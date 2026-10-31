@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    public enum ControlScheme { Auto, Tilt, Keyboard, Touch }
-
     [Serializable]
     public class SaveData
     {
@@ -26,7 +24,6 @@ namespace TiltRush
         public float musicVolume = 0.7f;
         public float sfxVolume = 0.8f;
         public float tiltSensitivity = 3f;
-        public int controls = 0;   // ControlScheme (unused)
 
         // Tilt setup: 0 Auto (pose at round start), 1 Flat, 2 Relaxed, 3 Upright, 4 Lying down, 5 Custom (calibrated)
         public int tiltPreset = 0;
@@ -81,7 +78,16 @@ namespace TiltRush
             int pi = Unlocks.ColorUnlocked(d.primary % n) ? d.primary % n : 0;
             int oi = Unlocks.ColorUnlocked(d.outline % n) ? d.outline % n : 7;
             var s = new PlayerStyle { Shape = Config.PlayerShapes[sh], Primary = Config.Palette[pi], Outline = Config.Palette[oi] };
-            if (playerIndex == 1) s.Primary = Config.Palette[(pi + 5) % n];   // player 2 gets a different colour
+            if (playerIndex == 1)                       // player 2 gets a different (unlocked) colour
+            {
+                int p2 = pi;
+                for (int k = 5; k < 5 + n; k++)
+                {
+                    int c = (pi + k) % n;
+                    if (c != pi && c != oi && Unlocks.ColorUnlocked(c)) { p2 = c; break; }
+                }
+                s.Primary = Config.Palette[p2];
+            }
             return s;
         }
     }

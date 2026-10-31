@@ -1,5 +1,12 @@
 using UnityEngine;
 
+// The game reads the phone tilt with the classic Input class. Unity 6 projects use the NEW Input System by default,
+// which makes every Input call throw an error. Fix: Edit > Project Settings > Player > Other Settings >
+// Active Input Handling = "Both" (Unity restarts once).
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+#error TILT RUSH: set Edit > Project Settings > Player > Other Settings > Active Input Handling to "Both" (see README).
+#endif
+
 namespace TiltRush
 {
     /// <summary>
@@ -66,6 +73,7 @@ namespace TiltRush
         }
 
         Vector3 camPos = new Vector3(0, 0, -10);
+        float camSize = Config.CameraSize;
         float shakeMag, shakeTime, shakeDur = 1f;
 
         /// <summary>Short camera shake (nuke, shockwave, death). Can be switched off in the options.</summary>
@@ -77,10 +85,14 @@ namespace TiltRush
             shakeMag = magnitude; shakeDur = Mathf.Max(0.01f, duration); shakeTime = duration;
         }
 
+        // Pausing when the app goes to the background (phone call, home button, notification shade)
+        void OnApplicationPause(bool paused) { if (paused) Pause(); }
+        void OnApplicationFocus(bool focused) { if (!focused && !Application.isEditor) Pause(); }
+
         void LateUpdate()
         {
-            cam.orthographicSize = Config.CameraSize;
-            if (GameWorld.Current == null) FitArena();    // the arena size only changes between rounds
+            cam.orthographicSize = camSize;
+            if (GameWorld.Current == null) FitArena(false);    // the arena size only changes between rounds
             Vector3 p = camPos;
             if (shakeTime > 0f)
             {
@@ -95,15 +107,31 @@ namespace TiltRush
         /// Makes the arena as large as possible: it fills the whole screen except the safe-area insets
         /// (notch, rounded corners). The camera is shifted so the arena centre is always world (0,0).
         /// </summary>
-        void FitArena()
+        /// <param name="fixedSize">
+        /// true (online PvP): the arena gets the same size on every phone (Config.OnlineArenaSize) and the camera zooms
+        /// so it fits - both players really play the identical map. false: the arena fills the whole screen.
+        /// </param>
+        public void FitArena(bool fixedSize)
         {
-            float visH = 2f * Config.CameraSize, visW = visH * cam.aspect;
             Rect sa = Screen.safeArea;
-            float usableW = visW * sa.width / Screen.width;
-            float usableH = visH * sa.height / Screen.height;
-            Config.ArenaSize = new Vector2(
-                Mathf.Max(6f, usableW - 2f * Config.ArenaMargin),
-                Mathf.Max(4f, usableH - 2f * Config.ArenaMargin));
+            float fracW = sa.width / Mathf.Max(1f, Screen.width), fracH = sa.height / Mathf.Max(1f, Screen.height);
+            float m2 = 2f * Config.ArenaMargin;
+
+            if (fixedSize)
+            {
+                Vector2 a = Config.OnlineArenaSize;
+                camSize = Mathf.Max((a.y + m2) / (2f * fracH), (a.x + m2) / (2f * cam.aspect * fracW));
+                Config.ArenaSize = a;
+            }
+            else
+            {
+                camSize = Config.CameraSize;
+                float uw = 2f * camSize * cam.aspect * fracW, uh = 2f * camSize * fracH;
+                Config.ArenaSize = new Vector2(Mathf.Max(6f, uw - m2), Mathf.Max(4f, uh - m2));
+            }
+            cam.orthographicSize = camSize;
+
+            float visH = 2f * camSize, visW = visH * cam.aspect;
 
             float offX = (sa.center.x / Screen.width - 0.5f) * visW;
             float offY = (sa.center.y / Screen.height - 0.5f) * visH;
@@ -122,14 +150,17 @@ namespace TiltRush
 
         public void Pause()
         {
-            if (GameWorld.Current == null || GameWorld.Current.State == GameWorld.Phase.Done) return;
-            GameWorld.Current.SetPaused(true);
+            var w = GameWorld.Current;
+            if (w == null || w.Paused) return;
+            if (w.State != GameWorld.Phase.Countdown && w.State != GameWorld.Phase.Playing) return;
+            w.SetPaused(true);
             UI.ShowOverlay<PauseScreen>();
         }
 
+        /// <summary>Continue after a pause - with a short countdown so you can get back into your tilt pose.</summary>
         public void Resume()
         {
-            if (GameWorld.Current != null) GameWorld.Current.SetPaused(false);
+            if (GameWorld.Current != null) GameWorld.Current.Resume();
             UI.Hide<PauseScreen>();
         }
 

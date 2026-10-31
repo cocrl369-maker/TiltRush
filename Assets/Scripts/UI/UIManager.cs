@@ -21,6 +21,7 @@ namespace TiltRush
         Canvas canvas;
         readonly Dictionary<Type, UIScreen> screens = new Dictionary<Type, UIScreen>();
         public UIScreen Current { get; private set; }
+        UIScreen belowOverlay;   // the screen under an overlay (e.g. the HUD under the pause menu)
 
         public void Build()
         {
@@ -73,13 +74,23 @@ namespace TiltRush
         public T Show<T>() where T : UIScreen
         {
             foreach (var s in screens.Values) s.gameObject.SetActive(false);
+            belowOverlay = null;
             return Activate<T>();
         }
 
         /// <summary>Show a screen on top of the current ones (e.g. pause over HUD).</summary>
-        public T ShowOverlay<T>() where T : UIScreen { return Activate<T>(); }
+        public T ShowOverlay<T>() where T : UIScreen
+        {
+            if (!(Current is T)) belowOverlay = Current;
+            return Activate<T>();
+        }
 
-        public void Hide<T>() where T : UIScreen { screens[typeof(T)].gameObject.SetActive(false); }
+        public void Hide<T>() where T : UIScreen
+        {
+            var s = screens[typeof(T)];
+            s.gameObject.SetActive(false);
+            if (Current == s) { Current = belowOverlay; belowOverlay = null; }
+        }
 
         T Activate<T>() where T : UIScreen
         {

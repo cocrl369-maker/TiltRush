@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TiltRush
@@ -6,17 +7,27 @@ namespace TiltRush
     public class Fx : MonoBehaviour
     {
         static int alive;
+        static readonly Stack<Fx> pool = new Stack<Fx>();   // finished effects are reused, not destroyed
         ShapeView view;
         float t, dur, r0, r1;
 
         public static void Burst(Vector2 pos, Color c, float radiusStart, float radiusEnd, float duration)
         {
             if (alive > 70) return;   // safety cap for nukes
-            var go = new GameObject("Fx");
-            go.transform.position = pos;
-            var f = go.AddComponent<Fx>();
-            f.view = ShapeView.Create(go.transform, ShapeType.Circle, radiusStart, Color.clear, c, 0.3f, 20);
-            f.r0 = radiusStart; f.r1 = radiusEnd; f.dur = duration;
+            Fx f = null;
+            while (f == null && pool.Count > 0) f = pool.Pop();   // (skips entries Unity has destroyed)
+            if (f == null)
+            {
+                var go = new GameObject("Fx");
+                f = go.AddComponent<Fx>();
+                f.view = ShapeView.Create(go.transform, ShapeType.Circle, radiusStart, Color.clear, c, 0.3f, 20);
+            }
+            else f.gameObject.SetActive(true);
+            f.transform.position = pos;
+            f.view.SetColors(Color.clear, c);
+            f.view.SetRadius(radiusStart);
+            f.view.Alpha = 1f;
+            f.t = 0f; f.r0 = radiusStart; f.r1 = radiusEnd; f.dur = Mathf.Max(0.01f, duration);
             alive++;
         }
 
@@ -54,16 +65,17 @@ namespace TiltRush
             float k = Mathf.Clamp01(t / dur);
             view.SetRadius(Mathf.Lerp(r0, r1, k));
             view.Alpha = 1f - k;
-            if (k >= 1f) Destroy(gameObject);
+            if (k >= 1f) { gameObject.SetActive(false); alive--; pool.Push(this); }
         }
 
-        void OnDestroy() { alive--; }
+        void OnDestroy() { if (gameObject.activeSelf) alive--; }
     }
 
     /// <summary>A straight line segment that fades out.</summary>
     public class FxLine : MonoBehaviour
     {
         static int alive;
+        static readonly Stack<FxLine> pool = new Stack<FxLine>();
         SpriteRenderer sr;
         float t, dur, len, width;
         Color color;
@@ -75,14 +87,20 @@ namespace TiltRush
             float len = d.magnitude;
             if (len < 0.01f) return;
 
-            var go = new GameObject("FxLine");
-            go.transform.position = (a + b) * 0.5f;
-            go.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
-            var f = go.AddComponent<FxLine>();
-            f.sr = go.AddComponent<SpriteRenderer>();
-            f.sr.sprite = SpriteFactory.Pixel();
+            FxLine f = null;
+            while (f == null && pool.Count > 0) f = pool.Pop();
+            if (f == null)
+            {
+                var go = new GameObject("FxLine");
+                f = go.AddComponent<FxLine>();
+                f.sr = go.AddComponent<SpriteRenderer>();
+                f.sr.sprite = SpriteFactory.Pixel();
+            }
+            else f.gameObject.SetActive(true);
+            f.transform.position = (a + b) * 0.5f;
+            f.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
             f.sr.sortingOrder = order;
-            f.len = len; f.width = width; f.color = color; f.dur = duration;
+            f.t = 0f; f.len = len; f.width = width; f.color = color; f.dur = Mathf.Max(0.01f, duration);
             alive++;
             f.Apply(0f);
         }
@@ -92,7 +110,7 @@ namespace TiltRush
             t += Time.deltaTime;
             float k = Mathf.Clamp01(t / dur);
             Apply(k);
-            if (k >= 1f) Destroy(gameObject);
+            if (k >= 1f) { gameObject.SetActive(false); alive--; pool.Push(this); }
         }
 
         void Apply(float k)
@@ -101,6 +119,6 @@ namespace TiltRush
             sr.color = new Color(color.r, color.g, color.b, color.a * (1f - k));
         }
 
-        void OnDestroy() { alive--; }
+        void OnDestroy() { if (gameObject.activeSelf) alive--; }
     }
 }

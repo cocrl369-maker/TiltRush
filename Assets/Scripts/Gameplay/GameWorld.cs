@@ -42,6 +42,7 @@ namespace TiltRush
         readonly List<Seeker> seekers = new List<Seeker>();
         readonly List<Turret> turrets = new List<Turret>();
         readonly List<Decoy> decoys = new List<Decoy>();
+        readonly Stack<Enemy> enemyPool = new Stack<Enemy>();   // killed dots are reused instead of destroyed
 
         public float Elapsed, Difficulty, CountdownLeft = 3f, Score;
         public float SlowTimer, FreezeTimer;
@@ -81,6 +82,7 @@ namespace TiltRush
             ringRng = new System.Random(seed + 2);
             wallRng = new System.Random(seed + 3);
             swordRng = new System.Random(seed + 4);
+            App.I.FitArena(mode.Id == GameModeId.Online);   // online: identical arena size on every phone
             areaScale = Mathf.Clamp(Config.ArenaSize.x * Config.ArenaSize.y / 150f, 1f, 2.5f);   // bigger arena -> more dots
 
             ArenaView.Build(transform);
@@ -168,7 +170,10 @@ namespace TiltRush
                     }
                     break;
                 case Phase.Playing:
-                    Step(dt);
+                    // split long frames into small steps (no tunnelling), cap extreme hiccups
+                    float total = Mathf.Min(dt, Config.MaxFrameTime);
+                    int steps = Mathf.Max(1, Mathf.CeilToInt(total / Config.MaxSubStep - 0.001f));
+                    for (int i = 0; i < steps && State == Phase.Playing; i++) Step(total / steps);
                     break;
                 case Phase.Ending:
                     endTimer -= dt;
@@ -239,7 +244,10 @@ namespace TiltRush
 
         void SpawnEnemy(EnemyType type)
         {
-            var e = Enemy.Spawn(transform, type, EdgePoint(), SpeedMul, (float)spawnRng.NextDouble() * 6.28f);
+            Vector2 pos = EdgePoint();
+            float phase = (float)spawnRng.NextDouble() * 6.28f;
+            Enemy e = enemyPool.Count > 0 ? enemyPool.Pop() : Enemy.Create(transform);
+            e.Setup(type, pos, SpeedMul, phase);
             Enemies.Add(e);
         }
 
@@ -477,7 +485,8 @@ namespace TiltRush
             e.Dead = true;
             Enemies.RemoveAt(i);
             Fx.Burst(e.Pos, Neon.Red, 0.1f, 0.5f, 0.3f);
-            Destroy(e.gameObject);
+            e.gameObject.SetActive(false);
+            enemyPool.Push(e);
         }
 
         public void KillEnemyObj(Enemy e, float pointsMul = 1f)
@@ -631,6 +640,13 @@ namespace TiltRush
         }
 
         public void SetPaused(bool p) { Paused = p; Time.timeScale = p ? 0f : 1f; }
+
+        /// <summary>Unpause. A running round restarts with a short 2-1 countdown (and re-reads the tilt pose).</summary>
+        public void Resume()
+        {
+            SetPaused(false);
+            if (State == Phase.Playing) { State = Phase.Countdown; CountdownLeft = 2f; }
+        }
 
         void OnDestroy()
         {

@@ -47,7 +47,7 @@ namespace TiltRush
         void Trigger(PlayerController p)
         {
             Vector2 v = p.Velocity;
-            Vector2 dir = v.sqrMagnitude > 0.5f ? -v.normalized : Random.insideUnitCircle.normalized;
+            Vector2 dir = v.sqrMagnitude > 0.5f ? -v.normalized : -p.Facing;   // standing still: fling backwards from the tip
             p.Launch(dir * Config.LaunchForce);
             Fx.Burst(transform.position, Neon.Yellow, Radius, 2.2f, 0.4f);
             App.I.Audio.Play("launch");

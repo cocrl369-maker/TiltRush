@@ -32,6 +32,12 @@ namespace TiltRush
         public const float CameraSize = 5.8f;
         public const float ArenaMargin = 0.2f;
         public static Vector2 ArenaSize = new Vector2(20f, 11f);   // overwritten automatically by App.FitArena()
+        public static readonly Vector2 OnlineArenaSize = new Vector2(19f, 10.4f);   // online PvP: same size on every phone
+
+        // Simulation safety: a long frame (hiccup, app resumed) is split into small sub-steps so nothing can tunnel
+        // through walls / swords. Frames longer than MaxFrameTime are capped (the game slows down for a moment instead).
+        public const float MaxSubStep = 1f / 50f;
+        public const float MaxFrameTime = 0.1f;
 
         // Player
         public const float PlayerRadius = 0.2f;

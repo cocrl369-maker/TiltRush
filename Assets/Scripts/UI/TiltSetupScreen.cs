@@ -86,7 +86,7 @@ namespace TiltRush
             if (!IsPhone) { msg.text = "Calibrating needs a real phone (accelerometer)."; return; }
             var d = SaveManager.Data;
             d.customNeutral = Input.acceleration;
-            d.customOrientation = (int)Screen.orientation;
+            d.customOrientation = (int)TiltInput.Landscape();
             d.hasCustomTilt = true;
             d.tiltPreset = 5;
             preview.Calibrate();

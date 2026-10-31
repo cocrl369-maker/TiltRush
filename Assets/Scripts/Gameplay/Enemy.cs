@@ -29,18 +29,27 @@ namespace TiltRush
         ShapeView view;
         float speed, warm, phase;
 
-        public static Enemy Spawn(Transform parent, EnemyType type, Vector2 pos, float speedMul, float phase)
+        /// <summary>Creates an (inactive) dot. GameWorld keeps killed dots in a pool and reuses them via Setup.</summary>
+        public static Enemy Create(Transform parent)
         {
-            var d = defs[(int)type];
             var go = new GameObject("Enemy");
             go.transform.SetParent(parent, false);
-            go.transform.position = pos;
             var e = go.AddComponent<Enemy>();
-            e.Type = type; e.Radius = d.Radius; e.speed = d.Speed * speedMul;
-            e.warm = Config.EnemySpawnWarning; e.phase = phase;
+            var d = defs[0];
             e.view = ShapeView.Create(go.transform, ShapeType.Circle, d.Radius, d.Fill, d.Line, 0.4f, 5);
-            e.view.Alpha = 0.3f;
             return e;
+        }
+
+        public void Setup(EnemyType type, Vector2 pos, float speedMul, float phase)
+        {
+            var d = defs[(int)type];
+            gameObject.SetActive(true);
+            transform.position = pos;
+            Type = type; Dead = false; Radius = d.Radius; speed = d.Speed * speedMul;
+            warm = Config.EnemySpawnWarning; this.phase = phase;
+            view.SetRadius(d.Radius);
+            view.SetColors(d.Fill, d.Line);
+            view.Alpha = 0.3f;
         }
 
         /// <param name="edt">enemy delta time (slow-mo / freeze applied)</param>
@@ -60,7 +69,7 @@ namespace TiltRush
             float d = dir.magnitude;
             if (d > 0.001f) dir /= d;
             Vector2 perp = new Vector2(-dir.y, dir.x);
-            Vector2 move = (dir + perp * Mathf.Sin(Time.time * 2f + phase) * 0.25f).normalized * speed * edt;  // slight weave so swarms spread out
+            Vector2 move = (dir + perp * Mathf.Sin(w.Elapsed * 2f + phase) * 0.25f).normalized * speed * edt;  // slight weave so swarms spread out
             transform.position = w.PushOut(Pos + move, Radius);   // obstacles block dots too
         }
     }

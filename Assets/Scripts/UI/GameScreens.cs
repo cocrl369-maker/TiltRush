@@ -80,9 +80,11 @@ namespace TiltRush
             if (w.SlowTimer > 0) sb.AppendLine("SLOW-MO " + w.SlowTimer.ToString("0.0"));
             if (w.FreezeTimer > 0) sb.AppendLine("FREEZE " + w.FreezeTimer.ToString("0.0"));
             foreach (var p in w.Players)
-                if (p.ShieldTime > 0) sb.AppendLine((w.Players.Count > 1 ? "P" + (p.Index + 1) + " " : "") + "SHIELD " + p.ShieldTime.ToString("0.0"));
-            foreach (var q in w.Players)
-                if (q.StormTime > 0) sb.AppendLine("STORM " + q.StormTime.ToString("0.0"));
+            {
+                string who = w.Players.Count > 1 ? "P" + (p.Index + 1) + " " : "";
+                if (p.ShieldTime > 0) sb.AppendLine(who + "SHIELD " + p.ShieldTime.ToString("0.0"));
+                if (p.StormTime > 0) sb.AppendLine(who + "STORM " + p.StormTime.ToString("0.0"));
+            }
             effectLabel.text = sb.ToString();
 
             bonusTimer -= Time.unscaledDeltaTime;

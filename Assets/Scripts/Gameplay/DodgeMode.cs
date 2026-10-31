@@ -33,6 +33,7 @@ namespace TiltRush
         readonly Action<string, Color> announce;
         readonly List<FormationDot> dots = new List<FormationDot>();
         readonly List<Entry> entries = new List<Entry>();
+        readonly Stack<ShapeView> viewPool = new Stack<ShapeView>();   // dot visuals are reused (hundreds per minute)
         float nextIn = 1.2f;
         int last = -1;
 
@@ -95,7 +96,7 @@ namespace TiltRush
                 float t = d.Age - d.Delay;
                 if (t > d.Life)
                 {
-                    if (d.View != null) UnityEngine.Object.Destroy(d.View.gameObject);
+                    if (d.View != null) { d.View.gameObject.SetActive(false); viewPool.Push(d.View); }
                     dots.RemoveAt(i);
                     continue;
                 }
@@ -103,8 +104,12 @@ namespace TiltRush
                 Vector3 m = d.Motion(t);
                 if (d.View == null)
                 {
-                    d.View = ShapeView.Create(root, ShapeType.Circle, d.Radius, DotFill, Color.white, 0.3f, 5);
-                    d.View.transform.GetChild(0).gameObject.SetActive(false);   // no glow: saves draw calls with hundreds of dots
+                    if (viewPool.Count > 0) { d.View = viewPool.Pop(); d.View.gameObject.SetActive(true); }
+                    else
+                    {
+                        d.View = ShapeView.Create(root, ShapeType.Circle, d.Radius, DotFill, Color.white, 0.3f, 5);
+                        d.View.transform.GetChild(0).gameObject.SetActive(false);   // no glow: saves draw calls with hundreds of dots
+                    }
                 }
                 d.Pos = new Vector2(m.x, m.y);
                 d.View.transform.position = d.Pos;

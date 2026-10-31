@@ -20,41 +20,69 @@ namespace TiltRush
         public static readonly string[] PresetHints = { "pose at round start", "phone held flat", "sofa / in hand, ~35 deg", "desk / upright, ~60 deg", "lying in bed, screen down" };
         static readonly float[] PresetPitch = { 0f, 0f, 35f, 60f, 160f };   // how far the top edge is raised towards you
 
-        Vector3 neutral;
-        const float DeadZone = 0.03f;
+        Vector3 neutral, filtered;
+        int lastFrame = -1;
+        const float DeadZone = 0.04f;
+        const float Smoothing = 20f;   // low-pass filter against sensor jitter (higher = more direct, lower = smoother)
 
         public TiltInput() { Calibrate(); }
-        public void Calibrate() { neutral = ResolveNeutral(); }
 
-        static Vector3 ResolveNeutral()
+        public void Calibrate()
+        {
+            filtered = Input.acceleration;   // restart the filter from the current pose
+            lastFrame = Time.frameCount;
+            neutral = ResolveNeutral(filtered);
+        }
+
+        /// <summary>
+        /// Current landscape orientation. Screen.orientation can report AutoRotation / Portrait on some Unity versions
+        /// and devices, so the device orientation and the screen shape are used as fallbacks.
+        /// </summary>
+        public static ScreenOrientation Landscape()
+        {
+            var o = Screen.orientation;
+            if (o == ScreenOrientation.LandscapeLeft || o == ScreenOrientation.LandscapeRight) { last = o; return o; }
+            var d = Input.deviceOrientation;
+            if (d == DeviceOrientation.LandscapeLeft) last = ScreenOrientation.LandscapeLeft;
+            else if (d == DeviceOrientation.LandscapeRight) last = ScreenOrientation.LandscapeRight;
+            return last;
+        }
+        static ScreenOrientation last = ScreenOrientation.LandscapeLeft;
+
+        static Vector3 ResolveNeutral(Vector3 current)
         {
             var d = SaveManager.Data;
-            if (d.tiltPreset == 0) return Input.acceleration;
+            if (d.tiltPreset == 0) return current;
             if (d.tiltPreset == 5)
             {
-                if (!d.hasCustomTilt) return Input.acceleration;
+                if (!d.hasCustomTilt) return current;
                 Vector3 c = d.customNeutral;
-                if ((int)Screen.orientation != d.customOrientation) c = new Vector3(-c.x, -c.y, c.z);   // phone was turned around 180 deg
+                if ((int)Landscape() != d.customOrientation) c = new Vector3(-c.x, -c.y, c.z);   // phone was turned around 180 deg
                 return c;
             }
             float r = PresetPitch[Mathf.Clamp(d.tiltPreset, 1, 4)] * Mathf.Deg2Rad;
-            float k = Screen.orientation == ScreenOrientation.LandscapeRight ? 1f : -1f;
+            float k = Landscape() == ScreenOrientation.LandscapeRight ? 1f : -1f;
             return new Vector3(k * Mathf.Sin(r), 0f, -Mathf.Cos(r));
         }
 
         public Vector2 Read()
         {
-            Vector3 a = Input.acceleration - neutral;   // device axes (portrait based)
-            Vector2 v;
-            switch (Screen.orientation)
+            // the filter advances once per rendered frame (Read can be called several times per frame)
+            if (Time.frameCount != lastFrame)
             {
-                case ScreenOrientation.LandscapeLeft:  v = new Vector2(-a.y, a.x); break;
-                case ScreenOrientation.LandscapeRight: v = new Vector2(a.y, -a.x); break;
-                default:                               v = new Vector2(a.x, a.y); break;
+                lastFrame = Time.frameCount;
+                float k = 1f - Mathf.Exp(-Smoothing * Mathf.Min(Time.unscaledDeltaTime, 0.1f));
+                filtered = Vector3.Lerp(filtered, Input.acceleration, k);
             }
+
+            Vector3 a = filtered - neutral;   // device axes (portrait based)
+            Vector2 v = Landscape() == ScreenOrientation.LandscapeRight ? new Vector2(a.y, -a.x) : new Vector2(-a.y, a.x);
             v *= SaveManager.Data.tiltSensitivity;
-            if (v.magnitude < DeadZone) return Vector2.zero;
-            return Vector2.ClampMagnitude(v, 1f);
+
+            // soft dead zone: no jump from 0 to full speed at the edge of the zone
+            float m = v.magnitude;
+            if (m < DeadZone) return Vector2.zero;
+            return v / m * Mathf.Min(1f, (m - DeadZone) / (1f - DeadZone));
         }
     }
 

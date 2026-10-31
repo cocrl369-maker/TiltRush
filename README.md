@@ -1,9 +1,24 @@
-# TILT RUSH – Unity (Android) – Setup
+# TILT RUSH – Unity (Android)
+
+## Schnellstart (Deutsch)
+1. **Unity Hub > New project** > Vorlage **"2D (Built-In Render Pipeline)"** wählen (NICHT "Universal 2D" / URP).
+2. Den Ordner `Assets/Scripts` aus diesem Repo in den `Assets`-Ordner deines Projekts kopieren
+   (vorher einen alten `Scripts`-Ordner von TiltRush löschen, damit keine doppelten Dateien entstehen).
+3. **Edit > Project Settings > Player > Other Settings > Active Input Handling = "Both"**.
+   Unity startet danach einmal neu. Ohne diese Einstellung erscheint in der Console der Fehler
+   `TILT RUSH: set ... Active Input Handling to "Both"` – das ist Absicht und genau der Hinweis auf diesen Schritt.
+4. **Play** drücken. Im Game-Fenster oben das Seitenverhältnis auf **16:9** stellen und einmal ins Bild klicken (Tastatur: WASD / Pfeile).
+5. Handy-Build: **File > Build Settings** (in Unity 6: **File > Build Profiles**) **> Android > Switch Platform**, dann **Build And Run** (Handy per USB, Entwickleroptionen + USB-Debugging an).
+
+---
+
+## Setup (English)
 
 1. Unity 2021.3 LTS or newer (also works in Unity 6): new **2D (Built-in)** project.
 2. Copy the folder `Assets/Scripts` into your project's `Assets` folder.
 3. **Project Settings > Player > Other Settings > Active Input Handling = "Input Manager (Old)" or "Both"**
-   (the code uses the classic `Input` class incl. `Input.acceleration`).
+   (the code uses the classic `Input` class incl. `Input.acceleration`). Unity 6 defaults to the new Input System only;
+   the project then stops with a clear `#error` message telling you to change this setting.
 4. Press Play. No scene setup is needed - `App.cs` boots itself in any scene.
    Set the Game view to **16:9** (landscape). Click once into the Game view so it receives keyboard input.
 5. Android build: File > Build Settings > Android, orientation Landscape (Auto Rotation) - the game also sets this itself.
@@ -71,3 +86,14 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   smiley (blinks and talks), fireworks (light red warning rings), elevator (wall with a moving, piped doorway), pinwheel, heart, windmill.
   A pattern is one function that adds dots with a movement formula - to add a gag write a method like `Smiley()` and register it in the constructor
   (name, difficulty at which it appears, announce on screen).
+
+## Stability notes
+- **Sub-steps:** long frames are split into steps of at most `Config.MaxSubStep` (1/50 s) and capped at `Config.MaxFrameTime`,
+  so nothing tunnels through walls or swords after a hiccup.
+- **Auto pause:** the game pauses when the app loses focus (call, home button, notification shade). RESUME restarts with a
+  short 2-1 countdown, and the tilt pose is re-read in AUTO mode.
+- **Tilt:** the accelerometer is low-pass filtered (`TiltInput.Smoothing`) with a soft dead zone; the landscape side is detected
+  with fallbacks (`TiltInput.Landscape()`), so the axes are never swapped.
+- **Pooling:** dots, Dodge dots and effects are reused instead of being created/destroyed all the time (less GC stutter on Android).
+- **Online fairness:** online rounds use the same arena size on every phone (`Config.OnlineArenaSize`); the camera zooms to fit.
+  Spawns use the seeded RNGs and game time only, so both players get the same dots at the same places.
