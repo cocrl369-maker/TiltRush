@@ -132,11 +132,53 @@ namespace TiltRush
                 case "warn":   return Tone(name, 800, 800, 0.15f);
                 case "pickup": return Tone(name, 500, 1200, 0.2f);
                 case "launch": return Tone(name, 300, 900, 0.25f);
-                case "die":    return Tone(name, 400, 60, 0.5f);
+                case "die":    return BrickBreak(name);                     // plastic bricks scattering
+                case "dieold": return Tone(name, 400, 60, 0.5f);
                 case "shoot":  return Tone(name, 1100, 500, 0.06f);
                 case "crack":  return Tone(name, 220, 90, 0.12f);
                 default:       return null;
             }
+        }
+
+        /// <summary>
+        /// Our own "toy bricks fall apart" sound (generated, so no licence problems): a short dull knock, then many
+        /// small hard plastic clicks that scatter and get quieter - like a brick model hitting the floor.
+        /// </summary>
+        static AudioClip BrickBreak(string name)
+        {
+            const int rate = 44100;
+            int n = (int)(rate * 0.75f);
+            var data = new float[n];
+            var rnd = new System.Random(1234);   // same sound every time
+
+            // dull knock at the start
+            for (int i = 0; i < (int)(rate * 0.09f); i++)
+            {
+                float t = i / (float)rate;
+                data[i] += Mathf.Sin(2f * Mathf.PI * 170f * t) * Mathf.Exp(-t * 45f) * 0.45f;
+            }
+
+            // 26 clicks: most of them early, a few late ones (pieces still bouncing)
+            for (int k = 0; k < 26; k++)
+            {
+                float u = (float)rnd.NextDouble();
+                float start = 0.01f + 0.55f * u * u;
+                float freq = 1800f + (float)rnd.NextDouble() * 3200f;     // hard plastic = high, short resonances
+                float amp = (0.35f + 0.4f * (float)rnd.NextDouble()) * (1f - 0.6f * u);
+                float decay = 70f + (float)rnd.NextDouble() * 80f;
+                int s0 = (int)(start * rate);
+                for (int i = s0; i < n && i < s0 + rate / 20; i++)
+                {
+                    float t = (i - s0) / (float)rate;
+                    float env = Mathf.Exp(-t * decay);
+                    float noise = ((float)rnd.NextDouble() * 2f - 1f) * Mathf.Exp(-t * 400f);   // the "tick" of the impact
+                    data[i] += (Mathf.Sin(2f * Mathf.PI * freq * t) * 0.7f + Mathf.Sin(2f * Mathf.PI * freq * 1.58f * t) * 0.3f) * env * amp * 0.5f + noise * amp * 0.35f;
+                }
+            }
+            for (int i = 0; i < n; i++) data[i] = Mathf.Clamp(data[i], -1f, 1f);
+            var clip = AudioClip.Create(name, n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         /// <summary>Little bell melody: each note is a decaying sine with two overtones.</summary>

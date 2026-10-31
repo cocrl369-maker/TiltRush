@@ -35,7 +35,8 @@ Put .mp3 / .ogg / .wav files into sub-folders of `Assets/Resources/Music/`:
 Missing folders fall back to `Game`, then to everything in `Music`. Tracks play in random order and cross-fade between menu and game.
 Credits: `Assets/Resources/Music/credits.txt` (one line per track) appears as the last card in HOW TO PLAY.
 Tip: select the music files in Unity and set Load Type = Streaming (saves memory on the phone).
-Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die`, `shoot`, `crack` (otherwise generated beeps are used).
+Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die`, `shoot`, `crack` (otherwise generated sounds are used;
+the generated `die` sound is a scattering-toy-bricks sound made in code, `AudioManager.BrickBreak`).
 
 ## Testing on the phone
 - Quick test without building: install **Unity Remote 5** on the phone, connect via USB, Edit > Project Settings > Editor > Device = your phone,
@@ -62,12 +63,18 @@ Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `d
 | menus / screens                             | `UI/*.cs` |
 | real online backend                         | implement `Online/IOnlineService.cs`, assign in `Core/App.cs` |
 
-## Online PvP
-Implemented as a "same-seed race": both players play the identical map (same seed) on their own device;
-the longer survivor wins the round, first to 3 wins the match (best of 5). The included `MockOnlineService`
-simulates an opponent so the full flow (matchmaking, rounds, Elo change) is testable offline.
-For real online play, implement `IOnlineService` (Unity Gaming Services, Photon, Nakama, Firebase...).
-Do the Elo calculation on the server later to prevent cheating.
+## Online (Unity Gaming Services)
+Without extra packages the game uses `MockOnlineService` (simulated players). Real online play switches on automatically:
+1. Unity Hub / Unity: log in, then Edit > Project Settings > Services: link (or create) a Unity Cloud project.
+2. Window > Package Manager > Unity Registry: install **Leaderboards** (real leaderboard) and **Lobby**
+   (or **Multiplayer Services**) for online PvP. Authentication + Core come automatically.
+3. cloud.unity.com > your project > Leaderboards > Create leaderboard: ID `classic`, sort descending, update "Keep best".
+   Authentication: enable "Anonymous" sign-in (on by default). Lobby needs no setup.
+`Assets/Scripts/TiltRush.asmdef` detects the packages (version defines `TILTRUSH_LEADERBOARDS`, `TILTRUSH_LOBBY`) and
+`OnlineFactory` then creates `UgsOnlineService`. Options > Profile shows the online status.
+PvP = "same-seed race" through a lobby: similar ELO (+-300), host sets the seed, both write their round times into the lobby.
+No opponent within `Config.MatchmakingSeconds` -> bot match. Elo is still calculated on the device (move it to Cloud Code later
+to prevent cheating). Player names are free text - moderate them before a public release.
 
 ## Difficulty progression
 Dots from the start -> red walls from difficulty 0.3 -> swords (with light red warning lane) from 0.55. All values in `Core/Config.cs`.

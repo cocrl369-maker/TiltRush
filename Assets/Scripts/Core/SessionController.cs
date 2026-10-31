@@ -62,6 +62,7 @@ namespace TiltRush
         public void Abort()
         {
             token++;                       // invalidates pending callbacks
+            if (match != null || (mode != null && mode.Id == GameModeId.Online)) app.Online.LeaveMatch();
             if (world != null) Object.Destroy(world.gameObject);
             world = null;
             Time.timeScale = 1f;
@@ -124,7 +125,7 @@ namespace TiltRush
                 case GameModeId.Online:
                     float mine = r.Survival[0];
                     app.UI.ShowDialog("ROUND " + (round + 1), "You survived " + mine.ToString("0.0") + "s\n\nWaiting for opponent...");
-                    app.Online.SubmitRound(match.MatchId, round, mine,
+                    app.Online.SubmitRound(match.MatchId, round * 100 + ties, mine,      // unique per round (replays after a draw too)
                         opp =>
                         {
                             if (t != token) return;

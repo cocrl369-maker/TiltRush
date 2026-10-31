@@ -10,11 +10,17 @@ namespace TiltRush
     /// <summary>
     /// Everything the game needs from a backend. Online PvP works as a "same-seed race": both players
     /// play the identical map (same seed) on their own device, results are compared per round.
-    /// To go live: implement this with Unity Gaming Services (Leaderboards + Cloud Code) / Photon / Nakama /
-    /// Firebase and assign it in App.Awake (replace MockOnlineService).
+    /// Implementations: MockOnlineService (offline, simulated players) and UgsOnlineService (Unity Gaming Services,
+    /// switches on automatically when the UGS packages are installed - see README "Online").
     /// </summary>
     public interface IOnlineService
     {
+        /// <summary>Short status text for the options screen, e.g. "ONLINE" or "OFFLINE (simulated players)".</summary>
+        string Status { get; }
+
+        /// <summary>Stop searching / leave the current match (cancel button, quitting, match over).</summary>
+        void LeaveMatch();
+
         // PvP
         void FindMatch(int myElo, Action<MatchInfo> onFound, Action<string> onError);
         void SubmitRound(string matchId, int round, float myTime, Action<float> onOpponentTime, Action<string> onError);

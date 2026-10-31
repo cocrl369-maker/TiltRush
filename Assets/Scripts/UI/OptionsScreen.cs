@@ -18,7 +18,7 @@ namespace TiltRush
         Button[] tabs;
         int tab;
         readonly List<System.Action> refreshers = new List<System.Action>();
-        Text trackText, statsText, skinsText;
+        Text trackText, statsText, skinsText, onlineText;
         InputField nameField;
         protected override bool HasVignette { get { return true; } }
 
@@ -150,6 +150,8 @@ namespace TiltRush
             l.Space(10);
             skinsText = l.Label("", 36, Neon.Lime, 60);
             l.Button("RESET PROGRESS", Neon.Red, 520, 96, ConfirmReset, 38);
+            l.Space(10);
+            onlineText = l.Label("", 28, Theme.TextDim, 70);
 
             var r = Column(page, true);
             r.Label("STATISTICS", 36, Neon.Aqua, 50);
@@ -184,6 +186,7 @@ namespace TiltRush
             var d = SaveManager.Data;
             nameField.text = d.playerName;
             skinsText.text = "SKINS: " + Skins.UnlockedCount + " / " + Skins.All.Length;
+            onlineText.text = "Online: " + App.I.Online.Status;
             statsText.text =
                 "Rounds played:  " + d.runsPlayed.ToString("N0") + "\n" +
                 "Time played:  " + Mathf.FloorToInt(d.totalPlaySeconds / 60f) + " min\n" +

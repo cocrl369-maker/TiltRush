@@ -1,0 +1,25 @@
+{
+    "name": "TiltRush",
+    "rootNamespace": "TiltRush",
+    "references": [
+        "UnityEngine.UI",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Leaderboards",
+        "Unity.Services.Lobbies",
+        "Unity.Services.Multiplayer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        { "name": "com.unity.services.leaderboards", "expression": "1.0.0", "define": "TILTRUSH_LEADERBOARDS" },
+        { "name": "com.unity.services.lobby", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
+        { "name": "com.unity.services.multiplayer", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" }
+    ],
+    "noEngineReferences": false
+}

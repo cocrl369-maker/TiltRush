@@ -48,7 +48,7 @@ namespace TiltRush
 
             Audio = gameObject.AddComponent<AudioManager>();
             gameObject.AddComponent<NeonBackground>();
-            Online = new MockOnlineService();          // <- swap for a real backend later
+            Online = OnlineFactory.Create();           // real Unity Gaming Services if installed, else simulated
             Session = new SessionController(this);
 
             UI = gameObject.AddComponent<UIManager>();
