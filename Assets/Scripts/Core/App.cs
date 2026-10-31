@@ -53,7 +53,8 @@ namespace TiltRush
 
             UI = gameObject.AddComponent<UIManager>();
             UI.Build();
-            UI.Show<MainMenuScreen>();
+            if (SaveManager.Data.tutorialDone) UI.Show<MainMenuScreen>();
+            else Session.StartTutorial();          // very first start: straight into the tutorial (can be skipped)
             Audio.Next();
         }
 
@@ -183,6 +184,8 @@ namespace TiltRush
 
         public void QuitToMenu()
         {
+            if (GameWorld.Current != null && GameWorld.Current.Mode.Id == GameModeId.Tutorial)
+            { SaveManager.Data.tutorialDone = true; SaveManager.Save(); }   // leaving the tutorial = skipping it
             Session.Abort();
             UI.Show<MainMenuScreen>();
         }

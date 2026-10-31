@@ -34,7 +34,8 @@ namespace TiltRush
             UIKit.Anchor((RectTransform)down.transform, new Vector2(1f, 0.5f), new Vector2(-30, -140), new Vector2(110, 110));
             Arrow(down.transform, 180f);
 
-            MenuUtil.AddBack(transform, () => UI.Show<MainMenuScreen>());
+            MenuUtil.AddButton(transform, "BACK", Neon.Gray, -230f, () => UI.Show<MainMenuScreen>(), 420f);
+            MenuUtil.AddButton(transform, "PLAY TUTORIAL", Neon.Aqua, 230f, () => App.I.Session.StartTutorial(), 420f);
         }
 
         static void Arrow(Transform parent, float rot)

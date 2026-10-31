@@ -4,7 +4,8 @@ namespace TiltRush
 {
     /// <summary>
     /// Permanent obstacle (campaign). It blocks the player AND the dots but never hurts.
-    /// Hide behind it - dots slide around it.
+    /// Hide behind it - dots slide around it. Its look comes from the level theme (GameTheme.Block):
+    /// lava bricks, ice with shine, slime with bubbles, metal with rivets, candy stripes ...
     /// </summary>
     public class Obstacle : MonoBehaviour
     {
@@ -20,39 +21,144 @@ namespace TiltRush
             o.center = new Vector2(def.X * arena.x, def.Y * arena.y);
             go.transform.position = o.center;
 
-            // GD-style block: very dark body, outline in the theme's accent colour
-            var th = GameTheme.Evaluate(Mathf.Max(GameTheme.Level, 0.35f));
-            Color fill = Color.Lerp(th.Dark, Color.black, 0.3f);
-            Color line = Color.Lerp(th.Accent, Color.white, 0.2f);
+            var st = GameTheme.Block;
             if (def.Circle)
             {
                 o.circle = true; o.radius = def.A;
-                ShapeView.Create(go.transform, ShapeType.Circle, def.A, fill, line, 0.15f, -20);
+                o.BuildCircle(st, def.A);
             }
             else
             {
                 o.half = new Vector2(def.A * 0.5f, def.B * 0.5f);
-                o.Quad(go.transform, SpriteFactory.Glow(), new Vector2(def.A * 1.3f, def.B * 2.2f), new Color(line.r, line.g, line.b, 0.15f), -21);
-                o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A, def.B), line, -20);
-                o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.12f, def.B - 0.12f), fill, -19);
-                if (def.A > 0.6f && def.B > 0.6f)   // inner frame like a GD block
-                {
-                    o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.36f, def.B - 0.36f), new Color(line.r, line.g, line.b, 0.35f), -18);
-                    o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.44f, def.B - 0.44f), fill, -17);
-                }
+                o.BuildRect(st, def.A, def.B);
             }
             return o;
         }
 
-        void Quad(Transform parent, Sprite s, Vector2 size, Color c, int order)
+        // ------------------------------------------------------------------ looks
+        const int Base = -24;   // sorting orders -24 .. -14 (below everything that moves)
+
+        void BuildRect(BlockStyle st, float w, float h)
         {
-            var g = new GameObject("Quad");
-            g.transform.SetParent(parent, false);
+            Color glow = st.Edge; glow.a = st.Glow;
+            Quad(SpriteFactory.Glow(), Vector2.zero, new Vector2(w + 1.6f, h + 1.6f), 0f, glow, Base);
+            Quad(SpriteFactory.Pixel(), Vector2.zero, new Vector2(w + 0.1f, h + 0.1f), 0f, new Color(0, 0, 0, 0.8f), Base + 1);   // dark outer line
+            Quad(SpriteFactory.Pixel(), Vector2.zero, new Vector2(w, h), 0f, st.Edge, Base + 2);
+            Quad(SpriteFactory.Pixel(), Vector2.zero, new Vector2(w - 0.16f, h - 0.16f), 0f, st.Fill, Base + 3);
+
+            float iw = w - 0.16f, ih = h - 0.16f;
+            Color d = st.Detail;
+            switch (st.Pattern)
+            {
+                case BlockPattern.Bricks:
+                    for (float y = -ih / 2 + 0.3f; y < ih / 2 - 0.05f; y += 0.3f)
+                        Quad(SpriteFactory.Pixel(), new Vector2(0, y), new Vector2(iw, 0.05f), 0f, d, Base + 4);
+                    int row = 0;
+                    for (float y = -ih / 2; y < ih / 2 - 0.05f; y += 0.3f, row++)
+                    {
+                        float top = Mathf.Min(y + 0.3f, ih / 2), mid = (y + top) * 0.5f;
+                        for (float x = -iw / 2 + (row % 2 == 0 ? 0.3f : 0.6f); x < iw / 2 - 0.05f; x += 0.6f)
+                            Quad(SpriteFactory.Pixel(), new Vector2(x, mid), new Vector2(0.05f, top - y), 0f, d, Base + 4);
+                    }
+                    // glowing hot top edge
+                    Quad(SpriteFactory.Pixel(), new Vector2(0, h / 2 - 0.05f), new Vector2(w, 0.1f), 0f, Color.Lerp(st.Edge, Color.white, 0.5f), Base + 5);
+                    break;
+                case BlockPattern.Shine:   // ice: two diagonal shine bars in the top-left corner
+                {
+                    float s = Mathf.Min(iw, ih);
+                    Vector2 c0 = new Vector2(-iw / 2 + s * 0.3f, ih / 2 - s * 0.3f);
+                    Quad(SpriteFactory.Pixel(), c0, new Vector2(s * 0.42f, s * 0.07f), 45f, d, Base + 4);
+                    Quad(SpriteFactory.Pixel(), c0 + new Vector2(s * 0.12f, -s * 0.12f), new Vector2(s * 0.24f, s * 0.05f), 45f, d, Base + 4);
+                    Frame(iw - 0.14f, ih - 0.14f, 0.03f, new Color(1, 1, 1, 0.35f), Base + 4);
+                    break;
+                }
+                case BlockPattern.Dots:
+                    for (float x = -iw / 2 + 0.25f; x < iw / 2 - 0.1f; x += 0.45f)
+                        for (float y = -ih / 2 + 0.25f; y < ih / 2 - 0.1f; y += 0.45f)
+                            Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(x, y + 0.08f * Mathf.Sin(x * 7f)), Vector2.one * 0.16f, 0f, d, Base + 4);
+                    break;
+                case BlockPattern.Rivets:
+                    Frame(iw - 0.16f, ih - 0.16f, 0.04f, d, Base + 4);
+                    for (int cx = -1; cx <= 1; cx += 2)
+                        for (int cy = -1; cy <= 1; cy += 2)
+                            Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(cx * (iw / 2 - 0.16f), cy * (ih / 2 - 0.16f)), Vector2.one * 0.13f, 0f, st.Edge, Base + 5);
+                    break;
+                case BlockPattern.Stripes:  // candy: stripes across the long side
+                    if (iw >= ih)
+                        for (float x = -iw / 2 + 0.2f; x < iw / 2; x += 0.42f)
+                            Quad(SpriteFactory.Pixel(), new Vector2(x, 0), new Vector2(0.16f, ih), 0f, d, Base + 4);
+                    else
+                        for (float y = -ih / 2 + 0.2f; y < ih / 2; y += 0.42f)
+                            Quad(SpriteFactory.Pixel(), new Vector2(0, y), new Vector2(iw, 0.16f), 0f, d, Base + 4);
+                    break;
+                case BlockPattern.Lines:    // sandstone layers
+                    for (float y = -ih / 2 + 0.2f; y < ih / 2 - 0.05f; y += 0.22f)
+                        Quad(SpriteFactory.Pixel(), new Vector2(0, y), new Vector2(iw, 0.04f), 0f, d, Base + 4);
+                    break;
+                default:                    // techno frame (like the background blocks)
+                    if (iw > 0.5f && ih > 0.5f) Frame(iw - 0.24f, ih - 0.24f, 0.05f, d, Base + 4);
+                    break;
+            }
+        }
+
+        void BuildCircle(BlockStyle st, float r)
+        {
+            Color glow = st.Edge; glow.a = st.Glow;
+            Quad(SpriteFactory.Glow(), Vector2.zero, Vector2.one * r * 4.2f, 0f, glow, Base);
+            Quad(SpriteFactory.Fill(ShapeType.Circle), Vector2.zero, Vector2.one * (r + 0.07f) * 2f / 0.9f, 0f, new Color(0, 0, 0, 0.8f), Base + 1);
+            Quad(SpriteFactory.Fill(ShapeType.Circle), Vector2.zero, Vector2.one * r * 2f / 0.9f, 0f, st.Edge, Base + 2);
+            Quad(SpriteFactory.Fill(ShapeType.Circle), Vector2.zero, Vector2.one * (r - 0.09f) * 2f / 0.9f, 0f, st.Fill, Base + 3);
+            Color d = st.Detail;
+            switch (st.Pattern)
+            {
+                case BlockPattern.Shine:
+                    Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(-r * 0.38f, r * 0.38f), Vector2.one * r * 0.42f, 0f, d, Base + 4);
+                    Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(-r * 0.12f, r * 0.55f), Vector2.one * r * 0.18f, 0f, d, Base + 4);
+                    break;
+                case BlockPattern.Dots:
+                case BlockPattern.Bricks:
+                    for (int k = 0; k < 5; k++)
+                    {
+                        float a = k * 2.4f, rr = r * (0.25f + 0.12f * k);
+                        Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * Mathf.Min(rr, r * 0.6f), Vector2.one * r * 0.28f, 0f, d, Base + 4);
+                    }
+                    break;
+                case BlockPattern.Stripes:
+                    Quad(SpriteFactory.Outline(ShapeType.Circle), Vector2.zero, Vector2.one * r * 1.3f, 0f, d, Base + 4);
+                    Quad(SpriteFactory.Outline(ShapeType.Circle), Vector2.zero, Vector2.one * r * 0.7f, 0f, d, Base + 4);
+                    break;
+                default:
+                    Quad(SpriteFactory.Outline(ShapeType.Circle), Vector2.zero, Vector2.one * r * 1.25f, 0f, d, Base + 4);
+                    if (st.Pattern == BlockPattern.Rivets)
+                        for (int k = 0; k < 4; k++)
+                        {
+                            float a = k * Mathf.PI / 2f + Mathf.PI / 4f;
+                            Quad(SpriteFactory.Fill(ShapeType.Circle), new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r * 0.78f, Vector2.one * 0.12f, 0f, st.Edge, Base + 5);
+                        }
+                    break;
+            }
+        }
+
+        void Frame(float w, float h, float t, Color c, int order)
+        {
+            Quad(SpriteFactory.Pixel(), new Vector2(0, h / 2), new Vector2(w, t), 0f, c, order);
+            Quad(SpriteFactory.Pixel(), new Vector2(0, -h / 2), new Vector2(w, t), 0f, c, order);
+            Quad(SpriteFactory.Pixel(), new Vector2(w / 2, 0), new Vector2(t, h), 0f, c, order);
+            Quad(SpriteFactory.Pixel(), new Vector2(-w / 2, 0), new Vector2(t, h), 0f, c, order);
+        }
+
+        void Quad(Sprite s, Vector2 pos, Vector2 size, float rot, Color c, int order)
+        {
+            var g = new GameObject("Part");
+            g.transform.SetParent(transform, false);
+            g.transform.localPosition = pos;
+            g.transform.localRotation = Quaternion.Euler(0, 0, rot);
             g.transform.localScale = new Vector3(size.x, size.y, 1f);
             var r = g.AddComponent<SpriteRenderer>();
             r.sprite = s; r.color = c; r.sortingOrder = order;
         }
 
+        // ------------------------------------------------------------------ collision
         /// <summary>Moves a circle (position p, radius r) out of the obstacle if it overlaps.</summary>
         public Vector2 PushOut(Vector2 p, float r)
         {

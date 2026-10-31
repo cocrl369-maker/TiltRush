@@ -27,6 +27,8 @@ namespace TiltRush
         public static GameWorld Current { get; private set; }
         public static event Action<string, Color> Toast;   // HUD listens to this
         public static event Action<int> Bonus;             // HUD listens to this (bonus points earned)
+        public static event Action<string> Speech;         // tutorial: what BLIP says (HUD shows it)
+        public static event Action<float> TutorialTimer;   // tutorial: "survive" countdown (-1 = hide)
 
         public ModeDef Mode { get; private set; }
         public LevelDef Level { get; private set; }        // null in the endless modes
@@ -59,6 +61,7 @@ namespace TiltRush
         bool wallsAnnounced, swordsAnnounced, ringsSpawned, gadgetsOn, completed;
         float[] deathTime;
         DodgeDirector director;      // DODGE mode only
+        TutorialDirector tutorial;   // TUTORIAL only
 
         // campaign plan
         List<EnemyType> plan;
@@ -76,6 +79,7 @@ namespace TiltRush
         void Init(ModeDef mode, int seed, Action<RoundResult> onEnd, LevelDef level)
         {
             Current = this; Mode = mode; Level = level; this.onEnd = onEnd;
+            GameTheme.Override = level != null ? level.Theme : null;   // campaign: the level's own theme
             Time.timeScale = 1f;
             EnemyTimeScale = 1f;
             Difficulty = level != null ? level.DiffStart : mode.StartDifficulty;
@@ -100,6 +104,7 @@ namespace TiltRush
                 Players.Add(p);
             }
             deathTime = new float[mode.Players];
+            if (mode.Id == GameModeId.Tutorial) tutorial = new TutorialDirector(this);
             if (mode.Id == GameModeId.Dodge) director = new DodgeDirector(transform, new System.Random(seed + 5), (text, col) => Toast?.Invoke(text, col));
 
             if (level != null)
@@ -202,11 +207,12 @@ namespace TiltRush
 
             foreach (var p in Players) p.Tick(dt);
 
-            if (director != null) director.Tick(dt, Difficulty, FirstAlivePos());     // DODGE: patterns instead of chasing dots
+            if (tutorial != null) tutorial.Tick(dt);                                    // TUTORIAL: scripted
+            else if (director != null) director.Tick(dt, Difficulty, FirstAlivePos());     // DODGE: patterns instead of chasing dots
             else if (Level == null) SpawnTick(dt);                                     // spawn timers use real time so online players see the same spawns
             else CampaignSpawns();
             foreach (var e in Enemies) e.Tick(edt, dt, this);
-            if (Level == null && director == null) HazardSpawnTick(dt);
+            if (Level == null && director == null && tutorial == null) HazardSpawnTick(dt);
             HazardMove(dt, edt);
             CheckCollisions();
             CheckHazards();
@@ -465,6 +471,7 @@ namespace TiltRush
         // ------------------------------------------------------------------ kills & points
         void KillPlayer(PlayerController p)
         {
+            if (tutorial != null) { tutorial.OnHit(p); App.I.Audio.Play("warn"); return; }   // nobody dies in the tutorial
             p.Kill();
             App.I.Shake(0.35f, 0.45f);
             deathTime[p.Index] = Elapsed;
@@ -609,7 +616,7 @@ namespace TiltRush
         void PickupTick(float dt)
         {
             pickupTimer -= dt;
-            if (pickupTimer <= 0f)
+            if (pickupTimer <= 0f && tutorial == null)
             {
                 pickupTimer = Config.GadgetSpawnInterval * (0.7f + (float)pickupRng.NextDouble() * 0.6f);
                 pickups.Add(Pickup.Spawn(transform, GadgetLibrary.PickRandom(pickupRng), RandomPoint(pickupRng, 1f)));
@@ -652,6 +659,57 @@ namespace TiltRush
             return p;
         }
 
+        // ------------------------------------------------------------------ tutorial helpers
+        public void Say(string text) { Speech?.Invoke(text); }
+        public void Countdown(float seconds) { TutorialTimer?.Invoke(seconds); }
+        public int HazardCount { get { return walls.Count + swords.Count; } }
+
+        public void TutorialEnemy(EnemyType type, Vector2 pos, float speedMul)
+        {
+            Enemy e = enemyPool.Count > 0 ? enemyPool.Pop() : Enemy.Create(transform);
+            e.Setup(type, PushOut(pos, 0.3f), speedMul, (float)spawnRng.NextDouble() * 6.28f);
+            Enemies.Add(e);
+        }
+
+        public void TutorialPickup(GadgetDef g, Vector2 pos)
+        {
+            Vector2 half = Config.ArenaSize * 0.5f - Vector2.one;
+            pos = new Vector2(Mathf.Clamp(pos.x, -half.x, half.x), Mathf.Clamp(pos.y, -half.y, half.y));
+            var pk = Pickup.Spawn(transform, g, pos);
+            pk.Life = 99999f;            // stays until it is collected
+            pickups.Add(pk);
+        }
+
+        /// <summary>Removes all dots without points or explosions screen-wide (a soft "poof").</summary>
+        public void ClearEnemies()
+        {
+            for (int i = Enemies.Count - 1; i >= 0; i--)
+            {
+                var e = Enemies[i];
+                Fx.Burst(e.Pos, e.SparkColor, 0.1f, 0.6f, 0.3f);
+                e.Dead = true; Enemies.RemoveAt(i);
+                e.gameObject.SetActive(false); enemyPool.Push(e);
+            }
+        }
+
+        public void TutorialWall() { SpawnWall(); }
+
+        /// <summary>A sword whose lane goes right through the player (so you really have to move).</summary>
+        public void TutorialSword()
+        {
+            App.I.Audio.Play("warn");
+            Vector2 half = Config.ArenaSize * 0.5f;
+            float y = Players[0].Pos.y;
+            float l0 = half.x + Config.SwordLength;
+            swords.Add(Sword.Spawn(transform, new Vector2(-l0, y), Vector2.right, l0 * 2f, 2.2f, Config.SwordSpeed * 0.8f));
+        }
+
+        public void FinishTutorial()
+        {
+            completed = true;
+            State = Phase.Ending; endTimer = 0.6f;
+        }
+
         // ------------------------------------------------------------------ result / pause
         RoundResult BuildResult()
         {
@@ -679,7 +737,7 @@ namespace TiltRush
 
         void OnDestroy()
         {
-            if (Current == this) Current = null;
+            if (Current == this) { Current = null; GameTheme.Override = null; }
             Time.timeScale = 1f;
             NeonBackground.Intensity = 0.1f;
         }

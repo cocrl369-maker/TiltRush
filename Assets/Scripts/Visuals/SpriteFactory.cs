@@ -61,6 +61,18 @@ namespace TiltRush
             }));
         }
 
+        /// <summary>Background block: two rows of bricks (lava, desert).</summary>
+        public static Sprite BrickOutline()
+        {
+            return Cached("bricks", () => Make(Res, Res, (x, y) =>
+            {
+                float d = Mathf.Min(Mathf.Abs(y), Mathf.Min(Mathf.Abs(y - 0.94f), Mathf.Abs(y + 0.94f)));       // mortar lines
+                if (y > 0f) d = Mathf.Min(d, Mathf.Min(Mathf.Abs(x), Mathf.Abs(Mathf.Abs(x) - 0.94f)));       // joints, top row
+                else d = Mathf.Min(d, Mathf.Abs(Mathf.Abs(x) - 0.5f));                                        // joints, bottom row (offset)
+                return Mathf.Clamp01(0.5f - (d - 0.035f) / 0.02f);
+            }));
+        }
+
         /// <summary>Background block: filled rounded square.</summary>
         public static Sprite TileFill()
         {

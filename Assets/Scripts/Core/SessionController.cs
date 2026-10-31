@@ -42,6 +42,23 @@ namespace TiltRush
             BeginRound();
         }
 
+        /// <summary>The guided tutorial (runs automatically on the very first start).</summary>
+        public void StartTutorial()
+        {
+            Abort();
+            mode = Modes.Tutorial; level = null; round = 0; ties = 0; match = null; wins = new int[2];
+            BeginRound();
+        }
+
+        /// <summary>SKIP button in the tutorial.</summary>
+        public void SkipTutorial()
+        {
+            SaveManager.Data.tutorialDone = true;
+            SaveManager.Save();
+            Abort();
+            app.UI.Show<MainMenuScreen>();
+        }
+
         public void Abort()
         {
             token++;                       // invalidates pending callbacks
@@ -76,6 +93,8 @@ namespace TiltRush
             Object.Destroy(world.gameObject);
             world = null;
             int t = token;
+
+            if (mode.Id == GameModeId.Tutorial) { EndTutorial(); return; }
 
             // statistics (skins are unlocked with these)
             var stats = SaveManager.Data;
@@ -114,6 +133,16 @@ namespace TiltRush
                         err => { if (t == token) Error(err); });
                     break;
             }
+        }
+
+        void EndTutorial()
+        {
+            SaveManager.Data.tutorialDone = true;
+            SaveManager.Save();
+            app.UI.ShowDialog("TUTORIAL COMPLETE!",
+                "You survived the tutorial.\nStatistically, that's 100% of the people who finished it.\n\nNext stop: the CAMPAIGN.",
+                new UIStack.Item("CAMPAIGN", Neon.Lime, () => app.UI.Show<CampaignScreen>()),
+                new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
         }
 
         void EndCampaign(RoundResult r)
@@ -272,6 +301,7 @@ namespace TiltRush
         void UpdateScore()
         {
             if (mode.Id == GameModeId.Campaign) { ScoreLine = "LEVEL " + (levelIndex + 1) + " - " + level.Name.ToUpper(); return; }
+            if (mode.Id == GameModeId.Tutorial) { ScoreLine = "TUTORIAL"; return; }
             if (mode.Players == 1 && mode.Id != GameModeId.Online) { ScoreLine = ""; return; }
             string a = mode.Id == GameModeId.Online ? "YOU" : "P1";
             string b = mode.Id == GameModeId.Online ? (match != null ? match.Opponent.Name : "OPP") : "P2";

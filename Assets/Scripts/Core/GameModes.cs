@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    public enum GameModeId { Campaign, Classic, Hard, Dodge, Coop, Online }
+    public enum GameModeId { Campaign, Classic, Hard, Dodge, Coop, Online, Tutorial }
 
     /// <summary>Pure data describing a mode. Add a new mode by adding a ModeDef to Modes.All.</summary>
     public class ModeDef
@@ -27,7 +27,7 @@ namespace TiltRush
         public static readonly ModeDef Campaign = new ModeDef
         {
             Id = GameModeId.Campaign, Name = "CAMPAIGN", Color = Neon.Blue,
-            Description = "12 levels with goals and obstacles. Unlock skins and colours.",
+            Description = "25 levels in 12 themed worlds. Unlock skins and colours.",
             LaunchRings = false   // each level decides for itself
         };
 
@@ -63,6 +63,13 @@ namespace TiltRush
             Id = GameModeId.Online, Name = "ONLINE PVP", Color = Neon.Pink,
             Description = "Best of 5. Same map, longest survival wins ELO.",
             BestOf = Config.OnlineBestOf
+        };
+
+        /// <summary>The guided first round (Gameplay/Tutorial.cs). Not shown in the mode list.</summary>
+        public static readonly ModeDef Tutorial = new ModeDef
+        {
+            Id = GameModeId.Tutorial, Name = "TUTORIAL", Color = Neon.Aqua,
+            Description = "Learn to play with BLIP.", LaunchRings = false, RampSeconds = 100000f
         };
 
         public static readonly ModeDef[] All = { Campaign, Classic, Hard, Dodge, Coop, Online };

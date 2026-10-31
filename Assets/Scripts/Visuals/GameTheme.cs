@@ -26,11 +26,15 @@ namespace TiltRush
         public static float Level { get; private set; } = 0.1f;
         public static ThemeColors Now { get; private set; } = Evaluate(0.1f);
 
+        /// <summary>Campaign level theme (null = the normal colour journey of the endless modes and menus).</summary>
+        public static LevelTheme Override;
+
         public static void SetLevel(float level) { Level = Mathf.Clamp01(level); Now = Evaluate(Level); }
 
         public static ThemeColors Evaluate(float d)
         {
             d = Mathf.Clamp01(d);
+            if (Override != null) return FromTheme(Override, d);
             float f = d * (Hues.Length - 1);
             int i = Mathf.Min((int)f, Hues.Length - 2);
             float hue = Mathf.Lerp(Hues[i], Hues[i + 1], f - i);
@@ -46,6 +50,44 @@ namespace TiltRush
             return t;
         }
 
+        /// <summary>Colours of a level theme; they get a bit more intense with the difficulty.</summary>
+        static ThemeColors FromTheme(LevelTheme th, float d)
+        {
+            float shift = th.Cycle ? Time.unscaledTime * 0.035f : 0f;   // rainbow theme: hues travel
+            float boost = 0.85f + 0.15f * d;
+            ThemeColors t;
+            t.BgTop = Adjust(th.Top, shift, boost);
+            t.BgBottom = Adjust(th.Bottom, shift, boost);
+            t.Tile = Adjust(th.Tile, shift, 1f);
+            t.Accent = Adjust(th.Accent, shift, 1f);
+            t.Dark = Adjust(th.Dark, shift, 1f);
+            float h, s, v;
+            Color.RGBToHSV(t.BgTop, out h, out s, out v);
+            t.Hue = h;
+            return t;
+        }
+
+        static Color Adjust(Color c, float hueShift, float satBoost)
+        {
+            float h, s, v;
+            Color.RGBToHSV(c, out h, out s, out v);
+            Color r = Color.HSVToRGB(Mathf.Repeat(h + hueShift, 1f), Mathf.Clamp01(s * satBoost), v);
+            r.a = c.a;
+            return r;
+        }
+
+        /// <summary>Obstacle style: the level theme's blocks, or neutral techno blocks in the theme colours.</summary>
+        public static BlockStyle Block
+        {
+            get
+            {
+                if (Override != null) return Override.Block;
+                var t = Now;
+                return new BlockStyle { Fill = Color.Lerp(t.Dark, Color.black, 0.3f), Edge = Color.Lerp(t.Accent, Color.white, 0.2f),
+                                        Detail = new Color(t.Accent.r, t.Accent.g, t.Accent.b, 0.4f), Pattern = BlockPattern.Frame };
+            }
+        }
+
         static Color HSV(float h, float s, float v) { return Color.HSVToRGB(Mathf.Repeat(h, 1f), Mathf.Clamp01(s), Mathf.Clamp01(v)); }
 
         // ---------------------------------------------------------------- enemies
@@ -56,12 +98,15 @@ namespace TiltRush
         public static Color EnemyRim(EnemyType type)
         {
             float d = Level;
+            Color c;
             switch (type)
             {
-                case EnemyType.Fast: return Color.Lerp(new Color32(255, 185, 245, 255), new Color32(255, 20, 200, 255), d);
-                case EnemyType.Big:  return Color.Lerp(new Color32(255, 215, 170, 255), new Color32(255, 110, 0, 255), d);
-                default:             return Color.Lerp(new Color32(255, 200, 205, 255), new Color32(255, 35, 70, 255), d);
+                case EnemyType.Fast: c = Color.Lerp(new Color32(255, 185, 245, 255), new Color32(255, 20, 200, 255), d); break;
+                case EnemyType.Big:  c = Color.Lerp(new Color32(255, 215, 170, 255), new Color32(255, 110, 0, 255), d); break;
+                default:             c = Color.Lerp(new Color32(255, 200, 205, 255), new Color32(255, 35, 70, 255), d); break;
             }
+            if (Override != null && Override.LightRims) c = Color.Lerp(c, new Color(1f, 1f, 0.85f, 1f), 0.5f);   // stays visible on red / orange
+            return c;
         }
 
         public static Color EnemyEye { get { return Color.Lerp(new Color32(255, 250, 200, 255), new Color32(255, 230, 0, 255), Level); } }

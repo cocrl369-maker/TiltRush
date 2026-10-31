@@ -13,6 +13,13 @@ namespace TiltRush
         Text bonusLabel;
         RectTransform pauseRt;
 
+        // tutorial: BLIP's speech bubble
+        RectTransform speechRoot, blip;
+        Text speechText, tutTimer;
+        GameObject skipBtn;
+        string speechFull = "";
+        float speechShown;
+
         protected override void Build()
         {
             safe = UIKit.Stretch(UIKit.Rect("Safe", transform));
@@ -40,7 +47,48 @@ namespace TiltRush
 
             var pause = UIKit.MakeButton(safe, "II", Neon.Blue, new Vector2(120, 120), () => App.I.Pause(), 56);
             pauseRt = (RectTransform)pause.transform;
+
+            BuildSpeech();
         }
+
+        void BuildSpeech()
+        {
+            speechRoot = UIKit.Panel(safe, 0, 0, 1380, 200);
+            UIKit.Anchor(speechRoot, new Vector2(0.5f, 0f), new Vector2(-110, 24), new Vector2(1380, 200));
+
+            // BLIP: friendly aqua dot with big eyes
+            blip = UIKit.Rect("Blip", speechRoot);
+            UIKit.Anchor(blip, new Vector2(0f, 0.5f), new Vector2(40, 0), new Vector2(140, 140));
+            blip.pivot = new Vector2(0f, 0.5f);
+            UIKit.Icon(blip, SpriteFactory.Glow(), 220, new Color(0f, 1f, 1f, 0.35f));
+            UIKit.Icon(blip, SpriteFactory.Fill(ShapeType.Circle), 130, new Color(0, 0, 0, 0.8f));
+            UIKit.Icon(blip, SpriteFactory.Fill(ShapeType.Circle), 116, new Color32(40, 220, 230, 255));
+            UIKit.Icon(blip, SpriteFactory.Outline(ShapeType.Circle), 116, Color.white);
+            for (int s = -1; s <= 1; s += 2)
+            {
+                var eye = UIKit.Icon(blip, SpriteFactory.Fill(ShapeType.Circle), 34, Color.white);
+                eye.rectTransform.anchoredPosition = new Vector2(s * 22, 12);
+                var pupil = UIKit.Icon(eye.transform, SpriteFactory.Fill(ShapeType.Circle), 17, new Color(0.05f, 0.05f, 0.1f));
+                pupil.rectTransform.anchoredPosition = new Vector2(3, -2);
+            }
+            var smile = UIKit.Icon(blip, SpriteFactory.Fill(ShapeType.Circle), 30, new Color(0.05f, 0.05f, 0.1f));
+            smile.rectTransform.sizeDelta = new Vector2(34, 16); smile.rectTransform.anchoredPosition = new Vector2(0, -22);
+
+            speechText = UIKit.Label(speechRoot, "", 40, Color.white, TextAnchor.MiddleLeft);
+            var rt = speechText.rectTransform;
+            rt.anchorMin = new Vector2(0f, 0f); rt.anchorMax = new Vector2(1f, 1f);
+            rt.offsetMin = new Vector2(210, 20); rt.offsetMax = new Vector2(-40, -20);
+
+            var skip = UIKit.MakeButton(safe, "SKIP", Neon.Gray, new Vector2(200, 100), () => App.I.Session.SkipTutorial(), 40);
+            UIKit.Anchor((RectTransform)skip.transform, new Vector2(1f, 0f), new Vector2(-30, 74), new Vector2(200, 100));
+            skipBtn = skip.gameObject;
+
+            tutTimer = UIKit.Label(safe, "", 80, Neon.Yellow);
+            UIKit.Anchor(tutTimer.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -190), new Vector2(900, 110));
+        }
+
+        void OnSpeech(string text) { speechFull = text; speechShown = 0f; }
+        void OnTutorialTimer(float s) { tutTimer.text = s < 0f ? "" : "SURVIVE: " + Mathf.CeilToInt(s); }
 
         /// <summary>Options > Interface: HUD size and pause button side.</summary>
         void ApplyLayout()
@@ -71,8 +119,8 @@ namespace TiltRush
             pauseRt.localScale = Vector3.one * k;
         }
 
-        void OnEnable() { GameWorld.Toast += OnToast; GameWorld.Bonus += OnBonus; }
-        void OnDisable() { GameWorld.Toast -= OnToast; GameWorld.Bonus -= OnBonus; }
+        void OnEnable() { GameWorld.Toast += OnToast; GameWorld.Bonus += OnBonus; GameWorld.Speech += OnSpeech; GameWorld.TutorialTimer += OnTutorialTimer; }
+        void OnDisable() { GameWorld.Toast -= OnToast; GameWorld.Bonus -= OnBonus; GameWorld.Speech -= OnSpeech; GameWorld.TutorialTimer -= OnTutorialTimer; }
 
         // bonus points that arrive within ~1.4 s of each other are shown as one growing "+N"
         void OnBonus(int pts)
@@ -93,6 +141,7 @@ namespace TiltRush
             safe.offsetMin = safe.offsetMax = Vector2.zero;
             toastLabel.text = ""; toastTimer = 0;
             bonusLabel.text = ""; bonusTimer = 0;
+            speechFull = ""; speechText.text = ""; tutTimer.text = "";
             ApplyLayout();
         }
 
@@ -101,7 +150,20 @@ namespace TiltRush
             var w = GameWorld.Current;
             if (w == null) return;
 
-            timeLabel.text = (w.Level != null ? w.TimeLeft : w.Elapsed).ToString("0.0") + "s";    // campaign: time left
+            bool tut = w.Mode.Id == GameModeId.Tutorial;
+            speechRoot.gameObject.SetActive(tut);
+            skipBtn.SetActive(tut);
+            if (tut)
+            {
+                // typewriter effect + BLIP bobs while talking
+                speechShown += Time.unscaledDeltaTime * 55f;
+                int n = Mathf.Min(speechFull.Length, Mathf.FloorToInt(speechShown));
+                speechText.text = speechFull.Substring(0, n);
+                bool talking = n < speechFull.Length;
+                blip.anchoredPosition = new Vector2(40, talking ? 6f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 14f)) : 3f * Mathf.Sin(Time.unscaledTime * 2f));
+            }
+
+            timeLabel.text = tut ? "" : (w.Level != null ? w.TimeLeft : w.Elapsed).ToString("0.0") + "s";    // campaign: time left
             pointsLabel.text = (w.Mode.Id == GameModeId.Classic || w.Mode.Id == GameModeId.Hard || w.Mode.Id == GameModeId.Dodge) ? w.ScoreInt.ToString("N0") + " PTS" : "";
             scoreLabel.text = App.I.Session.ScoreLine;
             centerLabel.text = w.State == GameWorld.Phase.Countdown ? Mathf.CeilToInt(w.CountdownLeft).ToString() : "";

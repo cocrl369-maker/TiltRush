@@ -57,6 +57,8 @@ namespace TiltRush
         public Vector3 customNeutral;
         public int customOrientation;
 
+        public bool tutorialDone;          // the tutorial runs automatically on the very first start
+
         // Campaign: number of levels completed (in order)
         public int campaignDone = 0;
     }

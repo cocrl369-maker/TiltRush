@@ -77,7 +77,7 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 ## Gadgets, campaign, tilt setup, design
 - Gadgets (`Gameplay/Gadgets.cs`): Slow-Mo, Freeze, Shield, Shockwave, Nuke, Seekers (homing darts), Lance (3 beams), Storm (chain lightning),
   Turret, Decoy (dots chase the hologram). New gadget = one entry in `GadgetLibrary.All` + an effect method in `GameWorld`.
-- Campaign (`Campaign/Campaign.cs`): 12 levels. Each has a duration, number of dots (normal/fast/big), walls, swords, rings, speed curve and
+- Campaign (`Campaign/Campaign.cs`): 25 levels, each with a theme (`Theme = LAVA` ...). Each has a duration, number of dots (normal/fast/big), walls, swords, rings, speed curve and
   permanent obstacles (grey blocks/pillars that block you and the dots but never hurt). Edit the table to change levels.
 - Unlocks: colours by campaign levels (`Core/Unlocks.cs`), skins by their own conditions (`Core/Skins.cs`).
 - Tilt setup (Options > Tilt Setup): Auto (pose at round start), presets (Flat / Relaxed / Upright / Lying down) or CALIBRATE NOW
@@ -156,3 +156,14 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   all tinted with the background theme.
 - **New gadgets** (14 in total): SHRINK (tiny ship + small hit circle), BOOST (faster), BLACK HOLE (pulls dots in and swallows them,
   `BlackHole` in `GadgetEffects.cs`), ORBIT (three orbs circle you and smash dots).
+
+## Level themes, 25 levels, tutorial
+- **Themes** (`Visuals/LevelThemes.cs`): Neon City, Ice Cave, Lava Lake, Toxic Swamp, Desert Ruins, Deep Sea, Outer Space,
+  Candy Land, Thunder Storm, Sunset Boulevard, Cyber Grid, Chaos Dimension (rainbow). Each theme sets the background colours,
+  the shape of the background blocks (tiles, bricks, crystals, bubbles, stars), floating particles (snow, embers, bubbles,
+  stars, rain, dust, sparkles), the obstacle block style (bricks, ice shine, slime dots, rivets, candy stripes, sandstone lines,
+  techno frame) and the arena border colour. `GameTheme.Override` is set while a campaign level runs.
+- **Campaign**: 25 levels; the level select shows the world colour of each level and its theme name.
+- **Tutorial** (`Gameplay/Tutorial.cs`): runs automatically on the very first start (SKIP button, or HOW TO PLAY > PLAY TUTORIAL).
+  BLIP, a friendly dot, explains moving (fly through rings), enemies (survive 10 s), gadgets, walls and swords - with jokes.
+  You cannot die in the tutorial. The steps are one script method (`Script()`), easy to edit.
