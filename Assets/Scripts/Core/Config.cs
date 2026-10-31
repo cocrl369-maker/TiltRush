@@ -40,7 +40,8 @@ namespace TiltRush
         public const float MaxFrameTime = 0.1f;
 
         // Player
-        public const float PlayerRadius = 0.2f;
+        public const float PlayerRadius = 0.26f;         // hit circle
+        public const float PlayerVisualRadius = 0.4f;    // how big the ship is drawn (the tips are forgiving)
         public const float PlayerMaxSpeed = 8f;
         public const float PlayerAcceleration = 42f;
 

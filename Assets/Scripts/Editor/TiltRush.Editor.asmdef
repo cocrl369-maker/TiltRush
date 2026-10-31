@@ -1,0 +1,14 @@
+{
+    "name": "TiltRush.Editor",
+    "rootNamespace": "TiltRush.EditorTools",
+    "references": [ "TiltRush" ],
+    "includePlatforms": [ "Editor" ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

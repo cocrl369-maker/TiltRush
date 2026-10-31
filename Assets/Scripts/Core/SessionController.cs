@@ -142,7 +142,7 @@ namespace TiltRush
             SaveManager.Data.tutorialDone = true;
             SaveManager.Save();
             app.UI.ShowDialog("TUTORIAL COMPLETE!",
-                "You survived the tutorial.\nStatistically, that's 100% of the people who finished it.\n\nNext stop: the CAMPAIGN.",
+                "You survived the tutorial.\nStatistically, that's 100% of the people who finished it.\n\nNext stop: the CAMPAIGN." + NewSkinsText(),
                 new UIStack.Item("CAMPAIGN", Neon.Lime, () => app.UI.Show<CampaignScreen>()),
                 new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
         }

@@ -4,10 +4,10 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>Second-colour detail drawn inside a skin (in the outline colour), like the two-colour icons in GD.</summary>
-    public enum SkinDetail { None, Inner, Core }
+    public enum SkinDetail { None, Inner, Core, Custom }   // Custom = cockpit / fold / dome drawn for that ship
 
     /// <summary>What you have to do to unlock a skin.</summary>
-    public enum UnlockKind { Free, Campaign, ClassicScore, HardScore, DodgeTime, OnlineWins, Kills, Pickups, Runs }
+    public enum UnlockKind { Free, Campaign, ClassicScore, HardScore, DodgeTime, OnlineWins, Kills, Pickups, Runs, Tutorial, AsteroidScore }
 
     public class SkinDef
     {
@@ -34,6 +34,8 @@ namespace TiltRush
                     case UnlockKind.Kills:        return Value.ToString("N0") + " DOTS";
                     case UnlockKind.Pickups:      return Value + " PICKUPS";
                     case UnlockKind.Runs:         return Value + " RUNS";
+                    case UnlockKind.Tutorial:     return "TUTORIAL";
+                    case UnlockKind.AsteroidScore: return "ROCKS " + Value.ToString("N0");
                     default:                      return "";
                 }
             }
@@ -55,6 +57,8 @@ namespace TiltRush
                     case UnlockKind.OnlineWins:   return "Win " + Value + " online matches" + p;
                     case UnlockKind.Kills:        return "Destroy " + Value.ToString("N0") + " dots in total" + p;
                     case UnlockKind.Pickups:      return "Collect " + Value + " pickups in total" + p;
+                    case UnlockKind.Tutorial:     return "Finish the tutorial";
+                    case UnlockKind.AsteroidScore: return "Score " + Value.ToString("N0") + " points in ASTEROID FIELD" + p;
                     default:                      return "Play " + Value + " rounds" + p;
                 }
             }
@@ -96,6 +100,15 @@ namespace TiltRush
             S("SABER",   ShapeType.Saber,   SkinDetail.Inner, UnlockKind.ClassicScore, 6000),
             S("PHOENIX", ShapeType.Phoenix, SkinDetail.Core,  UnlockKind.Kills, 1500),
             S("NOVA",    ShapeType.Nova,    SkinDetail.Inner, UnlockKind.HardScore, 4000),
+            // spaceships and things you know
+            S("STARFIGHTER", ShapeType.Starfighter, SkinDetail.Custom, UnlockKind.Free, 0),
+            S("PAPER PLANE", ShapeType.PaperPlane,  SkinDetail.Custom, UnlockKind.Tutorial, 1),
+            S("JET",         ShapeType.Jet,         SkinDetail.Custom, UnlockKind.Runs, 5),
+            S("UFO",         ShapeType.Ufo,         SkinDetail.Custom, UnlockKind.AsteroidScore, 2000),
+            S("SHARK",       ShapeType.Shark,       SkinDetail.Inner,  UnlockKind.Kills, 800),
+            S("SHUTTLE",     ShapeType.Shuttle,     SkinDetail.Custom, UnlockKind.Campaign, 15),
+            S("VIPER",       ShapeType.Viper,       SkinDetail.Custom, UnlockKind.AsteroidScore, 5000),
+            S("STEALTH",     ShapeType.Stealth,     SkinDetail.Inner,  UnlockKind.Campaign, 20),
         };
 
         public static int Progress(UnlockKind k)
@@ -111,6 +124,8 @@ namespace TiltRush
                 case UnlockKind.Kills:        return d.totalKills;
                 case UnlockKind.Pickups:      return d.totalPickups;
                 case UnlockKind.Runs:         return d.runsPlayed;
+                case UnlockKind.Tutorial:     return d.tutorialDone ? 1 : 0;
+                case UnlockKind.AsteroidScore: return d.bestAsteroidsScore;
                 default:                      return int.MaxValue;
             }
         }

@@ -58,10 +58,12 @@ namespace TiltRush
             {
                 if (!d.hasCustomTilt) return current;
                 Vector3 c = d.customNeutral;
-                if ((int)Landscape() != d.customOrientation) c = new Vector3(-c.x, -c.y, c.z);   // phone was turned around 180 deg
+                // only the "swapped" (device axes) mode has to mirror a pose calibrated with the phone turned around
+                if (d.tiltAxes == 1 && (int)Landscape() != d.customOrientation) c = new Vector3(-c.x, -c.y, c.z);
                 return c;
             }
             float r = PresetPitch[Mathf.Clamp(d.tiltPreset, 1, 4)] * Mathf.Deg2Rad;
+            if (d.tiltAxes == 0) return new Vector3(0f, -Mathf.Sin(r), -Mathf.Cos(r));   // top edge raised towards you
             float k = Landscape() == ScreenOrientation.LandscapeRight ? 1f : -1f;
             return new Vector3(k * Mathf.Sin(r), 0f, -Mathf.Cos(r));
         }
@@ -77,8 +79,12 @@ namespace TiltRush
                 filtered = Vector3.Lerp(filtered, Input.acceleration, k);
             }
 
-            Vector3 a = filtered - neutral;   // device axes (portrait based)
-            Vector2 v = Landscape() == ScreenOrientation.LandscapeRight ? new Vector2(a.y, -a.x) : new Vector2(-a.y, a.x);
+            Vector3 a = filtered - neutral;
+            // STANDARD: Unity already reports the acceleration in screen axes (x = right, y = up) for the current
+            // landscape orientation. SWAPPED (Options > Controls): for devices that report raw portrait axes.
+            Vector2 v = SaveManager.Data.tiltAxes == 0
+                ? new Vector2(a.x, a.y)
+                : (Landscape() == ScreenOrientation.LandscapeRight ? new Vector2(a.y, -a.x) : new Vector2(-a.y, a.x));
             v *= SaveManager.Data.tiltSensitivity;
             if (SaveManager.Data.invertX) v.x = -v.x;
             if (SaveManager.Data.invertY) v.y = -v.y;

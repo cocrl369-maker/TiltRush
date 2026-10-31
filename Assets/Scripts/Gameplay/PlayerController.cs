@@ -13,7 +13,7 @@ namespace TiltRush
         public float ShrinkTime, BoostTime, OrbitTime;
         public float FireCd, SpreadTime;        // asteroid field cannon
         public const int OrbCount = 3;
-        public const float OrbRadius = 0.17f, OrbDistance = 0.95f;
+        public const float OrbRadius = 0.17f, OrbDistance = 1.15f;
         public float Radius = Config.PlayerRadius;
         public Vector2 Facing = Vector2.up;     // direction the tip points to
         public IMoveInput Controls;
@@ -41,12 +41,12 @@ namespace TiltRush
             Index = index; Controls = controls; this.style = style;
             transform.position = pos;
             BuildTrail(pos);
-            view = ShapeView.Create(transform, style.Shape, Radius, style.Primary, style.Outline, 0.5f, 10);
+            view = ShapeView.Create(transform, style.Shape, Config.PlayerVisualRadius, style.Primary, style.Outline, 0.5f, 10);
             view.AddBacking(new Color(0f, 0f, 0f, 0.7f), 1.3f);   // thick dark outline: readable on every background
             view.SetDetail(style.Detail, style.Outline);            // skin detail in the second colour
-            shield = ShapeView.Create(transform, ShapeType.Circle, 0.5f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
+            shield = ShapeView.Create(transform, ShapeType.Circle, 0.62f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
             shield.gameObject.SetActive(false);
-            storm = ShapeView.Create(transform, ShapeType.Circle, 0.42f, Color.clear, new Color32(150, 130, 255, 255), 0.6f, 13);
+            storm = ShapeView.Create(transform, ShapeType.Circle, 0.55f, Color.clear, new Color32(150, 130, 255, 255), 0.6f, 13);
             storm.gameObject.SetActive(false);
             orbs = new ShapeView[OrbCount];
             for (int i = 0; i < OrbCount; i++)
@@ -90,7 +90,7 @@ namespace TiltRush
                 }
             }
 
-            Vector2 half = Config.ArenaSize * 0.5f - Vector2.one * Radius;
+            Vector2 half = Config.ArenaSize * 0.5f - Vector2.one * Mathf.Max(Radius, VisualRadius * 0.75f);
             if (Mathf.Abs(p.x) > half.x) { p.x = Mathf.Sign(p.x) * half.x; vel.x = 0; launchVel.x *= -0.4f; }
             if (Mathf.Abs(p.y) > half.y) { p.y = Mathf.Sign(p.y) * half.y; vel.y = 0; launchVel.y *= -0.4f; }
             transform.position = p;
@@ -179,7 +179,7 @@ namespace TiltRush
                 Vector2 p = trailPos[(trailHead - i + TrailLen) % TrailLen];
                 float k = 1f - i / (float)TrailLen;                                  // 1 at the ship, 0 at the end
                 r.transform.position = p;
-                r.transform.localScale = Vector3.one * (Radius * 1.7f * k + 0.02f);
+                r.transform.localScale = Vector3.one * (VisualRadius * 1.3f * k + 0.02f);
                 r.color = new Color(c.r, c.g, c.b, 0.45f * k * k * speed01);
                 r.enabled = speed01 > 0.02f;
             }
@@ -194,7 +194,8 @@ namespace TiltRush
 
         public void GiveSpread(float seconds) { SpreadTime = seconds; }
         /// <summary>Where the cannon shots leave the ship (the tip).</summary>
-        public Vector2 Muzzle { get { return Pos + Facing * Radius * 1.3f; } }
+        public Vector2 Muzzle { get { return Pos + Facing * VisualRadius * 0.95f; } }
+        public float VisualRadius { get { return Config.PlayerVisualRadius * sizeK; } }
 
         public void GiveShrink(float seconds) { ShrinkTime = seconds; }
         public void GiveBoost(float seconds) { BoostTime = seconds; Fx.Sparks(Pos, new Color32(255, 160, 40, 255), 14, 7f, 0.4f); }

@@ -111,7 +111,7 @@ namespace TiltRush
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
             var d = go.AddComponent<Decoy>();
-            d.view = ShapeView.Create(go.transform, style.Shape, Config.PlayerRadius, style.Primary, style.Outline, 0.5f, 9);
+            d.view = ShapeView.Create(go.transform, style.Shape, Config.PlayerVisualRadius, style.Primary, style.Outline, 0.5f, 9);
             d.view.SetDetail(style.Detail, style.Outline);
             d.ring = ShapeView.Create(go.transform, ShapeType.Circle, 0.5f, Color.clear, Mint, 0.4f, 8);
             d.view.Alpha = 0.55f; d.ring.Alpha = 0.6f;

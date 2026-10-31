@@ -38,7 +38,9 @@ namespace TiltRush
             Screen.autorotateToPortraitUpsideDown = false;
             Screen.autorotateToLandscapeLeft = true;
             Screen.autorotateToLandscapeRight = true;
-            Screen.orientation = ScreenOrientation.AutoRotation;   // landscape only
+            // landscape only: if the phone starts in portrait, turn to landscape first, then allow left/right rotation
+            if (Screen.height > Screen.width) Screen.orientation = ScreenOrientation.LandscapeLeft;
+            Screen.orientation = ScreenOrientation.AutoRotation;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Input.multiTouchEnabled = true;
 

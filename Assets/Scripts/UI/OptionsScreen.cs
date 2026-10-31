@@ -131,11 +131,12 @@ namespace TiltRush
             l.Button("TILT SETUP", Neon.Blue, ColW, 96, () => UI.Show<TiltSetupScreen>(), 40);
             refreshers.Add(l.SliderRow("SENSITIVITY", 1f, 6f, () => SaveManager.Data.tiltSensitivity, v => SaveManager.Data.tiltSensitivity = v));
             refreshers.Add(l.Choice("SMOOTHING", new[] { "DIRECT", "NORMAL", "SMOOTH" }, () => SaveManager.Data.tiltSmoothing, v => SaveManager.Data.tiltSmoothing = v));
+            refreshers.Add(l.Choice("TILT AXES", new[] { "STANDARD", "SWAPPED" }, () => SaveManager.Data.tiltAxes, v => SaveManager.Data.tiltAxes = v));
 
             var r = Column(page, true);
             refreshers.Add(r.Toggle("INVERT LEFT/RIGHT", () => SaveManager.Data.invertX, v => SaveManager.Data.invertX = v));
             refreshers.Add(r.Toggle("INVERT UP/DOWN", () => SaveManager.Data.invertY, v => SaveManager.Data.invertY = v));
-            r.Label(Platform.CoopHint, 28, Theme.TextDim, 150, TextAnchor.UpperLeft);
+            r.Label("Tilt right but the ship goes up/down? Switch TILT AXES to SWAPPED. " + Platform.CoopHint, 28, Theme.TextDim, 210, TextAnchor.UpperLeft);
         }
 
         // ------------------------------------------------------------------ PROFILE

@@ -12,7 +12,8 @@ namespace TiltRush
         Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon,
         Saw, Spike6, Spike10,  // enemies: saw blade, small spiky star, big spiky ball
         Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova,  // unlockable skins
-        Rock, Rock2, Shard     // asteroid field
+        Rock, Rock2, Shard,    // asteroid field
+        Starfighter, Jet, PaperPlane, Ufo, Shuttle, Stealth, Shark, Viper   // spaceship skins
     }
 
     /// <summary>
@@ -178,6 +179,14 @@ namespace TiltRush
                 case ShapeType.Saber:  return Poly(x, y, SaberV);
                 case ShapeType.Phoenix: return Poly(x, y, PhoenixV);
                 case ShapeType.Nova:   return Poly(x, y, NovaV);
+                case ShapeType.Starfighter: return Poly(x, y, StarfighterV);
+                case ShapeType.Jet:         return Poly(x, y, JetV);
+                case ShapeType.PaperPlane:  return Poly(x, y, PaperPlaneV);
+                case ShapeType.Ufo:         return Poly(x, y, UfoV);
+                case ShapeType.Shuttle:     return Poly(x, y, ShuttleV);
+                case ShapeType.Stealth:     return Poly(x, y, StealthV);
+                case ShapeType.Shark:       return Poly(x, y, SharkV);
+                case ShapeType.Viper:       return Poly(x, y, ViperV);
                 case ShapeType.Rock:   return Poly(x, y, RockV);
                 case ShapeType.Rock2:  return Poly(x, y, Rock2V);
                 case ShapeType.Shard:  return Poly(x, y, ShardV);
@@ -236,6 +245,74 @@ namespace TiltRush
         static readonly Vector2[] PhoenixV = { new Vector2(0, 0.95f), new Vector2(0.25f, 0.4f), new Vector2(0.95f, 0.55f), new Vector2(0.55f, 0f), new Vector2(0.8f, -0.5f), new Vector2(0.25f, -0.35f),
                                                new Vector2(0, -0.9f), new Vector2(-0.25f, -0.35f), new Vector2(-0.8f, -0.5f), new Vector2(-0.55f, 0f), new Vector2(-0.95f, 0.55f), new Vector2(-0.25f, 0.4f) };
 
+        // ---- spaceship skins (tip up). Detail polygons = cockpit / fold / dome, drawn in the second colour.
+        static Vector2[] P(params float[] xy) { var v = new Vector2[xy.Length / 2]; for (int i = 0; i < v.Length; i++) v[i] = new Vector2(xy[i * 2], xy[i * 2 + 1]); return v; }
+
+        static readonly Vector2[] StarfighterV = P(0f, 0.95f, 0.2f, 0.35f, 0.88f, -0.32f, 0.86f, -0.52f, 0.42f, -0.55f, 0.26f, -0.86f, 0f, -0.64f,
+                                                   -0.26f, -0.86f, -0.42f, -0.55f, -0.86f, -0.52f, -0.88f, -0.32f, -0.2f, 0.35f);
+        static readonly Vector2[] JetV = P(0f, 0.98f, 0.17f, 0.62f, 0.21f, 0.18f, 0.86f, -0.16f, 0.86f, -0.38f, 0.22f, -0.28f, 0.2f, -0.6f, 0.46f, -0.88f,
+                                           0f, -0.78f, -0.46f, -0.88f, -0.2f, -0.6f, -0.22f, -0.28f, -0.86f, -0.38f, -0.86f, -0.16f, -0.21f, 0.18f, -0.17f, 0.62f);
+        static readonly Vector2[] PaperPlaneV = P(0f, 0.96f, 0.72f, -0.8f, 0.09f, -0.5f, 0f, -0.88f, -0.09f, -0.5f, -0.72f, -0.8f);
+        static readonly Vector2[] UfoV = UfoPoly();
+        static readonly Vector2[] ShuttleV = P(0f, 0.95f, 0.28f, 0.6f, 0.31f, 0f, 0.74f, -0.55f, 0.74f, -0.78f, 0.31f, -0.72f, 0.22f, -0.94f,
+                                               -0.22f, -0.94f, -0.31f, -0.72f, -0.74f, -0.78f, -0.74f, -0.55f, -0.31f, 0f, -0.28f, 0.6f);
+        static readonly Vector2[] StealthV = P(0f, 0.75f, 0.95f, -0.25f, 0.8f, -0.42f, 0.55f, -0.26f, 0.3f, -0.46f, 0f, -0.26f,
+                                               -0.3f, -0.46f, -0.55f, -0.26f, -0.8f, -0.42f, -0.95f, -0.25f);
+        static readonly Vector2[] SharkV = P(0f, 0.95f, 0.27f, 0.55f, 0.32f, 0.1f, 0.82f, -0.08f, 0.3f, -0.25f, 0.2f, -0.55f, 0.5f, -0.95f, 0f, -0.75f,
+                                             -0.5f, -0.95f, -0.2f, -0.55f, -0.3f, -0.25f, -0.82f, -0.08f, -0.32f, 0.1f, -0.27f, 0.55f);
+        static readonly Vector2[] ViperV = P(0f, 0.98f, 0.13f, 0.5f, 0.3f, 0.2f, 0.92f, 0.36f, 0.46f, -0.2f, 0.6f, -0.86f, 0.15f, -0.55f, 0f, -0.7f,
+                                             -0.15f, -0.55f, -0.6f, -0.86f, -0.46f, -0.2f, -0.92f, 0.36f, -0.3f, 0.2f, -0.13f, 0.5f);
+
+        /// <summary>Flying saucer: wide disc with a dome on top.</summary>
+        static Vector2[] UfoPoly()
+        {
+            var pts = new System.Collections.Generic.List<Vector2>();
+            for (int i = 0; i <= 12; i++)                                    // lower half of the disc (right -> left)
+            {
+                float a = -Mathf.PI * i / 12f;
+                pts.Add(new Vector2(Mathf.Cos(a) * 0.95f, -0.12f + Mathf.Sin(a) * 0.36f));
+            }
+            for (int i = 0; i <= 3; i++)                                     // upper rim, left part
+            {
+                float a = Mathf.PI - Mathf.PI * 0.32f * i / 3f;
+                pts.Add(new Vector2(Mathf.Cos(a) * 0.95f, -0.12f + Mathf.Sin(a) * 0.36f));
+            }
+            for (int i = 0; i <= 10; i++)                                    // dome
+            {
+                float a = Mathf.PI * (1f - i / 10f);
+                pts.Add(new Vector2(Mathf.Cos(a) * 0.45f, 0.2f + Mathf.Sin(a) * 0.55f));
+            }
+            for (int i = 3; i >= 0; i--)                                     // upper rim, right part
+            {
+                float a = Mathf.PI * 0.32f * i / 3f;
+                pts.Add(new Vector2(Mathf.Cos(a) * 0.95f, -0.12f + Mathf.Sin(a) * 0.36f));
+            }
+            pts.RemoveAt(pts.Count - 1);                                     // same as the first point
+            return pts.ToArray();
+        }
+
+        // second-colour details (SkinDetail.Custom)
+        static readonly Vector2[] StarfighterD = P(0f, 0.56f, 0.12f, 0.2f, 0f, -0.06f, -0.12f, 0.2f);
+        static readonly Vector2[] JetD = P(0f, 0.74f, 0.1f, 0.45f, 0f, 0.2f, -0.1f, 0.45f);
+        static readonly Vector2[] PaperPlaneD = P(0f, 0.9f, 0.05f, -0.48f, 0f, -0.8f, -0.05f, -0.48f);
+        static readonly Vector2[] UfoD = P(-0.33f, 0.28f, -0.2f, 0.55f, 0f, 0.65f, 0.2f, 0.55f, 0.33f, 0.28f);
+        static readonly Vector2[] ShuttleD = P(0f, 0.8f, 0.15f, 0.55f, 0.15f, 0.4f, -0.15f, 0.4f, -0.15f, 0.55f);
+        static readonly Vector2[] ViperD = P(0f, 0.74f, 0.09f, 0.42f, 0f, 0.14f, -0.09f, 0.42f);
+
+        static Vector2[] CustomDetail(ShapeType s)
+        {
+            switch (s)
+            {
+                case ShapeType.Starfighter: return StarfighterD;
+                case ShapeType.Jet:         return JetD;
+                case ShapeType.PaperPlane:  return PaperPlaneD;
+                case ShapeType.Ufo:         return UfoD;
+                case ShapeType.Shuttle:     return ShuttleD;
+                case ShapeType.Viper:       return ViperD;
+                default:                    return null;
+            }
+        }
+
         // asteroids: lumpy rocks and a sharp shard
         static readonly Vector2[] RockV = { new Vector2(0.1f, 0.9f), new Vector2(0.55f, 0.72f), new Vector2(0.88f, 0.25f), new Vector2(0.8f, -0.3f), new Vector2(0.45f, -0.82f),
                                             new Vector2(-0.15f, -0.88f), new Vector2(-0.6f, -0.6f), new Vector2(-0.9f, -0.05f), new Vector2(-0.7f, 0.5f), new Vector2(-0.3f, 0.82f) };
@@ -271,7 +348,9 @@ namespace TiltRush
             if (kind == SkinDetail.None) return null;
             return Cached("detail" + s + kind, () => Make(Res, Res, (x, y) =>
             {
-                float d = kind == SkinDetail.Inner
+                var custom = kind == SkinDetail.Custom ? CustomDetail(s) : null;
+                float d = custom != null ? Poly(x, y, custom)
+                    : kind == SkinDetail.Inner
                     ? Sdf(s, x / 0.45f, (y + 0.05f) / 0.45f) * 0.45f
                     : Mathf.Sqrt(x * x + (y + 0.05f) * (y + 0.05f)) - 0.2f;
                 return Mathf.Clamp01(0.5f - d / 0.03f);

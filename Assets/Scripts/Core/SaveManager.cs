@@ -22,7 +22,7 @@ namespace TiltRush
         public bool skinsInitialized;
 
         // Wardrobe
-        public int playerShape = 0; // index into Skins.All
+        public int playerShape = 20; // index into Skins.All (20 = STARFIGHTER)
         public int primary = 0;    // Config.Palette index
         public int outline = 7;     // White
 
@@ -50,6 +50,7 @@ namespace TiltRush
         // Options - CONTROLS
         public float tiltSensitivity = 3f;
         public int tiltSmoothing = 1;      // 0 Direct, 1 Normal, 2 Smooth
+        public int tiltAxes;               // 0 Standard (screen axes), 1 Swapped (raw device axes, for unusual phones)
         public bool invertX, invertY;
 
         // Tilt setup: 0 Auto (pose at round start), 1 Flat, 2 Relaxed, 3 Upright, 4 Lying down, 5 Custom (calibrated)
@@ -89,7 +90,7 @@ namespace TiltRush
             fresh.bgBrightness = old.bgBrightness; fresh.screenShake = old.screenShake; fresh.frameRate = old.frameRate;
             fresh.musicVolume = old.musicVolume; fresh.sfxVolume = old.sfxVolume; fresh.buttonSounds = old.buttonSounds; fresh.vibration = old.vibration;
             fresh.hudSize = old.hudSize; fresh.pauseLeft = old.pauseLeft; fresh.showFps = old.showFps; fresh.menuAnimations = old.menuAnimations;
-            fresh.tiltSensitivity = old.tiltSensitivity; fresh.tiltSmoothing = old.tiltSmoothing; fresh.invertX = old.invertX; fresh.invertY = old.invertY;
+            fresh.tiltSensitivity = old.tiltSensitivity; fresh.tiltSmoothing = old.tiltSmoothing; fresh.invertX = old.invertX; fresh.invertY = old.invertY; fresh.tiltAxes = old.tiltAxes;
             fresh.tiltPreset = old.tiltPreset; fresh.hasCustomTilt = old.hasCustomTilt; fresh.customNeutral = old.customNeutral; fresh.customOrientation = old.customOrientation;
             Data = fresh;
             Data.skinsInitialized = true;

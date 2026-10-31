@@ -194,3 +194,13 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   frozen dots are harmless and are smashed (with points) when you fly into them.
 - **Lives**: `ModeDef.Lives` (Dodge and Asteroid Field = 3). After a hit you lose a heart and blink invulnerable for
   `Config.RespawnInvulnerable` seconds; hearts are shown at the top of the HUD, the last one beats.
+
+## Tilt axes, landscape, bigger ship, mode cards, spaceship skins
+- **Tilt**: Unity already reports `Input.acceleration` in screen axes for the current landscape orientation, so the game uses
+  x = right, y = up directly (`tiltAxes = 0`). Options > Controls > TILT AXES = SWAPPED uses raw device axes (unusual phones).
+- **Landscape only**: `Assets/Scripts/Editor/ProjectSetup.cs` sets the Player Settings (no portrait) automatically in the editor.
+- **Ship size**: drawn with `Config.PlayerVisualRadius` (0.4 = twice as big as before), hit circle `Config.PlayerRadius` (0.26).
+- **Mode select**: 4 big category cards (Campaign, Classic, Special, Multiplayer); Classic/Special/Multiplayer open 2 big cards.
+- **Skins**: 28 in total. New ships: STARFIGHTER (default for new players), PAPER PLANE (finish the tutorial), JET (5 rounds),
+  UFO (2,000 in Asteroid Field), SHARK (800 dots), SHUTTLE (campaign 15), VIPER (5,000 in Asteroid Field), STEALTH (campaign 20).
+  Details (cockpit, fold, dome) are polygons in `SpriteFactory.CustomDetail`.

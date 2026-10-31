@@ -9,7 +9,7 @@ namespace TiltRush
     /// </summary>
     public class WardrobeScreen : UIScreen
     {
-        const int Cols = 5;
+        const int Cols = 7;
         static readonly string[] TabNames = { "SKINS", "BODY COLOR", "OUTLINE" };
 
         PlayerPreview preview;
@@ -71,7 +71,7 @@ namespace TiltRush
                     int idx = row * Cols + c;
                     items[c] = new UIStack.Item("", Neon.Indigo, () => PickSkin(idx));
                 }
-                var btns = st.Row(140, 22, items);
+                var btns = st.Row(140, 18, items);
                 for (int c = 0; c < count; c++)
                 {
                     int idx = row * Cols + c;
