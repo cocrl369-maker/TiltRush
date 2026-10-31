@@ -128,7 +128,7 @@ namespace TiltRush
         {
             UIKit.Anchor(UIKit.Title(transform, "SELECT MODE", 96).rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -30), new Vector2(1200, 120));
 
-            const float w = 285f, gap = 16f;
+            const float w = 252f, gap = 12f;
             for (int i = 0; i < Modes.All.Length; i++)
             {
                 var m = Modes.All[i];

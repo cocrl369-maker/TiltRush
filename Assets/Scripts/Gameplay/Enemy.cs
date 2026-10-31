@@ -2,15 +2,16 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    public enum EnemyType { Normal, Fast, Big }
+    public enum EnemyType { Normal, Fast, Big, Asteroid, Rock, Pebble, Shard }
 
     /// <summary>A red dot that hunts the nearest player. Edit the table below to tune / add enemy types.</summary>
     public class Enemy : MonoBehaviour
     {
         struct Def
         {
-            public float Speed, Radius, Spin; public ShapeType Shape;
-            public Def(float s, float r, ShapeType shape, float spin) { Speed = s; Radius = r; Shape = shape; Spin = spin; }
+            public float Speed, Radius, Spin, Visual; public ShapeType Shape; public int Hp;
+            public Def(float s, float r, ShapeType shape, float spin, float visual = 1.3f, int hp = 1)
+            { Speed = s; Radius = r; Shape = shape; Spin = spin; Visual = visual; Hp = hp; }
         }
 
         // Speed, hit radius, look, spin (degrees per second). Colours come from GameTheme (they change with difficulty).
@@ -19,15 +20,43 @@ namespace TiltRush
             new Def(2.0f, 0.13f, ShapeType.Saw, 200f),       // Normal: saw blade with a glowing eye
             new Def(2.8f, 0.095f, ShapeType.Spike6, 330f),   // Fast: small spiky star
             new Def(1.35f, 0.24f, ShapeType.Spike10, 50f),   // Big: spiky ball with angry eyes
+            // asteroid field (they drift in a straight line; speed = drift speed, Hp = shots needed)
+            new Def(1.4f, 0.55f, ShapeType.Rock, 25f, 1.1f, 6),     // Asteroid: splits into 2 rocks
+            new Def(2.0f, 0.34f, ShapeType.Rock2, 50f, 1.1f, 3),    // Rock: splits into 2 pebbles
+            new Def(2.8f, 0.2f, ShapeType.Rock, 90f, 1.1f, 1),      // Pebble
+            new Def(5.5f, 0.12f, ShapeType.Shard, 320f, 1.2f, 1),   // Shard: fast debris
         };
 
-        // The picture is bigger than the hit radius: the body matches the hit circle, the spikes stick out (forgiving).
-        const float VisualScale = 1.3f;
+        public static bool IsRock(EnemyType t) { return t >= EnemyType.Asteroid; }
+
 
         public EnemyType Type;
         public bool Dead;
         public float Radius;
-        public bool Dangerous { get { return warm <= 0f; } }
+        public bool Dangerous { get { return warm <= 0f && FrozenTime <= 0f; } }
+        public bool Frozen { get { return FrozenTime > 0f; } }
+        public float FrozenTime;
+
+        public void Freeze(float seconds) { FrozenTime = Mathf.Max(FrozenTime, seconds); }
+
+        // asteroid field: straight drift, hit points, flash when hit
+        public Vector2 Drift;
+        public bool Drifting, Gone;     // Gone = left the arena (removed without points)
+        public int Hp;
+        float flash;
+
+        /// <summary>Turns this enemy into a drifting asteroid / shard (no chasing).</summary>
+        public void MakeDrifter(Vector2 velocity)
+        {
+            Drifting = true; Drift = velocity; warm = 0f; Hp = defs[(int)Type].Hp;
+        }
+
+        /// <returns>true when destroyed</returns>
+        public bool Hit(int damage)
+        {
+            Hp -= damage; flash = 0.08f;
+            return Hp <= 0;
+        }
         public Color SparkColor { get { return GameTheme.EnemyRim(Type); } }
         public Vector2 Pos { get { return transform.position; } }
 
@@ -70,24 +99,31 @@ namespace TiltRush
             transform.position = pos;
             Type = type; Dead = false; Radius = d.Radius; speed = d.Speed * speedMul;
             warm = Config.EnemySpawnWarning; this.phase = phase;
-            age = 0f; bump = 0f; look = Vector2.zero;
+            age = 0f; bump = 0f; look = Vector2.zero; FrozenTime = 0f;
+            Drifting = false; Gone = false; Drift = Vector2.zero; Hp = d.Hp; flash = 0f;
             spinDir = phase > 3.14f ? 1f : -1f; spinAngle = phase * 57.3f;
             body.localScale = Vector3.zero;
 
             view.SetShape(d.Shape);
-            view.SetRadius(d.Radius * VisualScale);
-            bool big = type == EnemyType.Big;
-            eye.sprite = big ? SpriteFactory.AngryEyes() : SpriteFactory.Fill(ShapeType.Circle);
-            eye.transform.localScale = Vector3.one * (big ? d.Radius * 1.5f : d.Radius * 0.62f);
+            view.SetRadius(d.Radius * d.Visual);   // spikes stick out of the hit circle (forgiving)
+            bool big = type == EnemyType.Big, rock = IsRock(type);
+            eye.sprite = rock ? SpriteFactory.Craters() : (big ? SpriteFactory.AngryEyes() : SpriteFactory.Fill(ShapeType.Circle));
+            eye.enabled = type != EnemyType.Shard;
+            eye.transform.localScale = Vector3.one * (rock ? d.Radius * 2f : (big ? d.Radius * 1.5f : d.Radius * 0.62f));
             ApplyColors(0.3f);
         }
 
         void ApplyColors(float alpha)
         {
-            view.SetColors(GameTheme.EnemyBody, GameTheme.EnemyRim(Type));
+            Color rim = GameTheme.EnemyRim(Type);
+            Color bodyC = IsRock(Type) ? new Color32(58, 44, 40, 255) : GameTheme.EnemyBody;
+            if (flash > 0f) { bodyC = Color.Lerp(bodyC, Color.white, 0.8f); rim = Color.white; }   // hit flash
+            view.SetColors(bodyC, rim);
             view.SetGlow(GameTheme.EnemyGlow);
             view.Alpha = alpha;
-            Color e = GameTheme.EnemyEye; e.a = alpha; eye.color = e;
+            Color e = IsRock(Type) ? new Color(rim.r, rim.g, rim.b, 0.45f * alpha) : GameTheme.EnemyEye;
+            if (!IsRock(Type)) e.a = alpha;
+            eye.color = e;
         }
 
         /// <param name="edt">enemy delta time (slow-mo / freeze applied)</param>
@@ -98,6 +134,17 @@ namespace TiltRush
             float s = age < PopTime ? EaseOutBack(age / PopTime) : 1f;
             if (bump > 0f) { bump -= dt; s *= 1f + 0.45f * Mathf.Sin(Mathf.PI * Mathf.Clamp01(1f - bump / BumpTime)); }
             body.localScale = Vector3.one * s;
+
+            if (FrozenTime > 0f)                       // ice block: no movement, icy colours, blinks before it thaws
+            {
+                FrozenTime -= dt;
+                float a = FrozenTime < 1f && Mathf.Sin(Time.time * 22f) > 0f ? 0.55f : 1f;
+                view.SetColors(new Color32(130, 200, 250, 255), Color.white);
+                view.SetGlow(0.55f);
+                view.Alpha = a;
+                eye.color = new Color(1f, 1f, 1f, 0.6f * a);
+                return;
+            }
             spinAngle += spinDir * defs[(int)Type].Spin * edt;                 // frozen / slow-mo dots spin slower too
             view.transform.localRotation = Quaternion.Euler(0, 0, spinAngle);
             eye.transform.localPosition = look * Radius * 0.35f;      // the eyes look where the dot is going
@@ -110,6 +157,15 @@ namespace TiltRush
                 return;
             }
             ApplyColors(1f);   // colours follow the difficulty
+
+            if (Drifting)                              // asteroid field: fly straight, leave the arena on the other side
+            {
+                if (flash > 0f) flash -= dt;
+                transform.position = Pos + Drift * edt;
+                Vector2 half = Config.ArenaSize * 0.5f + Vector2.one * (Radius + 1.5f);
+                if ((Mathf.Abs(Pos.x) > half.x && Pos.x * Drift.x > 0f) || (Mathf.Abs(Pos.y) > half.y && Pos.y * Drift.y > 0f)) Gone = true;
+                return;
+            }
 
             Vector2 targetPos;
             if (!w.NearestTarget(Pos, out targetPos)) return;   // nearest player or decoy

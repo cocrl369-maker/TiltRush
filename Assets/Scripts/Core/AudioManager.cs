@@ -70,14 +70,16 @@ namespace TiltRush
             sfx.volume = SaveManager.Data.sfxVolume;
         }
 
-        public void Play(string name)
+        public void Play(string name) { Play(name, 1f); }
+
+        public void Play(string name, float volume)
         {
             if (!sfxCache.TryGetValue(name, out var clip))
             {
                 clip = Resources.Load<AudioClip>("Sfx/" + name) ?? Generate(name);
                 sfxCache[name] = clip;
             }
-            if (clip != null) sfx.PlayOneShot(clip);
+            if (clip != null) sfx.PlayOneShot(clip, volume);
         }
 
         static AudioClip Generate(string name)
@@ -90,6 +92,8 @@ namespace TiltRush
                 case "pickup": return Tone(name, 500, 1200, 0.2f);
                 case "launch": return Tone(name, 300, 900, 0.25f);
                 case "die":    return Tone(name, 400, 60, 0.5f);
+                case "shoot":  return Tone(name, 1100, 500, 0.06f);
+                case "crack":  return Tone(name, 220, 90, 0.12f);
                 default:       return null;
             }
         }

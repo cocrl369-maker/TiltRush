@@ -113,6 +113,7 @@ namespace TiltRush
                 case GameModeId.Classic:
                 case GameModeId.Hard:
                 case GameModeId.Dodge:
+                case GameModeId.Asteroids:
                     EndSolo(r.Survival[0], r.Points);
                     break;
 
@@ -192,6 +193,7 @@ namespace TiltRush
             {
                 case GameModeId.Hard:  bestScore = d.bestHardScore; break;
                 case GameModeId.Dodge: bestScore = d.bestDodgeScore; break;
+                case GameModeId.Asteroids: bestScore = d.bestAsteroidsScore; break;
                 default:               bestScore = d.bestClassicScore; break;
             }
             bool isBest = score > bestScore;
@@ -199,6 +201,7 @@ namespace TiltRush
             {
                 case GameModeId.Hard:  d.bestHard = Mathf.Max(d.bestHard, time); if (isBest) d.bestHardScore = score; break;
                 case GameModeId.Dodge: d.bestDodge = Mathf.Max(d.bestDodge, time); if (isBest) d.bestDodgeScore = score; break;
+                case GameModeId.Asteroids: d.bestAsteroids = Mathf.Max(d.bestAsteroids, time); if (isBest) d.bestAsteroidsScore = score; break;
                 default:               d.bestClassic = Mathf.Max(d.bestClassic, time); if (isBest) d.bestClassicScore = score; break;
             }
             SaveManager.Save();

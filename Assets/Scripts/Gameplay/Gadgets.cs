@@ -14,6 +14,8 @@ namespace TiltRush
         public Color Color;
         public GadgetIcon Icon;   // pictogram on the pickup (SpriteFactory.Gadget)
         public float Weight = 1f;   // spawn probability weight
+        public bool InNormal = true;      // appears in the normal modes
+        public bool InAsteroids = true;   // appears in the asteroid field
         public Action<GameWorld, PlayerController> Apply;
     }
 
@@ -21,11 +23,11 @@ namespace TiltRush
     {
         public static readonly List<GadgetDef> All = new List<GadgetDef>
         {
-            new GadgetDef { Name = "Slow-Mo", Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = GadgetIcon.Clock,
+            new GadgetDef { Name = "Slow-Mo", Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = GadgetIcon.Clock, InAsteroids = false,
                 Apply = (w, p) => w.SlowTimer = 5f },
 
-            new GadgetDef { Name = "Freeze", Description = "Dots freeze in place", Color = new Color32(180, 220, 255, 255), Icon = GadgetIcon.Snowflake,
-                Apply = (w, p) => w.FreezeTimer = 3.5f },
+            new GadgetDef { Name = "Freeze", Description = "Freezes nearby dots into ice - fly into them to smash them!", Color = new Color32(180, 220, 255, 255), Icon = GadgetIcon.Snowflake, InAsteroids = false,
+                Apply = (w, p) => w.FreezeArea(p.Pos, Config.FreezeRadius) },
 
             new GadgetDef { Name = "Shield", Description = "Invincible, destroys dots on touch", Color = Neon.Green, Icon = GadgetIcon.Shield,
                 Apply = (w, p) => p.GiveShield(6f) },
@@ -46,10 +48,10 @@ namespace TiltRush
             new GadgetDef { Name = "Storm", Description = "Lightning leaps between nearby dots", Color = new Color32(150, 130, 255, 255), Icon = GadgetIcon.Bolt,
                 Apply = (w, p) => p.GiveStorm(5f) },
 
-            new GadgetDef { Name = "Turret", Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = GadgetIcon.Turret,
+            new GadgetDef { Name = "Turret", Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = GadgetIcon.Turret, InAsteroids = false,
                 Apply = (w, p) => w.PlaceTurret(p.Pos) },
 
-            new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost,
+            new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost, InAsteroids = false,
                 Apply = (w, p) => w.PlaceDecoy(p.Pos, p.Index) },
 
             new GadgetDef { Name = "Shrink", Description = "You become tiny - slip through the gaps", Color = new Color32(255, 240, 120, 255), Icon = GadgetIcon.Shrink,
@@ -63,16 +65,23 @@ namespace TiltRush
 
             new GadgetDef { Name = "Orbit", Description = "Three orbs circle around you and smash dots", Color = new Color32(90, 200, 255, 255), Icon = GadgetIcon.Orbit,
                 Apply = (w, p) => p.GiveOrbit(8f) },
+
+            // asteroid field only
+            new GadgetDef { Name = "Spread Shot", Description = "Asteroid Field: your cannon fires five shots at once", Color = new Color32(255, 90, 90, 255),
+                Icon = GadgetIcon.Spread, Weight = 1.6f, InNormal = false,
+                Apply = (w, p) => p.GiveSpread(8f) },
         };
 
-        public static GadgetDef PickRandom(System.Random rng)
+        public static GadgetDef PickRandom(System.Random rng, bool asteroids = false)
         {
             float total = 0f;
-            foreach (var g in All) total += g.Weight;
+            foreach (var g in All) if (Allowed(g, asteroids)) total += g.Weight;
             float r = (float)rng.NextDouble() * total;
-            foreach (var g in All) { r -= g.Weight; if (r <= 0f) return g; }
+            foreach (var g in All) { if (!Allowed(g, asteroids)) continue; r -= g.Weight; if (r <= 0f) return g; }
             return All[0];
         }
+
+        static bool Allowed(GadgetDef g, bool asteroids) { return asteroids ? g.InAsteroids : g.InNormal; }
     }
 
     /// <summary>A collectible lying on the map.</summary>

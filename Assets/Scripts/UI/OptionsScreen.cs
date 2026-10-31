@@ -135,7 +135,7 @@ namespace TiltRush
             var r = Column(page, true);
             refreshers.Add(r.Toggle("INVERT LEFT/RIGHT", () => SaveManager.Data.invertX, v => SaveManager.Data.invertX = v));
             refreshers.Add(r.Toggle("INVERT UP/DOWN", () => SaveManager.Data.invertY, v => SaveManager.Data.invertY = v));
-            r.Label("PC: WASD / arrow keys. Co-op: P1 = WASD, P2 = arrows (phone: P2 uses a touch stick).", 28, Theme.TextDim, 110, TextAnchor.UpperLeft);
+            r.Label(Platform.CoopHint, 28, Theme.TextDim, 150, TextAnchor.UpperLeft);
         }
 
         // ------------------------------------------------------------------ PROFILE

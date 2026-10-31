@@ -103,6 +103,10 @@ namespace TiltRush
             {
                 case EnemyType.Fast: c = Color.Lerp(new Color32(255, 185, 245, 255), new Color32(255, 20, 200, 255), d); break;
                 case EnemyType.Big:  c = Color.Lerp(new Color32(255, 215, 170, 255), new Color32(255, 110, 0, 255), d); break;
+                case EnemyType.Asteroid:
+                case EnemyType.Rock:
+                case EnemyType.Pebble: c = Color.Lerp(new Color32(235, 200, 160, 255), new Color32(255, 140, 60, 255), d); break;
+                case EnemyType.Shard:  c = Color.Lerp(new Color32(255, 235, 150, 255), new Color32(255, 200, 40, 255), d); break;
                 default:             c = Color.Lerp(new Color32(255, 200, 205, 255), new Color32(255, 35, 70, 255), d); break;
             }
             if (Override != null && Override.LightRims) c = Color.Lerp(c, new Color(1f, 1f, 0.85f, 1f), 0.5f);   // stays visible on red / orange

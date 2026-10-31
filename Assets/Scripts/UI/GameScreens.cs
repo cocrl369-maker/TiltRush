@@ -18,6 +18,10 @@ namespace TiltRush
         Text speechText, tutTimer;
         GameObject skipBtn;
         string speechFull = "";
+
+        // co-op on one phone: thumb sticks
+        RectTransform[] stickBase = new RectTransform[2], stickKnob = new RectTransform[2];
+        Text[] stickLabel = new Text[2];
         float speechShown;
 
         protected override void Build()
@@ -49,6 +53,62 @@ namespace TiltRush
             pauseRt = (RectTransform)pause.transform;
 
             BuildSpeech();
+            BuildSticks();
+        }
+
+        void BuildSticks()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                stickBase[i] = UIKit.Rect("StickBase" + i, transform);
+                stickBase[i].anchorMin = stickBase[i].anchorMax = stickBase[i].pivot = new Vector2(0.5f, 0.5f);
+                stickBase[i].sizeDelta = new Vector2(10, 10);
+                UIKit.Icon(stickBase[i], SpriteFactory.Fill(ShapeType.Circle), 100, new Color(0, 0, 0, 0.35f)).rectTransform.Also(r => UIKit.Stretch(r));
+                UIKit.Icon(stickBase[i], SpriteFactory.Outline(ShapeType.Circle), 100, new Color(1, 1, 1, 0.6f)).rectTransform.Also(r => UIKit.Stretch(r));
+                stickLabel[i] = UIKit.Label(stickBase[i], "P" + (i + 1), 34, Color.white);
+                UIKit.Stretch(stickLabel[i].rectTransform);
+                stickKnob[i] = UIKit.Rect("Knob" + i, transform);
+                stickKnob[i].anchorMin = stickKnob[i].anchorMax = stickKnob[i].pivot = new Vector2(0.5f, 0.5f);
+                stickKnob[i].sizeDelta = new Vector2(10, 10);
+                UIKit.Icon(stickKnob[i], SpriteFactory.Fill(ShapeType.Circle), 100, Color.white).rectTransform.Also(r => UIKit.Stretch(r));
+            }
+        }
+
+        /// <summary>Draws the thumb sticks; when nobody touches, a faint stick shows where to put the thumb.</summary>
+        void UpdateSticks()
+        {
+            var root = (RectTransform)transform;
+            var sticks = TouchStickInput.All;
+            for (int i = 0; i < 2; i++)
+            {
+                bool on = i < sticks.Count;
+                stickBase[i].gameObject.SetActive(on);
+                stickKnob[i].gameObject.SetActive(on);
+                if (!on) continue;
+                var s = sticks[i];
+                Color c = PlayerStyle.FromSave(i).Primary;
+                float rPx = TouchStickInput.RadiusPx;
+                Vector2 origin = s.Held ? s.Origin : new Vector2(s.Zone == 1 ? Screen.width * 0.82f : Screen.width * 0.18f, Screen.height * 0.25f);
+                Vector2 knob = s.Held ? s.Knob : origin;
+                Vector2 o, k, edge;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(root, origin, null, out o);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(root, knob, null, out k);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(root, origin + Vector2.right * rPx, null, out edge);
+                float r = (edge - o).magnitude;
+                stickBase[i].anchoredPosition = o; stickBase[i].sizeDelta = Vector2.one * r * 2f;
+                stickKnob[i].anchoredPosition = k; stickKnob[i].sizeDelta = Vector2.one * r * 0.8f;
+                float a = s.Held ? 1f : 0.45f;
+                foreach (var img in stickKnob[i].GetComponentsInChildren<Image>()) img.color = new Color(c.r, c.g, c.b, 0.85f * a);
+                SetAlpha(stickBase[i], a);
+                stickLabel[i].enabled = !s.Held;
+            }
+        }
+
+        static void SetAlpha(RectTransform rt, float a)
+        {
+            var g = rt.GetComponent<CanvasGroup>();
+            if (g == null) g = rt.gameObject.AddComponent<CanvasGroup>();
+            g.alpha = a; g.blocksRaycasts = false;
         }
 
         void BuildSpeech()
@@ -150,6 +210,7 @@ namespace TiltRush
             var w = GameWorld.Current;
             if (w == null) return;
 
+            UpdateSticks();
             bool tut = w.Mode.Id == GameModeId.Tutorial;
             speechRoot.gameObject.SetActive(tut);
             skipBtn.SetActive(tut);
@@ -164,13 +225,12 @@ namespace TiltRush
             }
 
             timeLabel.text = tut ? "" : (w.Level != null ? w.TimeLeft : w.Elapsed).ToString("0.0") + "s";    // campaign: time left
-            pointsLabel.text = (w.Mode.Id == GameModeId.Classic || w.Mode.Id == GameModeId.Hard || w.Mode.Id == GameModeId.Dodge) ? w.ScoreInt.ToString("N0") + " PTS" : "";
+            pointsLabel.text = (w.Mode.Id == GameModeId.Classic || w.Mode.Id == GameModeId.Hard || w.Mode.Id == GameModeId.Dodge || w.Mode.Id == GameModeId.Asteroids) ? w.ScoreInt.ToString("N0") + " PTS" : "";
             scoreLabel.text = App.I.Session.ScoreLine;
             centerLabel.text = w.State == GameWorld.Phase.Countdown ? Mathf.CeilToInt(w.CountdownLeft).ToString() : "";
 
             var sb = new StringBuilder();
             if (w.SlowTimer > 0) sb.AppendLine("SLOW-MO " + w.SlowTimer.ToString("0.0"));
-            if (w.FreezeTimer > 0) sb.AppendLine("FREEZE " + w.FreezeTimer.ToString("0.0"));
             foreach (var p in w.Players)
             {
                 string who = w.Players.Count > 1 ? "P" + (p.Index + 1) + " " : "";
@@ -179,6 +239,7 @@ namespace TiltRush
                 if (p.ShrinkTime > 0) sb.AppendLine(who + "SHRINK " + p.ShrinkTime.ToString("0.0"));
                 if (p.BoostTime > 0) sb.AppendLine(who + "BOOST " + p.BoostTime.ToString("0.0"));
                 if (p.OrbitTime > 0) sb.AppendLine(who + "ORBIT " + p.OrbitTime.ToString("0.0"));
+                if (p.SpreadTime > 0) sb.AppendLine(who + "SPREAD SHOT " + p.SpreadTime.ToString("0.0"));
             }
             effectLabel.text = sb.ToString();
 

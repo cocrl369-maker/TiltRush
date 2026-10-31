@@ -74,7 +74,12 @@ namespace TiltRush
         public const float ScoreDifficultyBonus = 2f;     // at max difficulty you earn (1 + 2) = 3x per second
 
         // Bonus points (also multiplied by the difficulty factor above)
-        public static readonly int[] KillPoints = { 10, 20, 40 };   // Normal, Fast, Big dot destroyed
+        public static readonly int[] KillPoints = { 10, 20, 40, 50, 25, 12, 8 };   // Normal, Fast, Big, Asteroid, Rock, Pebble, Shard
+
+        // Asteroid field
+        public const float CannonInterval = 0.15f;        // seconds between shots
+        public const float BulletSpeed = 17f;
+        public const float BulletLife = 1.3f;
         public const int GadgetPoints = 50;                         // for every pickup collected
         public const float NukeKillMultiplier = 0.25f;              // nuke kills count less so it can't dominate the score
 
@@ -83,6 +88,8 @@ namespace TiltRush
         public const float GadgetLifetime = 8f;
         public const float SlowMoScale = 0.35f;
         public const float ShockwaveRadius = 6.5f;
+        public const float FreezeRadius = 8f;        // a bit bigger than the shockwave
+        public const float FreezeDuration = 4.5f;    // frozen dots can be smashed by touching them
 
         // Launch rings (yellow orbs)
         public const float LaunchRingStartTime = 60f;     // rings only appear after this many seconds

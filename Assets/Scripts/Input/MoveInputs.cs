@@ -119,24 +119,63 @@ namespace TiltRush
         }
     }
 
-    /// <summary>Floating virtual stick: put a finger anywhere and drag.</summary>
+    /// <summary>
+    /// Floating thumb stick: put a finger down in your zone and drag. Zone 0 = left half of the screen,
+    /// 1 = right half, -1 = anywhere. Used for co-op on one phone (phone lies flat on the table).
+    /// The HUD draws all active sticks (TouchStickInput.All).
+    /// </summary>
     public class TouchStickInput : IMoveInput
     {
+        public static readonly System.Collections.Generic.List<TouchStickInput> All = new System.Collections.Generic.List<TouchStickInput>();
+
+        public readonly int Zone;
+        public bool Held { get; private set; }
+        public Vector2 Origin { get; private set; }     // screen pixels
+        public Vector2 Knob { get; private set; }       // screen pixels (clamped to the stick radius)
+        public static float RadiusPx { get { return Screen.height * 0.11f; } }
+
         int finger = -1;
-        Vector2 origin;
-        public void Calibrate() { finger = -1; }
+
+        public TouchStickInput(int zone) { Zone = zone; All.Add(this); }
+        public void Calibrate() { finger = -1; Held = false; }
+
+        bool InZone(Vector2 p)
+        {
+            if (Zone == 0) return p.x < Screen.width * 0.5f;
+            if (Zone == 1) return p.x >= Screen.width * 0.5f;
+            return true;
+        }
+
+        static bool OverButton(int fingerId)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            return es != null && es.IsPointerOverGameObject(fingerId);
+        }
 
         public Vector2 Read()
         {
-            float radius = Screen.height * 0.12f;
+            float radius = RadiusPx;
+            bool found = false;
             foreach (Touch t in Input.touches)
             {
-                if (finger == -1 && t.phase == TouchPhase.Began) { finger = t.fingerId; origin = t.position; }
+                if (finger == -1 && t.phase == TouchPhase.Began && InZone(t.position) && !OverButton(t.fingerId) && !Claimed(t.fingerId))
+                { finger = t.fingerId; Origin = t.position; }
                 if (t.fingerId != finger) continue;
-                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled) { finger = -1; return Vector2.zero; }
-                return Vector2.ClampMagnitude((t.position - origin) / radius, 1f);
+                found = true;
+                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled) break;
+                Vector2 off = Vector2.ClampMagnitude(t.position - Origin, radius);
+                Knob = Origin + off;
+                Held = true;
+                return off / radius;
             }
+            if (!found || finger != -1) { finger = -1; Held = false; }
             return Vector2.zero;
+        }
+
+        bool Claimed(int fingerId)
+        {
+            foreach (var s in All) if (s != this && s.finger == fingerId) return true;
+            return false;
         }
     }
 
@@ -162,16 +201,16 @@ namespace TiltRush
     {
         public static IMoveInput Create(int index, int playerCount)
         {
-            // Real phone / tablet: steer ONLY by tilting. (Co-op on one phone: player 2 gets a touch stick,
-            // because two people cannot both tilt the same phone.)
+            // Real phone / tablet: solo = tilt only. Co-op = the phone lies flat between the players and each one
+            // gets a thumb stick on their half of the screen (two people cannot tilt the same phone).
             bool phone = Application.isMobilePlatform && !Application.isEditor;
             if (phone)
             {
-                if (playerCount > 1 && index == 1) return new TouchStickInput();
+                if (playerCount > 1) return new TouchStickInput(index);
                 return new TiltInput();
             }
 
-            // PC / Unity editor (also Device Simulator): keyboard
+            // PC / Unity editor (also Device Simulator): keyboard - only for testing
             if (playerCount > 1) return new KeyboardInput(index == 0 ? KeyScheme.WASD : KeyScheme.Arrows);
             return new KeyboardInput(KeyScheme.Both);
         }

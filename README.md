@@ -24,8 +24,9 @@
 5. Android build: File > Build Settings > Android, orientation Landscape (Auto Rotation) - the game also sets this itself.
 
 ## Controls
-- Editor/PC: WASD or arrow keys (Co-op: P1 = WASD, P2 = arrows)
-- Phone: tilt ONLY (neutral position is captured when the 3-2-1 countdown ends). Co-op on one phone: P1 tilts, P2 uses a touch stick.
+- Editor/PC (testing only): WASD or arrow keys (Co-op: P1 = WASD, P2 = arrows). Phone texts never mention the keyboard (`Input/Platform.cs`).
+- Phone: tilt ONLY (neutral position is captured when the 3-2-1 countdown ends). Co-op on one phone: the phone lies flat on the table,
+  P1 drags a thumb stick on the left half, P2 on the right half (sticks are drawn on screen, orientation is locked during the round).
 - PC / Unity editor / Device Simulator: keyboard only.
 
 ## Music (Newgrounds)
@@ -87,7 +88,7 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 ## Hard and Dodge
 - HARD (`Modes.Hard` in `Core/GameModes.cs`): same rules as Classic (pickups, rings after 60 s, walls, swords) but 2.2x as many dots.
 - DODGE (`Gameplay/DodgeMode.cs`): the dots never chase you. A director sends patterns: rain, curtain (wall with gaps), ring, conga line, flock,
-  smiley (blinks and talks), fireworks (light red warning rings), elevator (wall with a moving, piped doorway), pinwheel, heart, windmill.
+  smiley (blinks and talks), fireworks (light red warning rings), escape hatch (wall with a sliding doorway inside a short tunnel), pinwheel, heart, windmill.
   A pattern is one function that adds dots with a movement formula - to add a gag write a method like `Smiley()` and register it in the constructor
   (name, difficulty at which it appears, announce on screen).
 
@@ -167,3 +168,12 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Tutorial** (`Gameplay/Tutorial.cs`): runs automatically on the very first start (SKIP button, or HOW TO PLAY > PLAY TUTORIAL).
   BLIP, a friendly dot, explains moving (fly through rings), enemies (survive 10 s), gadgets, walls and swords - with jokes.
   You cannot die in the tutorial. The steps are one script method (`Script()`), easy to edit.
+
+## Asteroid field, Freeze, co-op
+- **ASTEROID FIELD** (`Modes.Asteroids`, logic in `GameWorld` "asteroid field" section): asteroids, rocks, pebbles and fast shard
+  showers drift through space (theme Outer Space). Your cannon fires automatically where your ship's tip points
+  (`Config.CannonInterval`, `BulletSpeed`). Big asteroids need 6 hits and split into 2 rocks (3 hits), rocks split into 2 pebbles.
+  Gadgets: SPREAD SHOT (5-way cannon, asteroid field only) plus Shield, Shockwave, Nuke, Seekers, Lance, Storm, Shrink, Boost,
+  Black Hole, Orbit (`GadgetDef.InAsteroids / InNormal`). No Slow-Mo, Freeze, Turret, Decoy.
+- **Freeze**: freezes every dot within `Config.FreezeRadius` (a bit bigger than the shockwave) into ice for `FreezeDuration`;
+  frozen dots are harmless and are smashed (with points) when you fly into them.

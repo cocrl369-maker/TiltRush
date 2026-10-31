@@ -10,7 +10,8 @@ namespace TiltRush
         public int onlineWins, onlineLosses;
         public float bestClassic, bestHard;               // best survival time (seconds)
         public int bestClassicScore, bestHardScore;       // best points
-        public float bestDodge;
+        public float bestDodge, bestAsteroids;
+        public int bestAsteroidsScore;
         public int bestDodgeScore;
         public string playerName = "";                    // shown on the leaderboard
 

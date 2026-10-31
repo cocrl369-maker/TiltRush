@@ -61,9 +61,7 @@ namespace TiltRush
             // 1) hello + moving
             w.Say("Hi! I'm BLIP. I'm a dot - but one of the NICE ones. Promise.");
             yield return Seconds(3.5f);
-            w.Say(Application.isMobilePlatform
-                ? "Tilt your phone to move. Fly through the glowing rings!"
-                : "Use WASD or the arrow keys to move. Fly through the glowing rings!");
+            w.Say(Platform.MoveHint + " Fly through the glowing rings!");
 
             string[] praise = { "Nice! You moved! The first step of a legend.", "Again! Okay, show-off.", "Three for three. You're a natural!" };
             Vector2[] spots = { Arena(-0.3f, 0.25f), Arena(0.32f, -0.22f), Arena(0.05f, 0.3f) };

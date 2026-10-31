@@ -5,13 +5,14 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>Pictograms on the pickups: you can see roughly what a gadget does.</summary>
-    public enum GadgetIcon { Clock, Snowflake, Shield, Shockwave, Nuke, Crosshair, Lance, Bolt, Turret, Ghost, Shrink, Boost, Vortex, Orbit }
+    public enum GadgetIcon { Clock, Snowflake, Shield, Shockwave, Nuke, Crosshair, Lance, Bolt, Turret, Ghost, Shrink, Boost, Vortex, Orbit, Spread }
 
     public enum ShapeType
     {
         Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon,
         Saw, Spike6, Spike10,  // enemies: saw blade, small spiky star, big spiky ball
-        Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova   // unlockable skins
+        Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova,  // unlockable skins
+        Rock, Rock2, Shard     // asteroid field
     }
 
     /// <summary>
@@ -177,6 +178,9 @@ namespace TiltRush
                 case ShapeType.Saber:  return Poly(x, y, SaberV);
                 case ShapeType.Phoenix: return Poly(x, y, PhoenixV);
                 case ShapeType.Nova:   return Poly(x, y, NovaV);
+                case ShapeType.Rock:   return Poly(x, y, RockV);
+                case ShapeType.Rock2:  return Poly(x, y, Rock2V);
+                case ShapeType.Shard:  return Poly(x, y, ShardV);
                 case ShapeType.Diamond: return (Mathf.Abs(x) + Mathf.Abs(y) - 0.95f) * 0.7071f;
                 case ShapeType.Saw:
                 {
@@ -231,6 +235,23 @@ namespace TiltRush
                                              new Vector2(-0.2f, -0.6f), new Vector2(-0.75f, -0.45f), new Vector2(-0.3f, -0.3f) };
         static readonly Vector2[] PhoenixV = { new Vector2(0, 0.95f), new Vector2(0.25f, 0.4f), new Vector2(0.95f, 0.55f), new Vector2(0.55f, 0f), new Vector2(0.8f, -0.5f), new Vector2(0.25f, -0.35f),
                                                new Vector2(0, -0.9f), new Vector2(-0.25f, -0.35f), new Vector2(-0.8f, -0.5f), new Vector2(-0.55f, 0f), new Vector2(-0.95f, 0.55f), new Vector2(-0.25f, 0.4f) };
+
+        // asteroids: lumpy rocks and a sharp shard
+        static readonly Vector2[] RockV = { new Vector2(0.1f, 0.9f), new Vector2(0.55f, 0.72f), new Vector2(0.88f, 0.25f), new Vector2(0.8f, -0.3f), new Vector2(0.45f, -0.82f),
+                                            new Vector2(-0.15f, -0.88f), new Vector2(-0.6f, -0.6f), new Vector2(-0.9f, -0.05f), new Vector2(-0.7f, 0.5f), new Vector2(-0.3f, 0.82f) };
+        static readonly Vector2[] Rock2V = { new Vector2(-0.2f, 0.88f), new Vector2(0.4f, 0.85f), new Vector2(0.9f, 0.4f), new Vector2(0.7f, -0.1f), new Vector2(0.85f, -0.55f),
+                                             new Vector2(0.3f, -0.9f), new Vector2(-0.35f, -0.75f), new Vector2(-0.88f, -0.4f), new Vector2(-0.75f, 0.3f) };
+        static readonly Vector2[] ShardV = { new Vector2(0f, 0.95f), new Vector2(0.45f, -0.2f), new Vector2(0.15f, -0.9f), new Vector2(-0.5f, -0.35f) };
+
+        /// <summary>A few crater rings (drawn on the asteroids).</summary>
+        public static Sprite Craters()
+        {
+            return Cached("craters", () => Make(Res, Res, (x, y) =>
+            {
+                float d = Mathf.Min(Ring(x - 0.3f, y - 0.25f, 0.28f, 0.09f), Mathf.Min(Ring(x + 0.35f, y + 0.1f, 0.2f, 0.08f), Ring(x - 0.05f, y + 0.5f, 0.14f, 0.07f)));
+                return Mathf.Clamp01(0.5f - d / 0.03f);
+            }));
+        }
 
         static Vector2[] StarPoly(int points, float outer, float inner, float rot)
         {
@@ -370,6 +391,18 @@ namespace TiltRush
                     {
                         float a = Mathf.PI / 2f + k * 2f * Mathf.PI / 3f;
                         d = Mathf.Min(d, Disc(x, y, Mathf.Cos(a) * 0.62f, Mathf.Sin(a) * 0.62f, 0.18f));
+                    }
+                    return d;
+                }
+                case GadgetIcon.Spread:       // Spread shot: five bullets fanning out
+                {
+                    float d = Disc(x, y, 0, -0.62f, 0.17f);
+                    for (int k = -2; k <= 2; k++)
+                    {
+                        float a = Mathf.PI / 2f + k * 0.38f;
+                        float ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                        d = Mathf.Min(d, Seg(x, y, ca * 0.25f, -0.62f + sa * 0.25f, ca * 0.85f, -0.62f + sa * 0.85f, 0.1f));
+                        d = Mathf.Min(d, Disc(x, y, ca * 1.12f, -0.62f + sa * 1.12f, 0.12f));
                     }
                     return d;
                 }

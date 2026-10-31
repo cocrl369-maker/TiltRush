@@ -9,6 +9,7 @@ namespace TiltRush
         public float ShieldTime;
         public float StormTime, StormCd;        // lightning gadget
         public float ShrinkTime, BoostTime, OrbitTime;
+        public float FireCd, SpreadTime;        // asteroid field cannon
         public const int OrbCount = 3;
         public const float OrbRadius = 0.17f, OrbDistance = 0.95f;
         public float Radius = Config.PlayerRadius;
@@ -109,6 +110,7 @@ namespace TiltRush
             }
 
             if (ShrinkTime > 0f) ShrinkTime -= dt;
+            if (SpreadTime > 0f) SpreadTime -= dt;
             if (BoostTime > 0f) BoostTime -= dt;
             if (OrbitTime > 0f)
             {
@@ -182,6 +184,10 @@ namespace TiltRush
             float a = orbAngle + i * 2f * Mathf.PI / OrbCount;
             return Pos + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * OrbDistance;
         }
+
+        public void GiveSpread(float seconds) { SpreadTime = seconds; }
+        /// <summary>Where the cannon shots leave the ship (the tip).</summary>
+        public Vector2 Muzzle { get { return Pos + Facing * Radius * 1.3f; } }
 
         public void GiveShrink(float seconds) { ShrinkTime = seconds; }
         public void GiveBoost(float seconds) { BoostTime = seconds; Fx.Sparks(Pos, new Color32(255, 160, 40, 255), 14, 7f, 0.4f); }

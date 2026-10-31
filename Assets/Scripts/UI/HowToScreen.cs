@@ -59,8 +59,10 @@ namespace TiltRush
             c.Heading("GOAL", Neon.Aqua);
             c.Para("Survive as long as you can! Spiky dots hunt you down - touch one and the round is over.");
             c.Heading("CONTROLS", Neon.Aqua);
-            c.Para("Phone: tilt your device. Pick your favourite way to hold it in OPTIONS > CONTROLS > TILT SETUP.");
-            c.Para("PC: WASD or arrow keys. Co-op: player 1 = WASD, player 2 = arrow keys.");
+            c.Para(Platform.IsPhone
+                ? "Tilt your phone to move. Pick your favourite way to hold it in OPTIONS > CONTROLS > TILT SETUP."
+                : Platform.MoveHint);
+            c.Para(Platform.CoopHint);
             c.Hint("Swipe up for the next card");
 
             c = deck.NewCard();

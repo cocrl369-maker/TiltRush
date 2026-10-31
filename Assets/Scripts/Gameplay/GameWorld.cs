@@ -50,7 +50,7 @@ namespace TiltRush
 
         public float Elapsed, Difficulty, CountdownLeft = 3f, Score;
         public int Kills, PickupsCollected;
-        public float SlowTimer, FreezeTimer;
+        public float SlowTimer;
         public int ScoreInt { get { return Mathf.FloorToInt(Score); } }
         public float TimeLeft { get { return Level != null ? Mathf.Max(0f, Level.Duration - Elapsed) : 0f; } }
         public float EnemyTimeScale { get; private set; }
@@ -60,6 +60,12 @@ namespace TiltRush
         float spawnTimer = 1.0f, pickupTimer = 1.5f, wallTimer = 3f, swordTimer = 3f, endTimer, areaScale = 1f;
         bool wallsAnnounced, swordsAnnounced, ringsSpawned, gadgetsOn, completed;
         float[] deathTime;
+        bool coopPhone, asteroids;
+
+        // asteroid field: cannon bullets (pooled)
+        class Bullet { public Transform T; public SpriteRenderer Core, Glow; public Vector2 Pos, Vel; public float Life; }
+        readonly List<Bullet> bullets = new List<Bullet>();
+        readonly Stack<Bullet> bulletPool = new Stack<Bullet>();
         DodgeDirector director;      // DODGE mode only
         TutorialDirector tutorial;   // TUTORIAL only
 
@@ -79,7 +85,9 @@ namespace TiltRush
         void Init(ModeDef mode, int seed, Action<RoundResult> onEnd, LevelDef level)
         {
             Current = this; Mode = mode; Level = level; this.onEnd = onEnd;
-            GameTheme.Override = level != null ? level.Theme : null;   // campaign: the level's own theme
+            asteroids = mode.Id == GameModeId.Asteroids;
+            // campaign: the level's own theme; asteroid field: outer space
+            GameTheme.Override = level != null ? level.Theme : (asteroids ? LevelThemes.Space : null);
             Time.timeScale = 1f;
             EnemyTimeScale = 1f;
             Difficulty = level != null ? level.DiffStart : mode.StartDifficulty;
@@ -93,6 +101,9 @@ namespace TiltRush
             areaScale = Mathf.Clamp(Config.ArenaSize.x * Config.ArenaSize.y / 150f, 1f, 2.5f);   // bigger arena -> more dots
 
             ArenaView.Build(transform);
+            TouchStickInput.All.Clear();
+            coopPhone = mode.Players > 1 && Application.isMobilePlatform && !Application.isEditor;
+            if (coopPhone) Screen.orientation = TiltInput.Landscape();   // phone lies flat: do not let it flip around
 
             for (int i = 0; i < mode.Players; i++)
             {
@@ -201,18 +212,21 @@ namespace TiltRush
             if (Level == null && Mode.LaunchRings && !ringsSpawned && Elapsed >= Config.LaunchRingStartTime) SpawnRings(true);
 
             SlowTimer = Mathf.Max(0f, SlowTimer - dt);
-            FreezeTimer = Mathf.Max(0f, FreezeTimer - dt);
-            EnemyTimeScale = FreezeTimer > 0f ? 0f : (SlowTimer > 0f ? Config.SlowMoScale : 1f);
+            EnemyTimeScale = SlowTimer > 0f ? Config.SlowMoScale : 1f;
             float edt = dt * EnemyTimeScale;
 
             foreach (var p in Players) p.Tick(dt);
 
             if (tutorial != null) tutorial.Tick(dt);                                    // TUTORIAL: scripted
             else if (director != null) director.Tick(dt, Difficulty, FirstAlivePos());     // DODGE: patterns instead of chasing dots
+            else if (asteroids) AsteroidSpawnTick(dt);                                  // ASTEROID FIELD
             else if (Level == null) SpawnTick(dt);                                     // spawn timers use real time so online players see the same spawns
             else CampaignSpawns();
             foreach (var e in Enemies) e.Tick(edt, dt, this);
-            if (Level == null && director == null && tutorial == null) HazardSpawnTick(dt);
+            for (int i = Enemies.Count - 1; i >= 0; i--)                                // asteroids that left the arena
+                if (Enemies[i].Gone) { var g = Enemies[i]; Enemies.RemoveAt(i); g.gameObject.SetActive(false); enemyPool.Push(g); }
+            if (asteroids) { CannonTick(dt); BulletTick(dt); }
+            if (Level == null && director == null && tutorial == null && !asteroids) HazardSpawnTick(dt);
             HazardMove(dt, edt);
             CheckCollisions();
             CheckHazards();
@@ -333,6 +347,22 @@ namespace TiltRush
             for (int i = Enemies.Count - 1; i >= 0; i--)
             {
                 var e = Enemies[i];
+
+                // frozen dots are harmless ice blocks: flying into them smashes them
+                if (e.Frozen)
+                {
+                    foreach (var p in Players)
+                    {
+                        if (!p.Alive) continue;
+                        float reach = e.Radius + p.Radius;
+                        if ((e.Pos - p.Pos).sqrMagnitude > reach * reach) continue;
+                        Fx.Sparks(e.Pos, new Color32(200, 240, 255, 255), 10, 6f, 0.4f);
+                        App.I.Audio.Play("pickup");
+                        KillEnemy(i);
+                        break;
+                    }
+                    continue;
+                }
                 if (!e.Dangerous) continue;
 
                 bool eaten = false;
@@ -492,8 +522,9 @@ namespace TiltRush
         void KillEnemy(int i, float pointsMul = 1f)
         {
             var e = Enemies[i];
-            if (e.Dangerous) AddBonus(Config.KillPoints[(int)e.Type], pointsMul);   // dots still spawning give nothing
-            if (e.Dangerous && !completed) Kills++;
+            bool counts = e.Dangerous || e.Frozen;                                   // dots still spawning give nothing
+            if (counts) AddBonus(Config.KillPoints[(int)e.Type], pointsMul);
+            if (counts && !completed) Kills++;
             e.Dead = true;
             Enemies.RemoveAt(i);
             Fx.Burst(e.Pos, e.SparkColor, 0.1f, 0.5f, 0.3f);
@@ -515,6 +546,18 @@ namespace TiltRush
             App.I.Shake(0.3f, 0.4f);
             for (int i = Enemies.Count - 1; i >= 0; i--)
                 if ((Enemies[i].Pos - center).magnitude < radius) KillEnemy(i);
+        }
+
+        /// <summary>Freeze gadget: every dot within the radius turns into ice for a few seconds.</summary>
+        public void FreezeArea(Vector2 center, float radius)
+        {
+            Color ice = new Color32(180, 225, 255, 255);
+            Fx.Burst(center, ice, 0.3f, radius, 0.55f);
+            Fx.Burst(center, Color.white, 0.2f, radius * 0.6f, 0.4f);
+            Fx.Sparks(center, ice, 24, 9f, 0.6f);
+            App.I.Shake(0.15f, 0.25f);
+            foreach (var e in Enemies)
+                if ((e.Pos - center).sqrMagnitude < radius * radius) e.Freeze(Config.FreezeDuration);
         }
 
         public void KillAllEnemies()
@@ -619,7 +662,7 @@ namespace TiltRush
             if (pickupTimer <= 0f && tutorial == null)
             {
                 pickupTimer = Config.GadgetSpawnInterval * (0.7f + (float)pickupRng.NextDouble() * 0.6f);
-                pickups.Add(Pickup.Spawn(transform, GadgetLibrary.PickRandom(pickupRng), RandomPoint(pickupRng, 1f)));
+                pickups.Add(Pickup.Spawn(transform, GadgetLibrary.PickRandom(pickupRng, asteroids), RandomPoint(pickupRng, 1f)));
             }
 
             for (int i = pickups.Count - 1; i >= 0; i--)
@@ -657,6 +700,157 @@ namespace TiltRush
                 if (PushOut(p, 0.7f) == p) return p;
             }
             return p;
+        }
+
+        // ------------------------------------------------------------------ asteroid field
+        void AsteroidSpawnTick(float dt)
+        {
+            spawnTimer -= dt;
+            if (spawnTimer > 0f) return;
+            spawnTimer += Mathf.Lerp(1.5f, 0.35f, Difficulty) / areaScale;
+            if (Enemies.Count >= Config.MaxEnemies) return;
+
+            double r = spawnRng.NextDouble();
+            if (r < 0.15 + 0.12 * Difficulty) { DebrisShower(); return; }
+            EnemyType type = r < 0.5 ? EnemyType.Asteroid : (r < 0.8 ? EnemyType.Rock : EnemyType.Pebble);
+
+            Vector2 start = OutsidePoint(1.2f);
+            // aim at a random spot in the middle of the arena, sometimes straight at the player
+            Vector2 aim = spawnRng.NextDouble() < 0.25 ? FirstAlivePos()
+                        : new Vector2(((float)spawnRng.NextDouble() - 0.5f) * Config.ArenaSize.x * 0.6f, ((float)spawnRng.NextDouble() - 0.5f) * Config.ArenaSize.y * 0.6f);
+            SpawnRock(type, start, (aim - start).normalized * RockSpeed(type));
+        }
+
+        /// <summary>A burst of 3-5 fast shards from one edge.</summary>
+        void DebrisShower()
+        {
+            Vector2 start = OutsidePoint(0.8f);
+            Vector2 dir = (FirstAlivePos() * 0.5f - start).normalized;
+            int n = 3 + spawnRng.Next(3);
+            for (int i = 0; i < n; i++)
+            {
+                float a = ((float)spawnRng.NextDouble() - 0.5f) * 0.5f;
+                Vector2 d = Quaternion.Euler(0, 0, a * Mathf.Rad2Deg) * dir;
+                Vector2 side = new Vector2(-dir.y, dir.x) * (((float)spawnRng.NextDouble() - 0.5f) * 1.5f);
+                SpawnRock(EnemyType.Shard, start + side - dir * i * 0.4f, d * RockSpeed(EnemyType.Shard) * (0.85f + 0.3f * (float)spawnRng.NextDouble()));
+            }
+        }
+
+        float RockSpeed(EnemyType t)
+        {
+            float b = t == EnemyType.Asteroid ? 1.4f : t == EnemyType.Rock ? 2.0f : t == EnemyType.Pebble ? 2.8f : 5.5f;
+            return b * (1f + Difficulty * 0.9f) * (0.85f + 0.3f * (float)spawnRng.NextDouble());
+        }
+
+        Vector2 OutsidePoint(float margin)
+        {
+            Vector2 half = Config.ArenaSize * 0.5f + Vector2.one * margin;
+            float u = (float)spawnRng.NextDouble() * 2f - 1f;
+            switch (spawnRng.Next(4))
+            {
+                case 0: return new Vector2(u * half.x, half.y);
+                case 1: return new Vector2(u * half.x, -half.y);
+                case 2: return new Vector2(-half.x, u * half.y);
+                default: return new Vector2(half.x, u * half.y);
+            }
+        }
+
+        void SpawnRock(EnemyType type, Vector2 pos, Vector2 vel)
+        {
+            Enemy e = enemyPool.Count > 0 ? enemyPool.Pop() : Enemy.Create(transform);
+            e.Setup(type, pos, 1f, (float)spawnRng.NextDouble() * 6.28f);
+            e.MakeDrifter(vel);
+            Enemies.Add(e);
+        }
+
+        /// <summary>Big rocks break into two smaller ones that fly apart.</summary>
+        void Split(Enemy e)
+        {
+            EnemyType child = e.Type == EnemyType.Asteroid ? EnemyType.Rock : (e.Type == EnemyType.Rock ? EnemyType.Pebble : EnemyType.Shard);
+            if (e.Type == EnemyType.Shard || e.Type == EnemyType.Pebble) return;
+            Vector2 v = e.Drift.sqrMagnitude > 0.01f ? e.Drift : Vector2.right;
+            for (int s = -1; s <= 1; s += 2)
+            {
+                Vector2 d = Quaternion.Euler(0, 0, s * 40f) * v.normalized;
+                Vector2 side = new Vector2(-d.y, d.x) * e.Radius * 0.5f * s;
+                SpawnRock(child, e.Pos + side, d * Mathf.Max(v.magnitude * 1.35f, RockSpeed(child) * 0.8f));
+            }
+        }
+
+        /// <summary>The cannon fires automatically where the ship's tip points.</summary>
+        void CannonTick(float dt)
+        {
+            foreach (var p in Players)
+            {
+                if (!p.Alive) continue;
+                p.FireCd -= dt;
+                if (p.FireCd > 0f) continue;
+                p.FireCd = Config.CannonInterval;
+                bool spread = p.SpreadTime > 0f;
+                int n = spread ? 5 : 1;
+                for (int k = 0; k < n; k++)
+                {
+                    float ang = spread ? (k - 2) * 11f : 0f;
+                    Vector2 dir = Quaternion.Euler(0, 0, ang) * p.Facing;
+                    FireBullet(p.Muzzle, dir * Config.BulletSpeed + p.Velocity * 0.3f, spread);
+                }
+                App.I.Audio.Play("shoot", 0.25f);
+            }
+        }
+
+        void FireBullet(Vector2 pos, Vector2 vel, bool spread)
+        {
+            Bullet b;
+            if (bulletPool.Count > 0) { b = bulletPool.Pop(); b.T.gameObject.SetActive(true); }
+            else
+            {
+                b = new Bullet();
+                b.T = new GameObject("Bullet").transform;
+                b.T.SetParent(transform, false);
+                var g = new GameObject("Glow"); g.transform.SetParent(b.T, false); g.transform.localScale = Vector3.one * 0.6f;
+                b.Glow = g.AddComponent<SpriteRenderer>(); b.Glow.sprite = SpriteFactory.Glow(); b.Glow.sortingOrder = 11;
+                var c = new GameObject("Core"); c.transform.SetParent(b.T, false);
+                b.Core = c.AddComponent<SpriteRenderer>(); b.Core.sprite = SpriteFactory.Pixel(); b.Core.sortingOrder = 12;
+            }
+            Color col = spread ? new Color32(255, 120, 110, 255) : new Color32(255, 240, 150, 255);
+            b.Glow.color = new Color(col.r, col.g, col.b, 0.6f);
+            b.Core.color = Color.Lerp(col, Color.white, 0.5f);
+            b.Core.transform.localScale = new Vector3(0.32f, 0.09f, 1f);
+            b.Pos = pos; b.Vel = vel; b.Life = Config.BulletLife;
+            b.T.position = pos;
+            b.T.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg);
+            bullets.Add(b);
+        }
+
+        void BulletTick(float dt)
+        {
+            for (int i = bullets.Count - 1; i >= 0; i--)
+            {
+                var b = bullets[i];
+                b.Life -= dt;
+                b.Pos += b.Vel * dt;
+                b.T.position = b.Pos;
+                bool done = b.Life <= 0f;
+                if (!done)
+                    for (int k = Enemies.Count - 1; k >= 0; k--)
+                    {
+                        var e = Enemies[k];
+                        if (!e.Dangerous) continue;
+                        float reach = e.Radius + 0.08f;
+                        if ((e.Pos - b.Pos).sqrMagnitude > reach * reach) continue;
+                        done = true;
+                        Fx.Burst(b.Pos, new Color32(255, 230, 160, 255), 0.05f, 0.35f, 0.15f);
+                        if (e.Hit(1))
+                        {
+                            Split(e);
+                            if (Enemy.IsRock(e.Type)) Fx.Sparks(e.Pos, e.SparkColor, 10, 5f, 0.5f, 0.09f);
+                            App.I.Audio.Play("crack", 0.6f);
+                            KillEnemyObj(e);
+                        }
+                        break;
+                    }
+                if (done) { bullets.RemoveAt(i); b.T.gameObject.SetActive(false); bulletPool.Push(b); }
+            }
         }
 
         // ------------------------------------------------------------------ tutorial helpers
@@ -738,6 +932,8 @@ namespace TiltRush
         void OnDestroy()
         {
             if (Current == this) { Current = null; GameTheme.Override = null; }
+            if (coopPhone) Screen.orientation = ScreenOrientation.AutoRotation;
+            TouchStickInput.All.Clear();
             Time.timeScale = 1f;
             NeonBackground.Intensity = 0.1f;
         }

@@ -16,7 +16,7 @@ namespace TiltRush
 
     /// <summary>
     /// DODGE mode: the dots do not chase you. Instead the director sends patterns - walls with gaps, shrinking rings,
-    /// pinwheels, a conga line, a talking smiley, a beating heart, fireworks and the dotted lift...
+    /// pinwheels, a conga line, a talking smiley, a beating heart, fireworks and the escape hatch...
     /// Every pattern is just a function that adds dots with a movement formula, so new gags are easy to add:
     /// write a method like Smiley() and register it in the constructor.
     /// </summary>
@@ -48,7 +48,7 @@ namespace TiltRush
             entries.Add(new Entry { Name = "FLOCK",      MinDiff = 0.20f, Announce = true, Spawn = Flock });
             entries.Add(new Entry { Name = "SMILEY",     MinDiff = 0.25f, Announce = true, Spawn = Smiley });
             entries.Add(new Entry { Name = "FIREWORKS",  MinDiff = 0.30f, Announce = true, Spawn = Fireworks });
-            entries.Add(new Entry { Name = "ELEVATOR",   MinDiff = 0.30f, Announce = true, Spawn = Elevator });
+            entries.Add(new Entry { Name = "ESCAPE HATCH", MinDiff = 0.30f, Announce = true, Spawn = EscapeHatch });
             entries.Add(new Entry { Name = "PINWHEEL",   MinDiff = 0.40f, Spawn = Pinwheel });
             entries.Add(new Entry { Name = "HEART",      MinDiff = 0.45f, Announce = true, Spawn = Heart });
             entries.Add(new Entry { Name = "WINDMILL",   MinDiff = 0.55f, Spawn = Windmill });
@@ -382,11 +382,11 @@ namespace TiltRush
         }
 
         /// <summary>
-        /// GAG (from the original): a lift made of dots. A wall of dots sweeps across the arena, but it has a
-        /// doorway with a pipe around it that goes up and down like an elevator. Step into the pipe, ride the doorway
+        /// GAG "ESCAPE HATCH": a wall of dots sweeps across the arena, but it has a hatch (doorway) with a short
+        /// tunnel around it that slides up and down. Step into the tunnel, ride the hatch
         /// up and down while the wall passes, and get released on the other side.
         /// </summary>
-        float Elevator(Ctx c)
+        float EscapeHatch(Ctx c)
         {
             float sign = rng.Next(2) == 0 ? 1f : -1f;
             float speed = 2.6f * c.Speed, gapH = 2.0f, pipeLen = 4.5f, s = 0.5f;

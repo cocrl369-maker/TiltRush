@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    public enum GameModeId { Campaign, Classic, Hard, Dodge, Coop, Online, Tutorial }
+    public enum GameModeId { Campaign, Classic, Hard, Dodge, Coop, Online, Tutorial, Asteroids }
 
     /// <summary>Pure data describing a mode. Add a new mode by adding a ModeDef to Modes.All.</summary>
     public class ModeDef
@@ -51,10 +51,17 @@ namespace TiltRush
             Gadgets = false, LaunchRings = false, RampSeconds = 110f
         };
 
+        public static readonly ModeDef Asteroids = new ModeDef
+        {
+            Id = GameModeId.Asteroids, Name = "ASTEROID FIELD", Color = Neon.Orange,
+            Description = "Your auto-cannon fires where your tip points. Blast the rocks!",
+            LaunchRings = false, RampSeconds = 160f
+        };
+
         public static readonly ModeDef Coop = new ModeDef
         {
             Id = GameModeId.Coop, Name = "CO-OP DUEL", Color = Neon.Aqua,
-            Description = "2 players, 1 map. Last one alive wins.",
+            Description = "2 players, 1 phone flat on the table, a thumb stick each. Last one alive wins.",
             Players = 2, BestOf = Config.LocalBestOf
         };
 
@@ -72,6 +79,6 @@ namespace TiltRush
             Description = "Learn to play with BLIP.", LaunchRings = false, RampSeconds = 100000f
         };
 
-        public static readonly ModeDef[] All = { Campaign, Classic, Hard, Dodge, Coop, Online };
+        public static readonly ModeDef[] All = { Campaign, Classic, Hard, Dodge, Asteroids, Coop, Online };
     }
 }
