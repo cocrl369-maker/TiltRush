@@ -77,6 +77,14 @@ namespace TiltRush
             world = null;
             int t = token;
 
+            // statistics (skins are unlocked with these)
+            var stats = SaveManager.Data;
+            stats.runsPlayed++;
+            stats.totalKills += r.Kills;
+            stats.totalPickups += r.Pickups;
+            foreach (float s in r.Survival) stats.totalPlaySeconds = stats.totalPlaySeconds + s;
+            SaveManager.Save();
+
             switch (mode.Id)
             {
                 case GameModeId.Campaign:
@@ -116,14 +124,16 @@ namespace TiltRush
             if (r.Completed)
             {
                 var d = SaveManager.Data;
-                string rewards = "";
+                var rewards = new System.Collections.Generic.List<string>();
                 if (d.campaignDone < number)                 // first time: progress + unlocks
                 {
                     d.campaignDone = number;
-                    rewards = Unlocks.RewardsFor(number);
-                    SaveManager.Save();
+                    rewards.AddRange(Unlocks.ColoursFor(number));
                 }
-                string body = "You survived " + level.Duration.ToString("0") + " seconds." + (rewards.Length > 0 ? "\n\nUNLOCKED: " + rewards : "");
+                rewards.AddRange(Skins.CollectNew());
+                SaveManager.Save();
+                string body = "You survived " + level.Duration.ToString("0") + " seconds." +
+                              (rewards.Count > 0 ? "\n\nUNLOCKED: " + string.Join(", ", rewards.ToArray()) : "");
 
                 if (idx + 1 < Campaign.Levels.Length)
                     app.UI.ShowDialog("LEVEL COMPLETE!", body,
@@ -138,7 +148,7 @@ namespace TiltRush
             else
             {
                 app.UI.ShowDialog("TRY AGAIN",
-                    "Level " + number + " - " + level.Name + "\nYou survived " + r.Survival[0].ToString("0.0") + " of " + level.Duration.ToString("0") + " seconds.",
+                    "Level " + number + " - " + level.Name + "\nYou survived " + r.Survival[0].ToString("0.0") + " of " + level.Duration.ToString("0") + " seconds." + NewSkinsText(),
                     new UIStack.Item("RETRY", Neon.Lime, () => StartCampaign(idx)),
                     new UIStack.Item("LEVELS", Neon.Blue, () => app.UI.Show<CampaignScreen>()),
                     new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
@@ -165,7 +175,7 @@ namespace TiltRush
             SaveManager.Save();
 
             string title = isBest ? "NEW BEST!" : "GAME OVER";
-            string body = "Score: " + score.ToString("N0") + "\nTime: " + time.ToString("0.0") + "s\nBest score: " + Mathf.Max(bestScore, score).ToString("N0");
+            string body = "Score: " + score.ToString("N0") + "\nTime: " + time.ToString("0.0") + "s\nBest score: " + Mathf.Max(bestScore, score).ToString("N0") + NewSkinsText();
 
             System.Action<string> show = extra =>
             {
@@ -206,7 +216,7 @@ namespace TiltRush
 
             if (wins[winner] >= need) { EndMatch(winner, detail); return; }
 
-            app.UI.ShowDialog(PlayerName(winner) + " WINS THE ROUND", detail + "\n\nScore  " + wins[0] + " : " + wins[1],
+            app.UI.ShowDialog(PlayerName(winner) + " WINS THE ROUND", detail + "\n\nScore  " + wins[0] + " : " + wins[1] + NewSkinsText(),
                 new UIStack.Item("NEXT ROUND", Neon.Lime, BeginRound));
         }
 
@@ -226,16 +236,25 @@ namespace TiltRush
                 app.Online.ReportMatch(match.MatchId, won, d.elo);
 
                 app.UI.ShowDialog(won ? "VICTORY!" : "DEFEAT",
-                    score + "\n\nELO " + old + " -> " + d.elo + "  (" + (delta >= 0 ? "+" : "") + delta + ")",
+                    score + "\n\nELO " + old + " -> " + d.elo + "  (" + (delta >= 0 ? "+" : "") + delta + ")" + NewSkinsText(),
                     new UIStack.Item("PLAY AGAIN", Neon.Pink, () => Start(mode)),
                     new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
             }
             else
             {
-                app.UI.ShowDialog(PlayerName(winner) + " WINS!", detail + "\n\n" + score,
+                app.UI.ShowDialog(PlayerName(winner) + " WINS!", detail + "\n\n" + score + NewSkinsText(),
                     new UIStack.Item("REMATCH", Neon.Aqua, () => Start(mode)),
                     new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
             }
+        }
+
+        /// <summary>"NEW SKIN: SABER" line for the result dialogs (empty if nothing new). Marks the skins as announced.</summary>
+        static string NewSkinsText()
+        {
+            var list = Skins.CollectNew();
+            if (list.Count == 0) return "";
+            SaveManager.Save();
+            return "\n\n<color=#7DFF00>UNLOCKED: " + string.Join(", ", list.ToArray()).ToUpper() + "</color>";
         }
 
         void Error(string msg)

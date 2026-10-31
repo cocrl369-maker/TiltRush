@@ -34,6 +34,9 @@ namespace TiltRush
         /// <summary>Glowing sparks flying out of a point (see SparkSystem).</summary>
         public static void Sparks(Vector2 pos, Color c, int count, float speed = 6f, float life = 0.45f, float width = 0.06f)
         {
+            int setting = SaveManager.Data.particles;           // Options > Graphics > Particles
+            if (setting <= 0) return;
+            if (setting == 1) count = (count + 1) / 2;
             SparkSystem.Emit(pos, c, count, speed, life, width);
         }
 

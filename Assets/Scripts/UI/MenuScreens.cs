@@ -16,34 +16,107 @@ namespace TiltRush
         }
     }
 
+    /// <summary>
+    /// Main menu in Geometry-Dash style: big logo, a large PLAY button with a play symbol in the middle,
+    /// WARDROBE (shows your ship) and LEADERBOARD left and right, small round buttons for options and help,
+    /// your stats at the bottom. The colourful background slowly travels through all theme colours.
+    /// </summary>
     public class MainMenuScreen : UIScreen
     {
-        Text title;
+        Text title, stats, campaignInfo;
         PlayerPreview preview;
+        RectTransform logo;
         protected override bool HasVignette { get { return true; } }
 
         protected override void Build()
         {
-            var st = new UIStack((RectTransform)transform, 60);
-            title = st.Label(Config.GameTitle, 118, Color.white, 140);
-            st.Label("SURVIVE THE DOTS", 30, Theme.TextDim, 40);
+            var root = (RectTransform)transform;
 
-            preview = PlayerPreview.Create(transform);
-            st.Place((RectTransform)preview.transform, 170, 170);
-            st.Space(10);
+            // logo
+            logo = UIKit.Rect("Logo", root);
+            UIKit.Anchor(logo, new Vector2(0.5f, 1f), new Vector2(0, -150), new Vector2(1400, 200));
+            logo.pivot = new Vector2(0.5f, 0.5f);
+            title = UIKit.Title(logo, Config.GameTitle, 170);
+            UIKit.Stretch(title.rectTransform);
+            var sub = UIKit.Label(root, "SURVIVE THE SPIKES", 36, Theme.TextDim);
+            UIKit.Anchor(sub.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -265), new Vector2(900, 50));
 
-            st.Button("PLAY", Neon.Lime, 660, 190, () => UI.Show<ModeSelectScreen>(), 92, true);
-            st.Space(20);
-            st.Row(110, 36,
-                new UIStack.Item("OPTIONS", Neon.Blue, () => UI.Show<OptionsScreen>()),
-                new UIStack.Item("HOW TO PLAY", Neon.Orange, () => UI.Show<HowToScreen>()),
-                new UIStack.Item("WARDROBE", Neon.Purple, () => UI.Show<WardrobeScreen>()));
+            // big PLAY button with a play symbol
+            var play = UIKit.MakeButton(root, "", Neon.Lime, new Vector2(330, 330), () => UI.Show<ModeSelectScreen>(), 40, true);
+            UIKit.Anchor((RectTransform)play.transform, new Vector2(0.5f, 0.5f), new Vector2(0, -20), new Vector2(330, 330));
+            var tri = UIKit.Icon(play.transform, SpriteFactory.Fill(ShapeType.Triangle), 190, Color.white);
+            tri.rectTransform.localRotation = Quaternion.Euler(0, 0, -90);
+            tri.rectTransform.anchoredPosition = new Vector2(14, 10);
+            tri.gameObject.AddComponent<Outline>().Also(o => { o.effectColor = Theme.Outline; o.effectDistance = new Vector2(5, -5); });
+            var playText = play.GetComponentInChildren<Text>();
+            playText.text = "PLAY"; playText.alignment = TextAnchor.LowerCenter; playText.rectTransform.offsetMin = new Vector2(0, 18);
+
+            // wardrobe (with your ship) and leaderboard
+            var wardrobe = SideButton(root, -420, "WARDROBE", Neon.Purple, () => UI.Show<WardrobeScreen>());
+            preview = PlayerPreview.Create(wardrobe.transform);
+            var prt = (RectTransform)preview.transform;
+            prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
+            prt.sizeDelta = new Vector2(120, 120); prt.anchoredPosition = new Vector2(0, 22);
+
+            var board = SideButton(root, 420, "LEADERBOARD", Neon.Orange, () => UI.Show<LeaderboardScreen>());
+            var star = UIKit.Icon(board.transform, SpriteFactory.Fill(ShapeType.Star), 120, new Color(1f, 0.9f, 0.25f, 1f));
+            star.rectTransform.anchoredPosition = new Vector2(0, 22);
+            star.gameObject.AddComponent<Outline>().Also(o => { o.effectColor = Theme.Outline; o.effectDistance = new Vector2(4, -4); });
+
+            // small round buttons at the bottom
+            var opt = RoundButton(root, -110, Neon.Blue, () => UI.Show<OptionsScreen>());
+            var gear = UIKit.Icon(opt.transform, SpriteFactory.Gear(), 84, Color.white);
+            gear.gameObject.AddComponent<Spin>().Speed = -25f;
+            var help = RoundButton(root, 110, Neon.Aqua, () => UI.Show<HowToScreen>());
+            help.GetComponentInChildren<Text>().text = "?";
+            help.GetComponentInChildren<Text>().fontSize = 76;
+
+            campaignInfo = UIKit.Label(root, "", 30, Theme.TextDim);
+            UIKit.Anchor(campaignInfo.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, -235), new Vector2(700, 44));
+
+            stats = UIKit.Label(root, "", 30, Theme.TextDim, TextAnchor.LowerLeft);
+            UIKit.Anchor(stats.rectTransform, new Vector2(0f, 0f), new Vector2(40, 30), new Vector2(900, 50));
         }
 
-        public override void OnShow() { preview.Refresh(); }
+        static Button SideButton(RectTransform root, float x, string text, Color c, UnityEngine.Events.UnityAction a)
+        {
+            var b = UIKit.MakeButton(root, text, c, new Vector2(260, 260), a, 30);
+            UIKit.Anchor((RectTransform)b.transform, new Vector2(0.5f, 0.5f), new Vector2(x, -20), new Vector2(260, 260));
+            var t = b.GetComponentInChildren<Text>();
+            t.alignment = TextAnchor.LowerCenter; t.rectTransform.offsetMin = new Vector2(0, 20);
+            return b;
+        }
 
-        // very soft colour drift instead of a rainbow
-        void Update() { title.color = Color.HSVToRGB(Mathf.Repeat(Time.unscaledTime * 0.05f, 1f), 0.18f, 1f); }
+        static Button RoundButton(RectTransform root, float x, Color c, UnityEngine.Events.UnityAction a)
+        {
+            var b = UIKit.MakeButton(root, "", c, new Vector2(150, 150), a, 40);
+            UIKit.Anchor((RectTransform)b.transform, new Vector2(0.5f, 0f), new Vector2(x, 40), new Vector2(150, 150));
+            return b;
+        }
+
+        public override void OnShow()
+        {
+            preview.Refresh();
+            var d = SaveManager.Data;
+            stats.text = "BEST " + d.bestClassicScore.ToString("N0") + "   •   ELO " + d.elo + "   •   SKINS " + Skins.UnlockedCount + "/" + Skins.All.Length;
+            campaignInfo.text = "CAMPAIGN " + d.campaignDone + " / " + Campaign.Levels.Length;
+        }
+
+        void Update()
+        {
+            // logo: colour follows the background theme, gentle bob and tilt
+            float t = Time.unscaledTime;
+            title.color = Color.Lerp(Color.white, GameTheme.Now.Accent, 0.45f);
+            logo.anchoredPosition = new Vector2(0, -150 + 8f * Mathf.Sin(t * 1.6f));
+            logo.localRotation = Quaternion.Euler(0, 0, 1.5f * Mathf.Sin(t * 0.9f));
+        }
+    }
+
+    /// <summary>Rotates a UI element (gear icon).</summary>
+    public class Spin : MonoBehaviour
+    {
+        public float Speed = 30f;
+        void Update() { transform.Rotate(0, 0, Speed * Time.unscaledDeltaTime); }
     }
 
     public class ModeSelectScreen : UIScreen
@@ -53,7 +126,7 @@ namespace TiltRush
 
         protected override void Build()
         {
-            new UIStack((RectTransform)transform, 40).Label("SELECT MODE", 80, Color.white, 100);
+            UIKit.Anchor(UIKit.Title(transform, "SELECT MODE", 96).rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -30), new Vector2(1200, 120));
 
             const float w = 285f, gap = 16f;
             for (int i = 0; i < Modes.All.Length; i++)
@@ -83,50 +156,6 @@ namespace TiltRush
         }
     }
 
-    public class OptionsScreen : UIScreen
-    {
-        Text trackText, shakeText;
-        protected override bool HasVignette { get { return true; } }
-
-        protected override void Build()
-        {
-            var d = SaveManager.Data;
-            new UIStack((RectTransform)transform, 40).Label("OPTIONS", 80, Color.white, 100);
-
-            UIKit.Panel(transform, -500, 150, 860, 520);
-            UIKit.Panel(transform, 500, 150, 860, 580);
-
-            var left = new UIStack((RectTransform)transform, 175, -500, 800);
-            left.Slider("MUSIC VOLUME", 0f, 1f, d.musicVolume, v => { SaveManager.Data.musicVolume = v; App.I.Audio.ApplyVolumes(); });
-            left.Slider("SFX VOLUME", 0f, 1f, d.sfxVolume, v => { SaveManager.Data.sfxVolume = v; App.I.Audio.ApplyVolumes(); });
-            left.Space(10);
-            left.Button("TILT SETUP", Neon.Blue, 800, 100, () => UI.Show<TiltSetupScreen>(), 42);
-
-            var right = new UIStack((RectTransform)transform, 175, 500, 800);
-            right.Spacing = 18;
-            right.TextField("PLAYER NAME (LEADERBOARD)", d.playerName, 12, v =>
-            {
-                v = v.Trim();
-                if (v.Length > 0) SaveManager.Data.playerName = v;
-            });
-            right.Space(6);
-            shakeText = right.Button("", Neon.Blue, 800, 100, () => { SaveManager.Data.screenShake = !SaveManager.Data.screenShake; Refresh(); }, 40)
-                             .GetComponentInChildren<Text>();
-            trackText = right.Label("", 32, Color.white, 60);
-            right.Button("NEXT TRACK", Neon.Indigo, 500, 100, () => { App.I.Audio.Next(); Refresh(); }, 42);
-
-            MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<MainMenuScreen>(); });
-        }
-
-        void Refresh()
-        {
-            shakeText.text = "SCREEN SHAKE: " + (SaveManager.Data.screenShake ? "ON" : "OFF");
-            trackText.text = "Now playing: " + App.I.Audio.CurrentTrackName;
-        }
-
-        public override void OnShow() { Refresh(); }
-    }
-
     public class HowToScreen : UIScreen
     {
         protected override bool HasVignette { get { return true; } }
@@ -154,7 +183,7 @@ namespace TiltRush
             sb3.Append("<color=#FF8FD0>DODGE MODE</color>\nThe dots do not chase you - they form shapes and waves. Watch out for the dotted lift, smileys and fireworks!\n\n");
             sb3.Append("<color=#00FFFF>MODES</color>\n");
             foreach (var m in Modes.All) sb3.Append(m.Name).Append(" - ").Append(m.Description).Append('\n');
-            sb3.Append("\n<color=#00FFFF>UNLOCKS</color>\nComplete campaign levels to unlock new skins and colours.");
+            sb3.Append("\n<color=#00FFFF>UNLOCKS</color>\nColours: campaign levels. Skins: campaign, high scores, Dodge times, destroyed dots, pickups and online wins - see the Wardrobe.");
 
             Column(-640, col1);
             Column(0, sb.ToString());
@@ -168,114 +197,5 @@ namespace TiltRush
             var t = new UIStack((RectTransform)transform, 155, x, 560).Label(text, 30, Color.white, 750, TextAnchor.UpperLeft);
             t.resizeTextForBestFit = true; t.resizeTextMinSize = 16; t.resizeTextMaxSize = 30;
         }
-    }
-
-    public class WardrobeScreen : UIScreen
-    {
-        PlayerPreview preview;
-        Button[] shapeBtns = new Button[8], bodyBtns, lineBtns;
-        protected override bool HasVignette { get { return true; } }
-
-        protected override void Build()
-        {
-            new UIStack((RectTransform)transform, 30).Label("WARDROBE", 80, Color.white, 100);
-
-            // left: preview + hint
-            UIKit.Panel(transform, -600, 150, 420, 420);
-            var left = new UIStack((RectTransform)transform, 210, -600, 380);
-            preview = PlayerPreview.Create(transform);
-            left.Place((RectTransform)preview.transform, 300, 300);
-            UIKit.Panel(transform, -600, 590, 420, 200);
-            new UIStack((RectTransform)transform, 615, -600, 380)
-                .Label("Complete campaign levels to unlock more skins and colours.", 28, Theme.TextDim, 160);
-
-            // right: skins + colours
-            UIKit.Panel(transform, 250, 150, 1120, 790);
-            var st = new UIStack((RectTransform)transform, 170, 250, 1060);
-            st.Spacing = 10;
-
-            st.Label("SKIN", 40, Neon.Aqua, 50);
-            for (int row = 0; row < 2; row++)
-            {
-                var items = new UIStack.Item[4];
-                for (int c = 0; c < 4; c++)
-                {
-                    int idx = row * 4 + c;
-                    items[c] = new UIStack.Item(Config.PlayerShapeNames[idx], Neon.Indigo, () =>
-                    {
-                        if (!Unlocks.ShapeUnlocked(idx)) return;
-                        SaveManager.Data.playerShape = idx; Refresh();
-                    });
-                }
-                var btns = st.Row(90, 32, items);
-                for (int c = 0; c < 4; c++) shapeBtns[row * 4 + c] = btns[c];
-            }
-            st.Space(10);
-
-            st.Label("BODY COLOR", 40, Neon.Aqua, 50);
-            bodyBtns = Swatches(st, idx =>
-            {
-                if (!Unlocks.ColorUnlocked(idx)) return;
-                SaveManager.Data.primary = idx; Refresh();
-            });
-            st.Space(10);
-
-            st.Label("OUTLINE COLOR", 40, Neon.Aqua, 50);
-            lineBtns = Swatches(st, idx =>
-            {
-                if (!Unlocks.ColorUnlocked(idx)) return;
-                SaveManager.Data.outline = idx; Refresh();
-            });
-
-            MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<MainMenuScreen>(); });
-        }
-
-        /// <summary>Two rows of colour swatches (10 each).</summary>
-        static Button[] Swatches(UIStack st, System.Action<int> onPick)
-        {
-            int n = Config.Palette.Length, perRow = n / 2;
-            var all = new Button[n];
-            float oldSpacing = st.Spacing;
-            st.Spacing = 8; st.RawColors = true;
-            for (int row = 0; row < 2; row++)
-            {
-                var items = new UIStack.Item[perRow];
-                for (int c = 0; c < perRow; c++)
-                {
-                    int idx = row * perRow + c;
-                    items[c] = new UIStack.Item("", Config.Palette[idx], () => onPick(idx));
-                }
-                var btns = st.Row(62, 24, items);
-                for (int c = 0; c < perRow; c++) all[row * perRow + c] = btns[c];
-            }
-            st.RawColors = false; st.Spacing = oldSpacing;
-            return all;
-        }
-
-        static void SetText(Button b, string s) { b.GetComponentInChildren<Text>().text = s; }
-
-        void Refresh()
-        {
-            var d = SaveManager.Data;
-            for (int i = 0; i < shapeBtns.Length; i++)
-            {
-                bool open = Unlocks.ShapeUnlocked(i);
-                SetText(shapeBtns[i], open ? Config.PlayerShapeNames[i] : "LV " + Unlocks.ShapeLevel[i]);
-                if (open) UIKit.SetButtonColor(shapeBtns[i], i == d.playerShape ? Neon.Purple : Neon.Indigo);
-                else UIKit.SetButtonColor(shapeBtns[i], Theme.Locked, true);
-            }
-            for (int i = 0; i < bodyBtns.Length; i++)
-            {
-                bool open = Unlocks.ColorUnlocked(i);
-                string locked = "LV " + Unlocks.ColorLevel[i];
-                SetText(bodyBtns[i], open ? (i == d.primary ? "OK" : "") : locked);
-                SetText(lineBtns[i], open ? (i == d.outline ? "OK" : "") : locked);
-                UIKit.SetButtonColor(bodyBtns[i], open ? Config.Palette[i] : Theme.Locked, true);
-                UIKit.SetButtonColor(lineBtns[i], open ? Config.Palette[i] : Theme.Locked, true);
-            }
-            preview.Refresh();
-        }
-
-        public override void OnShow() { Refresh(); }
     }
 }

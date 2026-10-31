@@ -13,17 +13,43 @@ namespace TiltRush
         public float bestDodge;
         public int bestDodgeScore;
         public string playerName = "";                    // shown on the leaderboard
-        public bool screenShake = true;
+
+        // Statistics (skins are unlocked with these, see Skins.cs)
+        public int totalKills, totalPickups, runsPlayed;
+        public float totalPlaySeconds;
+        public long knownSkins;                           // bit mask: skins already announced as unlocked
+        public bool skinsInitialized;
 
         // Wardrobe
-        public int playerShape = 0; // index into Config.PlayerShapes
+        public int playerShape = 0; // index into Skins.All
         public int primary = 0;    // Config.Palette index
         public int outline = 7;     // White
 
-        // Options
+        // Options - GRAPHICS
+        public int quality = 2;            // 0 Low, 1 Medium, 2 High, 3 Custom
+        public int particles = 2;          // 0 Off, 1 Few, 2 Many
+        public bool trail = true;          // light trail behind the ship
+        public int bgMotion = 2;           // 0 Still, 1 Calm, 2 Full
+        public float bgBrightness = 1f;    // 0.5 .. 1.2
+        public bool screenShake = true;
+        public int frameRate = 1;          // 0 = 30, 1 = 60, 2 = 120 fps
+
+        // Options - SOUND
         public float musicVolume = 0.7f;
         public float sfxVolume = 0.8f;
+        public bool buttonSounds = true;
+        public bool vibration = true;
+
+        // Options - INTERFACE
+        public int hudSize = 1;            // 0 Small, 1 Normal, 2 Large
+        public bool pauseLeft;             // pause button on the left side
+        public bool showFps;
+        public bool menuAnimations = true;
+
+        // Options - CONTROLS
         public float tiltSensitivity = 3f;
+        public int tiltSmoothing = 1;      // 0 Direct, 1 Normal, 2 Smooth
+        public bool invertX, invertY;
 
         // Tilt setup: 0 Auto (pose at round start), 1 Flat, 2 Relaxed, 3 Upright, 4 Lying down, 5 Custom (calibrated)
         public int tiltPreset = 0;
@@ -46,6 +72,26 @@ namespace TiltRush
                 Data = JsonUtility.FromJson<SaveData>(PlayerPrefs.GetString(Key));
             if (Data == null) Data = new SaveData();
             if (string.IsNullOrEmpty(Data.playerName)) { Data.playerName = "Player" + UnityEngine.Random.Range(1000, 9999); Save(); }
+            if (!Data.skinsInitialized) { Data.skinsInitialized = true; Skins.MarkAllKnown(); Save(); }
+        }
+
+        /// <summary>Deletes progress, scores and statistics, but keeps the settings and the player name.</summary>
+        public static void ResetProgress()
+        {
+            var old = Data;
+            var fresh = new SaveData();
+            // copy all settings
+            fresh.playerName = old.playerName;
+            fresh.quality = old.quality; fresh.particles = old.particles; fresh.trail = old.trail; fresh.bgMotion = old.bgMotion;
+            fresh.bgBrightness = old.bgBrightness; fresh.screenShake = old.screenShake; fresh.frameRate = old.frameRate;
+            fresh.musicVolume = old.musicVolume; fresh.sfxVolume = old.sfxVolume; fresh.buttonSounds = old.buttonSounds; fresh.vibration = old.vibration;
+            fresh.hudSize = old.hudSize; fresh.pauseLeft = old.pauseLeft; fresh.showFps = old.showFps; fresh.menuAnimations = old.menuAnimations;
+            fresh.tiltSensitivity = old.tiltSensitivity; fresh.tiltSmoothing = old.tiltSmoothing; fresh.invertX = old.invertX; fresh.invertY = old.invertY;
+            fresh.tiltPreset = old.tiltPreset; fresh.hasCustomTilt = old.hasCustomTilt; fresh.customNeutral = old.customNeutral; fresh.customOrientation = old.customOrientation;
+            Data = fresh;
+            Data.skinsInitialized = true;
+            Skins.MarkAllKnown();
+            Save();
         }
 
         public static void Save()
@@ -69,15 +115,19 @@ namespace TiltRush
     {
         public ShapeType Shape;
         public Color Primary, Outline;
+        public Sprite Detail;          // second-colour detail of the skin (drawn in the outline colour), may be null
 
         public static PlayerStyle FromSave(int playerIndex = 0)
         {
             var d = SaveManager.Data;
             int n = Config.Palette.Length;
-            int sh = Unlocks.ShapeUnlocked(d.playerShape % Config.PlayerShapes.Length) ? d.playerShape % Config.PlayerShapes.Length : 0;
+            int sh = Mathf.Abs(d.playerShape) % Skins.All.Length;
+            if (!Skins.All[sh].Unlocked) sh = 0;
+            var skin = Skins.All[sh];
             int pi = Unlocks.ColorUnlocked(d.primary % n) ? d.primary % n : 0;
             int oi = Unlocks.ColorUnlocked(d.outline % n) ? d.outline % n : 7;
-            var s = new PlayerStyle { Shape = Config.PlayerShapes[sh], Primary = Config.Palette[pi], Outline = Config.Palette[oi] };
+            var s = new PlayerStyle { Shape = skin.Shape, Primary = Config.Palette[pi], Outline = Config.Palette[oi],
+                                      Detail = SpriteFactory.Detail(skin.Shape, skin.Detail) };
             if (playerIndex == 1)                       // player 2 gets a different (unlocked) colour
             {
                 int p2 = pi;

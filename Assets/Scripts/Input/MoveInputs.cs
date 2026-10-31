@@ -23,7 +23,8 @@ namespace TiltRush
         Vector3 neutral, filtered;
         int lastFrame = -1;
         const float DeadZone = 0.04f;
-        const float Smoothing = 20f;   // low-pass filter against sensor jitter (higher = more direct, lower = smoother)
+        // low-pass filter against sensor jitter (higher = more direct, lower = smoother) - Options > Controls > Smoothing
+        static readonly float[] SmoothingLevels = { 45f, 20f, 9f };
 
         public TiltInput() { Calibrate(); }
 
@@ -71,13 +72,16 @@ namespace TiltRush
             if (Time.frameCount != lastFrame)
             {
                 lastFrame = Time.frameCount;
-                float k = 1f - Mathf.Exp(-Smoothing * Mathf.Min(Time.unscaledDeltaTime, 0.1f));
+                float smoothing = SmoothingLevels[Mathf.Clamp(SaveManager.Data.tiltSmoothing, 0, 2)];
+                float k = 1f - Mathf.Exp(-smoothing * Mathf.Min(Time.unscaledDeltaTime, 0.1f));
                 filtered = Vector3.Lerp(filtered, Input.acceleration, k);
             }
 
             Vector3 a = filtered - neutral;   // device axes (portrait based)
             Vector2 v = Landscape() == ScreenOrientation.LandscapeRight ? new Vector2(a.y, -a.x) : new Vector2(-a.y, a.x);
             v *= SaveManager.Data.tiltSensitivity;
+            if (SaveManager.Data.invertX) v.x = -v.x;
+            if (SaveManager.Data.invertY) v.y = -v.y;
 
             // soft dead zone: no jump from 0 to full speed at the edge of the zone
             float m = v.magnitude;

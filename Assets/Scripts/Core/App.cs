@@ -33,7 +33,7 @@ namespace TiltRush
         {
             I = this;
             DontDestroyOnLoad(gameObject);
-            Application.targetFrameRate = 60;
+
             Screen.autorotateToPortrait = false;
             Screen.autorotateToPortraitUpsideDown = false;
             Screen.autorotateToLandscapeLeft = true;
@@ -43,6 +43,7 @@ namespace TiltRush
             Input.multiTouchEnabled = true;
 
             SaveManager.Load();
+            ApplyFrameRate();
             SetupCamera();
 
             Audio = gameObject.AddComponent<AudioManager>();
@@ -144,6 +145,22 @@ namespace TiltRush
             if (GameWorld.Current != null) { if (GameWorld.Current.Paused) Resume(); else Pause(); }
             else if (UI.Current is MainMenuScreen) Application.Quit();
             else if (!(UI.Current is DialogScreen)) UI.Show<MainMenuScreen>();
+        }
+
+        /// <summary>Options > Graphics > Frame rate. 120 only helps on phones with a fast display.</summary>
+        public void ApplyFrameRate()
+        {
+            int[] rates = { 30, 60, 120 };
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = rates[Mathf.Clamp(SaveManager.Data.frameRate, 0, 2)];
+        }
+
+        /// <summary>Short vibration (player hit). Options > Sound > Vibration.</summary>
+        public void Vibrate()
+        {
+#if UNITY_ANDROID || UNITY_IOS
+            if (SaveManager.Data.vibration) Handheld.Vibrate();
+#endif
         }
 
         public void StartMode(ModeDef mode) { Session.Start(mode); }

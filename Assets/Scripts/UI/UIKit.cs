@@ -5,20 +5,24 @@ using UnityEngine.UI;
 
 namespace TiltRush
 {
-    /// <summary>Look of the UI: calm dark panels, slightly muted neon colours (less glaring than pure neon).</summary>
+    /// <summary>
+    /// Look of the UI (Geometry-Dash style): bright, slightly softened button colours with thick dark outlines,
+    /// translucent dark panels so the colourful background shines through, white text with dark outlines.
+    /// </summary>
     public static class Theme
     {
-        public static readonly Color Panel = new Color(0.05f, 0.06f, 0.09f, 0.78f);
-        public static readonly Color PanelRim = new Color(1f, 1f, 1f, 0.10f);
-        public static readonly Color TextDim = new Color(1f, 1f, 1f, 0.72f);
-        public static readonly Color Locked = new Color(0.2f, 0.21f, 0.26f, 1f);
+        public static readonly Color Panel = new Color(0.02f, 0.01f, 0.06f, 0.6f);
+        public static readonly Color PanelRim = new Color(0f, 0f, 0f, 0.55f);
+        public static readonly Color TextDim = new Color(1f, 1f, 1f, 0.8f);
+        public static readonly Color Locked = new Color(0.16f, 0.15f, 0.22f, 1f);
+        public static readonly Color Outline = new Color(0.03f, 0.02f, 0.06f, 0.9f);   // dark button outline
 
-        /// <summary>Softens a bright colour: a bit less saturated and a bit darker.</summary>
+        /// <summary>Softens a bright colour a little (colourful, but not glaring).</summary>
         public static Color Tone(Color c)
         {
             float h, s, v;
             Color.RGBToHSV(c, out h, out s, out v);
-            return Color.HSVToRGB(h, s * 0.8f, v * 0.82f);
+            return Color.HSVToRGB(h, s * 0.88f, v * 0.92f);
         }
     }
 
@@ -73,10 +77,33 @@ namespace TiltRush
             t.verticalOverflow = VerticalWrapMode.Overflow;
             if (outline)
             {
+                float w = size >= 70 ? 4f : (size >= 40 ? 3f : 2f);   // bigger text -> thicker dark outline
                 var o = rt.gameObject.AddComponent<Outline>();
-                o.effectColor = new Color(0, 0, 0, 0.8f); o.effectDistance = new Vector2(2, -2);
+                o.effectColor = new Color(0, 0, 0, 0.85f); o.effectDistance = new Vector2(w, -w);
             }
             return t;
+        }
+
+        /// <summary>Big title: white text, very thick dark outline and a drop shadow (GD logo style).</summary>
+        public static Text Title(Transform parent, string text, int size)
+        {
+            var t = Label(parent, text, size, Color.white);
+            var o2 = t.gameObject.AddComponent<Outline>();
+            o2.effectColor = new Color(0, 0, 0, 0.9f); o2.effectDistance = new Vector2(-6, 6);
+            var sh = t.gameObject.AddComponent<Shadow>();
+            sh.effectColor = new Color(0, 0, 0, 0.6f); sh.effectDistance = new Vector2(0, -12);
+            return t;
+        }
+
+        /// <summary>Plain image (icons), centred in the parent.</summary>
+        public static Image Icon(Transform parent, Sprite sprite, float size, Color color)
+        {
+            var rt = Rect("Icon", parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(size, size);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = sprite; img.color = color; img.raycastTarget = false;
+            return img;
         }
 
         /// <summary>Dark rounded card with a thin light rim. Created BEFORE the content so it sits behind it.</summary>
@@ -90,8 +117,14 @@ namespace TiltRush
 
             var rim = Stretch(Rect("Rim", rt));
             var ri = rim.gameObject.AddComponent<Image>();
-            ri.sprite = SpriteFactory.RoundedRing(); ri.type = Image.Type.Sliced;
+            ri.sprite = SpriteFactory.RoundedRingThick(); ri.type = Image.Type.Sliced;
             ri.color = Theme.PanelRim; ri.raycastTarget = false;
+
+            var inner = Stretch(Rect("InnerRim", rt));              // thin light line just inside the dark rim
+            inner.offsetMin = new Vector2(10, 10); inner.offsetMax = new Vector2(-10, -10);
+            var ii = inner.gameObject.AddComponent<Image>();
+            ii.sprite = SpriteFactory.RoundedRing(); ii.type = Image.Type.Sliced;
+            ii.color = new Color(1f, 1f, 1f, 0.07f); ii.raycastTarget = false;
             return rt;
         }
 
@@ -140,12 +173,18 @@ namespace TiltRush
             gloss.offsetMin = new Vector2(16, 0); gloss.offsetMax = new Vector2(-16, -10);
             var glossImg = gloss.gameObject.AddComponent<Image>();
             glossImg.sprite = SpriteFactory.RoundedFill(); glossImg.type = Image.Type.Sliced;
-            glossImg.color = new Color(1, 1, 1, 0.12f); glossImg.raycastTarget = false;
+            glossImg.color = new Color(1, 1, 1, 0.16f); glossImg.raycastTarget = false;
 
-            var ring = Stretch(Rect("Rim", rt));
+            var light = Stretch(Rect("LightRim", rt));             // thin bright bevel inside
+            light.offsetMin = new Vector2(9, 9); light.offsetMax = new Vector2(-9, -9);
+            var lightImg = light.gameObject.AddComponent<Image>();
+            lightImg.sprite = SpriteFactory.RoundedRing(); lightImg.type = Image.Type.Sliced;
+            lightImg.color = new Color(1, 1, 1, 0.35f); lightImg.raycastTarget = false;
+
+            var ring = Stretch(Rect("Rim", rt));                   // thick dark outline (GD look)
             var ringImg = ring.gameObject.AddComponent<Image>();
-            ringImg.sprite = SpriteFactory.RoundedRing(); ringImg.type = Image.Type.Sliced;
-            ringImg.color = new Color(1, 1, 1, 0.85f); ringImg.raycastTarget = false;
+            ringImg.sprite = SpriteFactory.RoundedRingThick(); ringImg.type = Image.Type.Sliced;
+            ringImg.color = Theme.Outline; ringImg.raycastTarget = false;
 
             var b = rt.gameObject.AddComponent<Button>();
             b.targetGraphic = img;
@@ -157,7 +196,7 @@ namespace TiltRush
 
             b.onClick.AddListener(() =>
             {
-                App.I.Audio.Play("click");
+                if (SaveManager.Data.buttonSounds) App.I.Audio.Play("click");
                 if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);   // keys must not re-trigger buttons
             });
             if (onClick != null) b.onClick.AddListener(onClick);
@@ -177,7 +216,7 @@ namespace TiltRush
 
         void OnEnable() { scale = 1f; velocity = 0f; down = false; hover = false; transform.localScale = Vector3.one; }
 
-        public void OnPointerDown(PointerEventData e) { down = true; App.I.Audio.Play("press"); }
+        public void OnPointerDown(PointerEventData e) { down = true; if (SaveManager.Data.buttonSounds) App.I.Audio.Play("press"); }
         public void OnPointerUp(PointerEventData e) { down = false; }
         public void OnPointerEnter(PointerEventData e) { hover = true; }
         public void OnPointerExit(PointerEventData e) { hover = false; down = false; }
@@ -223,7 +262,7 @@ namespace TiltRush
     /// <summary>UI version of the player (used in main menu + wardrobe). Reflects the saved style.</summary>
     public class PlayerPreview : MonoBehaviour
     {
-        Image glow, fill, line;
+        Image glow, backing, fill, line, detail;
         RectTransform spin;
 
         public static PlayerPreview Create(Transform parent)
@@ -232,7 +271,10 @@ namespace TiltRush
             var p = rt.gameObject.AddComponent<PlayerPreview>();
             p.glow = p.Img(rt, SpriteFactory.Glow(), 2.6f);
             p.spin = UIKit.Stretch(UIKit.Rect("Spin", rt));
+            p.backing = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1.3f);
+            p.backing.color = new Color(0, 0, 0, 0.7f);
             p.fill = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1f);
+            p.detail = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1f);
             p.line = p.Img(p.spin, SpriteFactory.Outline(ShapeType.Arrow), 1f);
             p.Refresh();
             return p;
@@ -249,7 +291,14 @@ namespace TiltRush
 
         public void Refresh()
         {
-            var st = PlayerStyle.FromSave(0);
+            Show(PlayerStyle.FromSave(0));
+        }
+
+        /// <summary>Shows any style (the wardrobe uses this to preview a skin before it is chosen).</summary>
+        public void Show(PlayerStyle st)
+        {
+            backing.sprite = SpriteFactory.Fill(st.Shape);
+            detail.sprite = st.Detail; detail.enabled = st.Detail != null; detail.color = st.Outline;
             fill.sprite = SpriteFactory.Fill(st.Shape);
             line.sprite = SpriteFactory.Outline(st.Shape);
             fill.color = st.Primary; line.color = st.Outline;

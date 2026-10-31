@@ -35,6 +35,7 @@ namespace TiltRush
             BuildTrail(pos);
             view = ShapeView.Create(transform, style.Shape, Radius, style.Primary, style.Outline, 0.5f, 10);
             view.AddBacking(new Color(0f, 0f, 0f, 0.7f), 1.3f);   // thick dark outline: readable on every background
+            view.SetDetail(style.Detail, style.Outline);            // skin detail in the second colour
             shield = ShapeView.Create(transform, ShapeType.Circle, 0.5f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
             shield.gameObject.SetActive(false);
             storm = ShapeView.Create(transform, ShapeType.Circle, 0.42f, Color.clear, new Color32(150, 130, 255, 255), 0.6f, 13);
@@ -116,7 +117,7 @@ namespace TiltRush
         void LateUpdate()
         {
             if (trail == null) return;
-            if (!Alive) { foreach (var r in trail) r.enabled = false; return; }
+            if (!Alive || !SaveManager.Data.trail) { foreach (var r in trail) r.enabled = false; return; }
 
             trailTimer += Time.deltaTime;                       // (stops while paused)
             while (trailTimer >= TrailSample)

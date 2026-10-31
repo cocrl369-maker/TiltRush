@@ -46,6 +46,9 @@ Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `d
 | colours (difficulty colour journey)         | `Visuals/GameTheme.cs` |
 | background (gradient, blocks, shapes)       | `Visuals/NeonBackground.cs` |
 | shapes (new player shapes)                  | `Visuals/SpriteFactory.cs` |
+| skins + unlock conditions                   | `Core/Skins.cs` |
+| settings screen (tabs)                      | `UI/OptionsScreen.cs` |
+| wardrobe                                    | `UI/WardrobeScreen.cs` |
 | match flow, rounds, Elo handling            | `Core/SessionController.cs` |
 | menus / screens                             | `UI/*.cs` |
 | real online backend                         | implement `Online/IOnlineService.cs`, assign in `Core/App.cs` |
@@ -76,7 +79,7 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   Turret, Decoy (dots chase the hologram). New gadget = one entry in `GadgetLibrary.All` + an effect method in `GameWorld`.
 - Campaign (`Campaign/Campaign.cs`): 12 levels. Each has a duration, number of dots (normal/fast/big), walls, swords, rings, speed curve and
   permanent obstacles (grey blocks/pillars that block you and the dots but never hurt). Edit the table to change levels.
-- Unlocks (`Core/Unlocks.cs`): skins and colours are unlocked by completed campaign levels. Tables are in the same order as `Config.PlayerShapes` / `Config.Palette`.
+- Unlocks: colours by campaign levels (`Core/Unlocks.cs`), skins by their own conditions (`Core/Skins.cs`).
 - Tilt setup (Options > Tilt Setup): Auto (pose at round start), presets (Flat / Relaxed / Upright / Lying down) or CALIBRATE NOW
   (current pose becomes the neutral pose). A live preview dot shows the input.
 - Look: `Theme` in `UI/UIKit.cs` (colour softening, panels). `Theme.Tone` controls how muted the button colours are.
@@ -118,3 +121,17 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   Fast = small spiky star, Big = spiky ball with angry eyes that look where it is going. The spikes stick out a bit beyond the
   hit circle (forgiving). Dodge dots are little saws too.
 - **Readability**: the player ship has a thick dark outline, walls have a dark core with a red rim, the sword lane is dark with light red edges.
+
+## Menus, settings, skins
+- **Main menu** (`UI/MenuScreens.cs`): GD-style logo, big PLAY button, WARDROBE (shows your ship) and LEADERBOARD,
+  round buttons for options and help, stats line. The background travels slowly through all theme colours.
+- **Buttons/panels** (`UI/UIKit.cs`): bright fill, thick dark outline, light bevel; translucent dark panels.
+- **Options** (`UI/OptionsScreen.cs`), 5 tabs:
+  GRAPHICS (quality preset, particles, light trail, frame rate, background motion, brightness, screen shake),
+  SOUND (music, effects, button sounds, vibration, next track),
+  INTERFACE (HUD size, pause button left/right, FPS counter, animations),
+  CONTROLS (tilt setup, sensitivity, smoothing, invert axes),
+  PROFILE (player name, statistics, skins count, reset progress).
+- **Skins** (`Core/Skins.cs`): 20 skins. 8 classic ones (free / campaign) + 12 two-colour skins unlocked by
+  Classic/Hard scores, Dodge survival time, destroyed dots, pickups, rounds played and online wins.
+  New unlocks are announced in the result dialog. The wardrobe shows progress for locked skins.

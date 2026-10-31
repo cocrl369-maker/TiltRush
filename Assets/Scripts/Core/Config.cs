@@ -97,14 +97,7 @@ namespace TiltRush
         public const int OnlineBestOf = 5;
         public const int LocalBestOf = 1;   // set to 3 or 5 for a local series
 
-        // Player skins (all have a sharp tip that points in the direction of movement).
-        // Unlock levels (campaign levels completed) are in Unlocks.cs
-        public static readonly ShapeType[] PlayerShapes =
-        {
-            ShapeType.Arrow, ShapeType.Dart, ShapeType.Kite, ShapeType.Ship,
-            ShapeType.Needle, ShapeType.Comet, ShapeType.Wing, ShapeType.Falcon
-        };
-        public static readonly string[] PlayerShapeNames = { "ARROW", "DART", "KITE", "SHIP", "NEEDLE", "COMET", "WING", "FALCON" };
+        // Player skins and their unlock conditions: Core/Skins.cs
 
         // Colours: the first 8 are free, the other 12 are unlocked through the campaign
         public static readonly Color[] Palette =

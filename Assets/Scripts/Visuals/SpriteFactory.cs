@@ -7,7 +7,8 @@ namespace TiltRush
     public enum ShapeType
     {
         Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon,
-        Saw, Spike6, Spike10   // enemies: saw blade, small spiky star, big spiky ball
+        Saw, Spike6, Spike10,  // enemies: saw blade, small spiky star, big spiky ball
+        Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova   // unlockable skins
     }
 
     /// <summary>
@@ -94,6 +95,8 @@ namespace TiltRush
         /// <summary>Rounded rectangle, 9-sliced (use Image.Type.Sliced). Used for the buttons.</summary>
         public static Sprite RoundedFill() { return Cached("rfill", () => Rounded(false)); }
         public static Sprite RoundedRing() { return Cached("rring", () => Rounded(true)); }
+        /// <summary>Thick dark outline for the GD-style buttons.</summary>
+        public static Sprite RoundedRingThick() { return Cached("rring2", () => Rounded(true, 12f)); }
 
         /// <summary>Sword sprite, 1 unit long, tip points up (+y).</summary>
         public static Sprite BladeFill() { return Cached("bfill", () => Blade(false)); }
@@ -120,6 +123,18 @@ namespace TiltRush
                 case ShapeType.Comet: return Poly(x, y, CometV);
                 case ShapeType.Wing:  return Poly(x, y, WingV);
                 case ShapeType.Falcon: return Poly(x, y, FalconV);
+                case ShapeType.Rocket: return Poly(x, y, RocketV);
+                case ShapeType.Star:   return Poly(x, y, StarV);
+                case ShapeType.Crystal: return Poly(x, y, CrystalV);
+                case ShapeType.Fang:   return Poly(x, y, FangV);
+                case ShapeType.Manta:  return Poly(x, y, MantaV);
+                case ShapeType.Bolt:   return Poly(x, y, BoltV);
+                case ShapeType.Spear:  return Poly(x, y, SpearV);
+                case ShapeType.Hornet: return Poly(x, y, HornetV);
+                case ShapeType.Crown:  return Poly(x, y, CrownV);
+                case ShapeType.Saber:  return Poly(x, y, SaberV);
+                case ShapeType.Phoenix: return Poly(x, y, PhoenixV);
+                case ShapeType.Nova:   return Poly(x, y, NovaV);
                 case ShapeType.Diamond: return (Mathf.Abs(x) + Mathf.Abs(y) - 0.95f) * 0.7071f;
                 case ShapeType.Saw:
                 {
@@ -155,6 +170,64 @@ namespace TiltRush
                                               new Vector2(-0.35f, -0.45f), new Vector2(-0.95f, -0.75f), new Vector2(-0.55f, 0.1f) };
         static readonly Vector2[] ShipV  = { new Vector2(0, 0.95f), new Vector2(0.8f, -0.3f), new Vector2(0.5f, -0.85f), new Vector2(-0.5f, -0.85f), new Vector2(-0.8f, -0.3f) };
 
+        // Unlockable skins (tip up as well)
+        static readonly Vector2[] RocketV = { new Vector2(0, 0.95f), new Vector2(0.32f, 0.45f), new Vector2(0.32f, -0.35f), new Vector2(0.62f, -0.85f), new Vector2(0.15f, -0.6f),
+                                              new Vector2(-0.15f, -0.6f), new Vector2(-0.62f, -0.85f), new Vector2(-0.32f, -0.35f), new Vector2(-0.32f, 0.45f) };
+        static readonly Vector2[] StarV = StarPoly(5, 0.95f, 0.42f, 0f);
+        static readonly Vector2[] NovaV = StarPoly(8, 0.95f, 0.5f, 0f);
+        static readonly Vector2[] CrystalV = { new Vector2(0, 0.95f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, -0.35f), new Vector2(0, -0.95f), new Vector2(-0.5f, -0.35f), new Vector2(-0.5f, 0.35f) };
+        static readonly Vector2[] FangV = { new Vector2(0, 0.95f), new Vector2(0.48f, -0.15f), new Vector2(0.32f, -0.85f), new Vector2(0, -0.5f), new Vector2(-0.32f, -0.85f), new Vector2(-0.48f, -0.15f) };
+        static readonly Vector2[] MantaV = { new Vector2(0, 0.9f), new Vector2(0.35f, 0.35f), new Vector2(0.95f, -0.1f), new Vector2(0.4f, -0.3f), new Vector2(0.12f, -0.9f), new Vector2(0, -0.6f),
+                                             new Vector2(-0.12f, -0.9f), new Vector2(-0.4f, -0.3f), new Vector2(-0.95f, -0.1f), new Vector2(-0.35f, 0.35f) };
+        static readonly Vector2[] BoltV = { new Vector2(0.28f, 0.95f), new Vector2(-0.68f, -0.12f), new Vector2(-0.06f, -0.12f), new Vector2(-0.3f, -0.95f), new Vector2(0.7f, 0.22f), new Vector2(0.08f, 0.22f) };
+        static readonly Vector2[] SpearV = { new Vector2(0, 0.98f), new Vector2(0.52f, 0.25f), new Vector2(0.26f, 0.22f), new Vector2(0.26f, -0.9f), new Vector2(-0.26f, -0.9f), new Vector2(-0.26f, 0.22f), new Vector2(-0.52f, 0.25f) };
+        static readonly Vector2[] HornetV = { new Vector2(0, 0.95f), new Vector2(0.2f, 0.55f), new Vector2(0.85f, 0.35f), new Vector2(0.3f, 0f), new Vector2(0.35f, -0.6f), new Vector2(0, -0.9f),
+                                              new Vector2(-0.35f, -0.6f), new Vector2(-0.3f, 0f), new Vector2(-0.85f, 0.35f), new Vector2(-0.2f, 0.55f) };
+        static readonly Vector2[] CrownV = { new Vector2(0, 0.95f), new Vector2(0.25f, 0.4f), new Vector2(0.72f, 0.7f), new Vector2(0.6f, -0.3f), new Vector2(0.75f, -0.85f),
+                                             new Vector2(-0.75f, -0.85f), new Vector2(-0.6f, -0.3f), new Vector2(-0.72f, 0.7f), new Vector2(-0.25f, 0.4f) };
+        static readonly Vector2[] SaberV = { new Vector2(0, 0.98f), new Vector2(0.3f, -0.3f), new Vector2(0.75f, -0.45f), new Vector2(0.2f, -0.6f), new Vector2(0, -0.95f),
+                                             new Vector2(-0.2f, -0.6f), new Vector2(-0.75f, -0.45f), new Vector2(-0.3f, -0.3f) };
+        static readonly Vector2[] PhoenixV = { new Vector2(0, 0.95f), new Vector2(0.25f, 0.4f), new Vector2(0.95f, 0.55f), new Vector2(0.55f, 0f), new Vector2(0.8f, -0.5f), new Vector2(0.25f, -0.35f),
+                                               new Vector2(0, -0.9f), new Vector2(-0.25f, -0.35f), new Vector2(-0.8f, -0.5f), new Vector2(-0.55f, 0f), new Vector2(-0.95f, 0.55f), new Vector2(-0.25f, 0.4f) };
+
+        static Vector2[] StarPoly(int points, float outer, float inner, float rot)
+        {
+            var v = new Vector2[points * 2];
+            for (int i = 0; i < v.Length; i++)
+            {
+                float a = Mathf.PI * 0.5f + rot + i * Mathf.PI / points;
+                float r = i % 2 == 0 ? outer : inner;
+                v[i] = new Vector2(Mathf.Cos(a) * r, Mathf.Sin(a) * r);
+            }
+            return v;
+        }
+
+        /// <summary>Second-colour detail of a skin: a smaller copy of the shape (Inner) or a round cockpit (Core).</summary>
+        public static Sprite Detail(ShapeType s, SkinDetail kind)
+        {
+            if (kind == SkinDetail.None) return null;
+            return Cached("detail" + s + kind, () => Make(Res, Res, (x, y) =>
+            {
+                float d = kind == SkinDetail.Inner
+                    ? Sdf(s, x / 0.45f, (y + 0.05f) / 0.45f) * 0.45f
+                    : Mathf.Sqrt(x * x + (y + 0.05f) * (y + 0.05f)) - 0.2f;
+                return Mathf.Clamp01(0.5f - d / 0.03f);
+            }));
+        }
+
+        /// <summary>Gear icon (options button).</summary>
+        public static Sprite Gear()
+        {
+            return Cached("gear", () => Make(Res, Res, (x, y) =>
+            {
+                float r = Mathf.Sqrt(x * x + y * y);
+                float u = Mathf.Repeat(Mathf.Atan2(y, x) / 6.2832f * 8f, 1f);
+                float tooth = Mathf.Abs(u - 0.5f) < 0.22f ? 0.9f : 0.7f;
+                float outer = r - tooth, hole = 0.3f - r;
+                return Mathf.Clamp01(0.5f - Mathf.Max(outer, hole) / 0.03f);
+            }));
+        }
+
         // Signed distance to a polygon (negative inside)
         static float Poly(float px, float py, Vector2[] v)
         {
@@ -174,10 +247,10 @@ namespace TiltRush
             return s * Mathf.Sqrt(d);
         }
 
-        static Sprite Rounded(bool ring)
+        static Sprite Rounded(bool ring, float thick = 7f)
         {
             const int n = 128;
-            const float radius = 44f, thick = 7f;
+            const float radius = 44f;
             float half = n * 0.5f - 1.5f;
             var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
             var pixels = new Color32[n * n];

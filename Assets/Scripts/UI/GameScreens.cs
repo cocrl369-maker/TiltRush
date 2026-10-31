@@ -11,6 +11,7 @@ namespace TiltRush
         float toastTimer, bonusTimer;
         int bonusSum;
         Text bonusLabel;
+        RectTransform pauseRt;
 
         protected override void Build()
         {
@@ -38,8 +39,36 @@ namespace TiltRush
             UIKit.Anchor(toastLabel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 330), new Vector2(1000, 140));
 
             var pause = UIKit.MakeButton(safe, "II", Neon.Blue, new Vector2(120, 120), () => App.I.Pause(), 56);
-            UIKit.Anchor((RectTransform)pause.transform, new Vector2(1, 1), new Vector2(-40, -30), new Vector2(120, 120));
-            ((RectTransform)pause.transform).pivot = new Vector2(1, 1);
+            pauseRt = (RectTransform)pause.transform;
+        }
+
+        /// <summary>Options > Interface: HUD size and pause button side.</summary>
+        void ApplyLayout()
+        {
+            var d = SaveManager.Data;
+            float k = d.hudSize == 0 ? 0.8f : (d.hudSize == 2 ? 1.25f : 1f);
+            bool left = d.pauseLeft;
+
+            // the info column moves to the other side when the pause button is on the left
+            Vector2 corner = left ? new Vector2(1, 1) : new Vector2(0, 1);
+            float sx = left ? -40f : 40f;
+            TextAnchor align = left ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
+            Text[] col = { timeLabel, pointsLabel, bonusLabel, effectLabel };
+            float[] ys = { -30f, -95f, -150f, -205f };
+            for (int i = 0; i < col.Length; i++)
+            {
+                var rt = col[i].rectTransform;
+                rt.anchorMin = rt.anchorMax = rt.pivot = corner;
+                rt.anchoredPosition = new Vector2(sx, ys[i] * k);
+                rt.localScale = Vector3.one * k;
+                col[i].alignment = align;
+            }
+            scoreLabel.rectTransform.localScale = Vector3.one * k;
+            toastLabel.rectTransform.localScale = Vector3.one * k;
+
+            Vector2 pc = left ? new Vector2(0, 1) : new Vector2(1, 1);
+            UIKit.Anchor(pauseRt, pc, new Vector2(left ? 40 : -40, -30), new Vector2(120, 120));
+            pauseRt.localScale = Vector3.one * k;
         }
 
         void OnEnable() { GameWorld.Toast += OnToast; GameWorld.Bonus += OnBonus; }
@@ -64,6 +93,7 @@ namespace TiltRush
             safe.offsetMin = safe.offsetMax = Vector2.zero;
             toastLabel.text = ""; toastTimer = 0;
             bonusLabel.text = ""; bonusTimer = 0;
+            ApplyLayout();
         }
 
         void Update()

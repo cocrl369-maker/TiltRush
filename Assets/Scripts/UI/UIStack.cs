@@ -69,6 +69,83 @@ namespace TiltRush
             return res;
         }
 
+        // ------------------------------------------------------------------ settings rows (label left, control right)
+
+        /// <summary>Label on the left, a button on the right that cycles through the options. Returns a refresh action.</summary>
+        public System.Action Choice(string label, string[] options, System.Func<int> get, System.Action<int> set, float h = 84f)
+        {
+            RowLabel(label, h);
+            float cw = width * 0.46f;
+            Button b = null;
+            b = UIKit.MakeButton(root, "", Neon.Indigo, new Vector2(cw, h), () =>
+            {
+                set((get() + 1) % options.Length);
+                if (onChanged != null) onChanged();
+            }, 34);
+            PlaceRight((RectTransform)b.transform, cw, h);
+            var txt = b.GetComponentInChildren<Text>();
+            System.Action refresh = () => { txt.text = options[Mathf.Clamp(get(), 0, options.Length - 1)]; };
+            refresh();
+            y += h + Spacing;
+            return refresh;
+        }
+
+        /// <summary>ON / OFF switch (green when on).</summary>
+        public System.Action Toggle(string label, System.Func<bool> get, System.Action<bool> set, float h = 84f)
+        {
+            RowLabel(label, h);
+            float cw = width * 0.46f;
+            Button b = null;
+            b = UIKit.MakeButton(root, "", Neon.Gray, new Vector2(cw, h), () =>
+            {
+                set(!get());
+                if (onChanged != null) onChanged();
+            }, 34);
+            PlaceRight((RectTransform)b.transform, cw, h);
+            var txt = b.GetComponentInChildren<Text>();
+            System.Action refresh = () =>
+            {
+                bool on = get();
+                txt.text = on ? "ON" : "OFF";
+                UIKit.SetButtonColor(b, on ? Neon.Green : Neon.Gray);
+            };
+            refresh();
+            y += h + Spacing;
+            return refresh;
+        }
+
+        /// <summary>Slider on the right side. Returns a refresh action (reads the value again).</summary>
+        public System.Action SliderRow(string label, float min, float max, System.Func<float> get, System.Action<float> set, float h = 84f)
+        {
+            RowLabel(label, h);
+            float cw = width * 0.46f;
+            var s = BuildSlider(cw, 60f, min, max, get(), v => set(v));
+            PlaceRight((RectTransform)s.transform, cw, 60f, (h - 60f) * 0.5f);
+            y += h + Spacing;
+            return () => s.SetValueWithoutNotify(get());
+        }
+
+        /// <summary>Called after any Choice/Toggle changed (e.g. to refresh dependent rows).</summary>
+        public System.Action onChanged;
+
+        void RowLabel(string text, float h)
+        {
+            var l = UIKit.Label(root, text, 34, Color.white, TextAnchor.MiddleLeft);
+            var rt = l.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width * 0.52f, h);
+            rt.anchoredPosition = new Vector2(cx - width / 2f, -y);
+        }
+
+        void PlaceRight(RectTransform rt, float w, float h, float dy = 0f)
+        {
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(w, h);
+            rt.anchoredPosition = new Vector2(cx + width / 2f, -(y + dy));
+        }
+
         /// <summary>Single-line text input (e.g. the leaderboard name).</summary>
         public InputField TextField(string label, string value, int maxLength, UnityAction<string> onEndEdit)
         {
@@ -94,20 +171,31 @@ namespace TiltRush
         public Slider Slider(string label, float min, float max, float value, UnityAction<float> onChange)
         {
             Label(label, 38, Color.white, 50);
+            var s = BuildSlider(width, 60, min, max, value, onChange);
+            Place((RectTransform)s.transform, width, 60);
+            return s;
+        }
+
+        Slider BuildSlider(float w, float h, float min, float max, float value, UnityAction<float> onChange)
+        {
             var rt = UIKit.Rect("Slider", root);
-            Place(rt, width, 60);
+            rt.sizeDelta = new Vector2(w, h);
 
             var bg = UIKit.Rect("BG", rt);
-            bg.anchorMin = new Vector2(0, 0.35f); bg.anchorMax = new Vector2(1, 0.65f);
+            bg.anchorMin = new Vector2(0, 0.3f); bg.anchorMax = new Vector2(1, 0.7f);
             bg.offsetMin = bg.offsetMax = Vector2.zero;
-            bg.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.15f);
+            var bgImg = bg.gameObject.AddComponent<Image>();
+            bgImg.sprite = SpriteFactory.RoundedFill(); bgImg.type = Image.Type.Sliced; bgImg.pixelsPerUnitMultiplier = 4f;
+            bgImg.color = new Color(0, 0, 0, 0.45f);
 
             var fillArea = UIKit.Rect("FillArea", rt);
             fillArea.anchorMin = new Vector2(0, 0.35f); fillArea.anchorMax = new Vector2(1, 0.65f);
             fillArea.offsetMin = fillArea.offsetMax = Vector2.zero;
             var fill = UIKit.Rect("Fill", fillArea);
             fill.sizeDelta = Vector2.zero;
-            fill.gameObject.AddComponent<Image>().color = Neon.Lime;
+            var fillImg = fill.gameObject.AddComponent<Image>();
+            fillImg.sprite = SpriteFactory.RoundedFill(); fillImg.type = Image.Type.Sliced; fillImg.pixelsPerUnitMultiplier = 4f;
+            fillImg.color = Theme.Tone(Neon.Lime);
 
             var handleArea = UIKit.Rect("HandleArea", rt);
             UIKit.Stretch(handleArea);
@@ -115,7 +203,9 @@ namespace TiltRush
             var handle = UIKit.Rect("Handle", handleArea);
             handle.sizeDelta = new Vector2(56, 56);
             var hImg = handle.gameObject.AddComponent<Image>();
-            hImg.color = Color.white;
+            hImg.sprite = SpriteFactory.Fill(ShapeType.Circle); hImg.color = Color.white;
+            var hOutline = handle.gameObject.AddComponent<Outline>();
+            hOutline.effectColor = Theme.Outline; hOutline.effectDistance = new Vector2(3, -3);
 
             var s = rt.gameObject.AddComponent<Slider>();
             s.fillRect = fill; s.handleRect = handle; s.targetGraphic = hImg;

@@ -10,6 +10,7 @@ namespace TiltRush
         public int Points;         // score of the round (solo modes)
         public bool Completed;     // campaign: level goal reached
         public int Winner;         // 0/1, or -1 for a draw
+        public int Kills, Pickups; // statistics (unlock skins)
     }
 
     /// <summary>
@@ -45,6 +46,7 @@ namespace TiltRush
         readonly Stack<Enemy> enemyPool = new Stack<Enemy>();   // killed dots are reused instead of destroyed
 
         public float Elapsed, Difficulty, CountdownLeft = 3f, Score;
+        public int Kills, PickupsCollected;
         public float SlowTimer, FreezeTimer;
         public int ScoreInt { get { return Mathf.FloorToInt(Score); } }
         public float TimeLeft { get { return Level != null ? Mathf.Max(0f, Level.Duration - Elapsed) : 0f; } }
@@ -466,6 +468,7 @@ namespace TiltRush
             App.I.Shake(0.35f, 0.45f);
             deathTime[p.Index] = Elapsed;
             App.I.Audio.Play("die");
+            App.I.Vibrate();
         }
 
         /// <summary>Adds bonus points (scaled by difficulty). Returns the points actually awarded.</summary>
@@ -482,6 +485,7 @@ namespace TiltRush
         {
             var e = Enemies[i];
             if (e.Dangerous) AddBonus(Config.KillPoints[(int)e.Type], pointsMul);   // dots still spawning give nothing
+            if (e.Dangerous && !completed) Kills++;
             e.Dead = true;
             Enemies.RemoveAt(i);
             Fx.Burst(e.Pos, e.SparkColor, 0.1f, 0.5f, 0.3f);
@@ -601,6 +605,7 @@ namespace TiltRush
                     if ((pk.Pos - p.Pos).sqrMagnitude > reach * reach) continue;
 
                     pk.Def.Apply(this, p);
+                    PickupsCollected++;
                     int pts = AddBonus(Config.GadgetPoints);
                     Toast?.Invoke(pk.Def.Name.ToUpper() + "  +" + pts, pk.Def.Color);
                     Fx.Burst(pk.Pos, pk.Def.Color, 0.3f, 1.8f, 0.4f);
@@ -629,7 +634,8 @@ namespace TiltRush
         // ------------------------------------------------------------------ result / pause
         RoundResult BuildResult()
         {
-            var res = new RoundResult { Survival = new float[Players.Count], Winner = 0, Points = ScoreInt, Completed = completed };
+            var res = new RoundResult { Survival = new float[Players.Count], Winner = 0, Points = ScoreInt, Completed = completed,
+                                        Kills = Kills, Pickups = PickupsCollected };
             for (int i = 0; i < Players.Count; i++)
                 res.Survival[i] = Players[i].Alive ? Elapsed : deathTime[i];
 

@@ -5,7 +5,8 @@ namespace TiltRush
     /// <summary>A Geometry-Dash style shape: coloured fill + bright outline + soft glow behind.</summary>
     public class ShapeView : MonoBehaviour
     {
-        SpriteRenderer fill, line, glow, backing;
+        SpriteRenderer fill, line, glow, backing, detail;
+        Color detailC;
         float backingScale;
         Color fillC, lineC;
         float glowA, alpha = 1f;
@@ -43,6 +44,25 @@ namespace TiltRush
             fill.transform.localScale = line.transform.localScale = Vector3.one * s;
             glow.transform.localScale = Vector3.one * r * 6f;
             if (backing != null) backing.transform.localScale = Vector3.one * s * backingScale;
+            if (detail != null) detail.transform.localScale = Vector3.one * s;
+        }
+
+        /// <summary>Second-colour detail inside the shape (skins). null sprite = none.</summary>
+        public void SetDetail(Sprite sprite, Color color)
+        {
+            if (detail == null)
+            {
+                if (sprite == null) return;
+                var g = new GameObject("Detail");
+                g.transform.SetParent(transform, false);
+                detail = g.AddComponent<SpriteRenderer>();
+                detail.sortingOrder = line.sortingOrder;
+                detail.transform.localScale = fill.transform.localScale;
+            }
+            detail.sprite = sprite;
+            detail.enabled = sprite != null;
+            detailC = color;
+            Apply();
         }
 
         /// <summary>Swap the shape (used when pooled objects are reused as a different type).</summary>
@@ -79,6 +99,7 @@ namespace TiltRush
             Color f = fillC; f.a *= alpha; fill.color = f;
             Color l = lineC; l.a *= alpha; line.color = l;
             glow.color = new Color(lineC.r, lineC.g, lineC.b, glowA * alpha * lineC.a);
+            if (detail != null) { Color dc = detailC; dc.a *= alpha; detail.color = dc; }
         }
     }
 }

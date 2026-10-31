@@ -22,6 +22,8 @@ namespace TiltRush
         readonly Dictionary<Type, UIScreen> screens = new Dictionary<Type, UIScreen>();
         public UIScreen Current { get; private set; }
         UIScreen belowOverlay;   // the screen under an overlay (e.g. the HUD under the pause menu)
+        Text fpsLabel;
+        float fpsSmooth = 60f;
 
         public void Build()
         {
@@ -56,6 +58,21 @@ namespace TiltRush
             AddScreen<HudScreen>();
             AddScreen<PauseScreen>();     // keep overlays/dialog last so they render on top
             AddScreen<DialogScreen>();
+
+            // FPS counter (Options > Interface > Show FPS), always on top
+            fpsLabel = UIKit.Label(canvas.transform, "", 28, Neon.Lime);
+            UIKit.Anchor(fpsLabel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -8), new Vector2(200, 40));
+        }
+
+        void Update()
+        {
+            if (fpsLabel == null) return;
+            bool on = SaveManager.Data.showFps;
+            if (fpsLabel.enabled != on) fpsLabel.enabled = on;
+            if (!on) return;
+            float dt = Mathf.Max(0.0001f, Time.unscaledDeltaTime);
+            fpsSmooth = Mathf.Lerp(fpsSmooth, 1f / dt, 0.05f);
+            fpsLabel.text = Mathf.RoundToInt(fpsSmooth) + " FPS";
         }
 
         T AddScreen<T>() where T : UIScreen
@@ -135,7 +152,7 @@ namespace TiltRush
 
         public void FadeIn()
         {
-            fadingOut = false; t = 0f;
+            fadingOut = false; t = SaveManager.Data.menuAnimations ? 0f : 1f;   // Options > Interface > Animations
             group.blocksRaycasts = true; group.interactable = true;
             Apply();
         }
@@ -143,6 +160,7 @@ namespace TiltRush
         public void FadeOut()
         {
             if (!gameObject.activeSelf || fadingOut) return;
+            if (!SaveManager.Data.menuAnimations) { gameObject.SetActive(false); return; }
             fadingOut = true; t = 0f;
             group.blocksRaycasts = false; group.interactable = false;
         }

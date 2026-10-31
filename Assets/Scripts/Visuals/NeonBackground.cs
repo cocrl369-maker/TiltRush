@@ -62,19 +62,25 @@ namespace TiltRush
             if (cam == null) cam = Camera.main;
             if (cam == null || far == null) return;
 
-            float dt = Time.unscaledDeltaTime, t = Time.unscaledTime;
-            shown = Mathf.Lerp(shown, Intensity, 1f - Mathf.Exp(-1.5f * dt));
+            var save = SaveManager.Data;
+            float motion = save.bgMotion == 0 ? 0f : (save.bgMotion == 1 ? 0.35f : 1f);   // Options > Graphics > Background
+            float dt = Time.unscaledDeltaTime * motion, t = Time.unscaledTime * motion + 10f;
+
+            // in the menus the colours slowly travel through the whole palette (like the GD menu)
+            float target = GameWorld.Current != null ? Intensity : 0.3f + 0.28f * Mathf.Sin(Time.unscaledTime * 0.06f);
+            shown = Mathf.Lerp(shown, target, 1f - Mathf.Exp(-1.5f * Time.unscaledDeltaTime));
             GameTheme.SetLevel(shown);
             var th = GameTheme.Now;
-            float beat = (App.I != null && App.I.Audio != null) ? App.I.Audio.Beat : 0f;
+            float beat = (App.I != null && App.I.Audio != null) ? App.I.Audio.Beat * motion : 0f;
+            float bright = Mathf.Clamp(save.bgBrightness, 0.4f, 1.3f);
 
             transform.position = new Vector3(cam.transform.position.x, cam.transform.position.y, 0f);
             float h = cam.orthographicSize * 2f, w = h * cam.aspect;
 
             baseQuad.transform.localScale = new Vector3(w + 2f, h + 2f, 1f);
-            baseQuad.color = th.BgBottom;
+            baseQuad.color = Bright(th.BgBottom, bright);
             gradient.transform.localScale = new Vector3(w + 2f, h + 2f, 1f);
-            gradient.color = th.BgTop;
+            gradient.color = Bright(th.BgTop, bright);
 
             // diagonal drift, faster when it gets harder (near layer moves faster = depth)
             Vector2 dir = new Vector2(0.94f, 0.34f);
@@ -113,6 +119,8 @@ namespace TiltRush
                 floaters[i].color = new Color(th.Tile.r, th.Tile.g, th.Tile.b, Mathf.Lerp(0.06f, 0.13f, shown));
             }
         }
+
+        static Color Bright(Color c, float k) { return new Color(Mathf.Clamp01(c.r * k), Mathf.Clamp01(c.g * k), Mathf.Clamp01(c.b * k), 1f); }
 
         delegate Color TileColor(int ix, int iy, Vector2 pos);
 
