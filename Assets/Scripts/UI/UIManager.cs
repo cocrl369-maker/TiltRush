@@ -13,6 +13,8 @@ namespace TiltRush
         public void Init(UIManager ui) { UI = ui; if (HasVignette) UIKit.AddVignette(transform); Build(); }
         protected abstract void Build();
         public virtual void OnShow() { }
+        /// <summary>Music playlist for this screen ("Menu"); null = keep the current music (HUD, dialogs, pause).</summary>
+        public virtual string MusicContext { get { return "Menu"; } }
     }
 
     /// <summary>Owns the canvas and all screens. To add a screen: write a UIScreen class and AddScreen it below.</summary>
@@ -119,6 +121,7 @@ namespace TiltRush
             bool visible = s.gameObject.activeSelf && !fade.FadingOut;   // e.g. a dialog that only gets new text
             s.gameObject.SetActive(true);
             if (!visible) fade.FadeIn();
+            if (s.MusicContext != null && App.I != null && App.I.Audio != null) App.I.Audio.SetContext(s.MusicContext);
             s.OnShow();
             Current = s;
             return s;

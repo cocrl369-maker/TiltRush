@@ -86,6 +86,7 @@ namespace TiltRush
         {
             Current = this; Mode = mode; Level = level; this.onEnd = onEnd;
             asteroids = mode.Id == GameModeId.Asteroids;
+            App.I.Audio.SetContext(mode.Id.ToString());   // Music/<Mode>, else Music/Game
             // campaign: the level's own theme; asteroid field: outer space
             GameTheme.Override = level != null ? level.Theme : (asteroids ? LevelThemes.Space : null);
             Time.timeScale = 1f;

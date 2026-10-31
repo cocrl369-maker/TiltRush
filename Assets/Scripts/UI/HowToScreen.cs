@@ -110,6 +110,16 @@ namespace TiltRush
             c.Para("New skins are unlocked by playing: high scores in Classic and Hard, long Dodge runs, destroyed dots, collected pickups and online wins.");
             c.Para("Open the WARDROBE and tap a locked skin to see what is still missing.");
 
+            // optional: Assets/Resources/Music/credits.txt (one line per track)
+            var credits = Resources.Load<TextAsset>("Music/credits");
+            if (credits != null && credits.text.Trim().Length > 0)
+            {
+                c = deck.NewCard();
+                c.Heading("MUSIC CREDITS", Neon.Aqua);
+                foreach (var line in credits.text.Split('\n'))
+                    if (line.Trim().Length > 0) c.Para(line.Trim());
+            }
+
             deck.Finish();
         }
 

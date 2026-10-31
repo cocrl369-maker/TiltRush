@@ -6,6 +6,7 @@ namespace TiltRush
 {
     public class HudScreen : UIScreen
     {
+        public override string MusicContext { get { return null; } }
         RectTransform safe;
         Text timeLabel, pointsLabel, scoreLabel, centerLabel, toastLabel, effectLabel;
         float toastTimer, bonusTimer;
@@ -284,6 +285,7 @@ namespace TiltRush
 
     public class PauseScreen : UIScreen
     {
+        public override string MusicContext { get { return null; } }
         protected override void Build()
         {
             var bg = ((RectTransform)transform).gameObject.AddComponent<Image>();
@@ -300,6 +302,7 @@ namespace TiltRush
     /// <summary>Generic message screen: title, text, 0-3 buttons. Used for results, matchmaking, errors.</summary>
     public class DialogScreen : UIScreen
     {
+        public override string MusicContext { get { return null; } }
         Text titleLabel, bodyLabel;
         RectTransform buttonRoot;
 

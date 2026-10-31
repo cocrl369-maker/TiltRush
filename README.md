@@ -30,9 +30,17 @@
 - PC / Unity editor / Device Simulator: keyboard only.
 
 ## Music (Newgrounds)
-Download tracks from Newgrounds (check the artist's licence and credit them!) and put the files into
-`Assets/Resources/Music/`. They play automatically in random order. The current track name is shown in Options.
-Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die` (otherwise generated beeps are used).
+Put .mp3 / .ogg / .wav files into sub-folders of `Assets/Resources/Music/`:
+`Menu` (menus), `Game` (all modes), optional per mode: `Campaign`, `Classic`, `Hard`, `Dodge`, `Asteroids`, `Coop`, `Online`, `Tutorial`.
+Missing folders fall back to `Game`, then to everything in `Music`. Tracks play in random order and cross-fade between menu and game.
+Credits: `Assets/Resources/Music/credits.txt` (one line per track) appears as the last card in HOW TO PLAY.
+Tip: select the music files in Unity and set Load Type = Streaming (saves memory on the phone).
+Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die`, `shoot`, `crack` (otherwise generated beeps are used).
+
+## Testing on the phone
+- Quick test without building: install **Unity Remote 5** on the phone, connect via USB, Edit > Project Settings > Editor > Device = your phone,
+  press Play. The game then uses the phone's tilt and touches (`Platform.RemoteConnected`).
+- Real build: see the German quick start at the top.
 
 ## Where do I change what?
 | I want to change...                         | File |

@@ -210,6 +210,13 @@ namespace TiltRush
                 return new TiltInput();
             }
 
+            // Editor + Unity Remote app: tilt / touch from the phone, keyboard still works
+            if (Platform.RemoteConnected)
+            {
+                if (playerCount > 1) return new CombinedInput(new TouchStickInput(index), new KeyboardInput(index == 0 ? KeyScheme.WASD : KeyScheme.Arrows));
+                return new CombinedInput(new TiltInput(), new KeyboardInput(KeyScheme.Both));
+            }
+
             // PC / Unity editor (also Device Simulator): keyboard - only for testing
             if (playerCount > 1) return new KeyboardInput(index == 0 ? KeyScheme.WASD : KeyScheme.Arrows);
             return new KeyboardInput(KeyScheme.Both);

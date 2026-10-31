@@ -17,7 +17,7 @@ namespace TiltRush
         IMoveInput preview;
         protected override bool HasVignette { get { return true; } }
 
-        static bool IsPhone { get { return Application.isMobilePlatform && !Application.isEditor && SystemInfo.supportsAccelerometer; } }
+        static bool IsPhone { get { return (Application.isMobilePlatform && !Application.isEditor && SystemInfo.supportsAccelerometer) || Platform.RemoteConnected; } }
 
         protected override void Build()
         {

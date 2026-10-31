@@ -55,7 +55,6 @@ namespace TiltRush
             UI.Build();
             if (SaveManager.Data.tutorialDone) UI.Show<MainMenuScreen>();
             else Session.StartTutorial();          // very first start: straight into the tutorial (can be skipped)
-            Audio.Next();
         }
 
         void SetupCamera()

@@ -5,7 +5,23 @@ namespace TiltRush
     /// <summary>Which texts / controls to show: phone (tilt + touch) or PC (keyboard, only for testing).</summary>
     public static class Platform
     {
-        public static bool IsPhone { get { return Application.isMobilePlatform; } }
+        public static bool IsPhone { get { return Application.isMobilePlatform || RemoteConnected; } }
+
+        /// <summary>
+        /// Unity Remote 5 (free app) is connected: the editor receives the phone's tilt and touches.
+        /// Lets you test the tilt controls by pressing Play in the editor - no build needed.
+        /// </summary>
+        public static bool RemoteConnected
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return UnityEditor.EditorApplication.isRemoteConnected;
+#else
+                return false;
+#endif
+            }
+        }
 
         public static string MoveHint
         {

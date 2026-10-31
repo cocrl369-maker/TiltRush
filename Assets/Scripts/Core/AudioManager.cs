@@ -4,16 +4,26 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>
-    /// Music: drop .mp3/.ogg/.wav files (e.g. from Newgrounds) into Assets/Resources/Music - they are
-    /// picked up automatically and played in random order.
-    /// SFX: drop clips into Assets/Resources/Sfx named click, pickup, launch, die. Missing ones are generated.
+    /// MUSIC - put .mp3 / .ogg / .wav files (e.g. from Newgrounds) into sub-folders of Assets/Resources/Music:
+    ///   Music/Menu       menus and lobby
+    ///   Music/Game       all game modes (fallback for the folders below)
+    ///   Music/Campaign, Music/Classic, Music/Hard, Music/Dodge, Music/Asteroids, Music/Coop, Music/Online, Music/Tutorial
+    ///                    optional: own music for one mode
+    /// A missing folder falls back to Music/Game, then to every file in Music. Tracks play in random order and
+    /// cross-fade when you go from the menu into a game. Optional credits: Assets/Resources/Music/credits.txt
+    /// (one line per track) - shown as the last card in HOW TO PLAY.
+    /// SFX: drop clips into Assets/Resources/Sfx named click, pickup, launch, die ... Missing ones are generated.
     /// </summary>
     public class AudioManager : MonoBehaviour
     {
         AudioSource music, sfx;
-        AudioClip[] tracks;
+        AudioClip[] tracks = new AudioClip[0];
         int current = -1;
+        string context = "";
+        float fade = 1f, fadeTarget = 1f;
+        AudioClip[] pending;
         readonly Dictionary<string, AudioClip> sfxCache = new Dictionary<string, AudioClip>();
+        readonly Dictionary<string, AudioClip[]> playlists = new Dictionary<string, AudioClip[]>();
 
         // Beat detection for visuals: 0..1, jumps up on loud moments of the music and decays quickly.
         public float Beat { get; private set; }
@@ -25,15 +35,44 @@ namespace TiltRush
 
         void Awake()
         {
-            tracks = Resources.LoadAll<AudioClip>("Music");
             music = gameObject.AddComponent<AudioSource>();
             sfx = gameObject.AddComponent<AudioSource>();
             ApplyVolumes();
+            SetContext("Menu");
+        }
+
+        AudioClip[] Load(string folder)
+        {
+            if (!playlists.TryGetValue(folder, out var list))
+            {
+                list = Resources.LoadAll<AudioClip>(folder);
+                playlists[folder] = list;
+            }
+            return list;
+        }
+
+        /// <summary>"Menu", "Game" or a mode name ("Asteroids", "Campaign" ...). Switches the playlist with a cross-fade.</summary>
+        public void SetContext(string ctx)
+        {
+            if (ctx == context) return;
+            context = ctx;
+            AudioClip[] list = Load("Music/" + ctx);
+            if (list.Length == 0 && ctx != "Menu") list = Load("Music/Game");
+            if (list.Length == 0) list = Load("Music");
+            if (list == tracks && music.isPlaying) { pending = null; fadeTarget = 1f; return; }   // same music: keep playing
+            pending = list;
+            if (music.isPlaying) fadeTarget = 0f;                 // fade out, then switch (see Update)
+            else { tracks = pending; pending = null; Next(); }
         }
 
         void Update()
         {
-            if (tracks.Length > 0 && !music.isPlaying && Application.isFocused) Next();
+            // cross-fade between playlists
+            fade = Mathf.MoveTowards(fade, fadeTarget, Time.unscaledDeltaTime / 0.8f);
+            if (pending != null && fade <= 0f) { tracks = pending; pending = null; Next(); fadeTarget = 1f; }
+            ApplyVolumes();
+
+            if (pending == null && tracks.Length > 0 && !music.isPlaying && Application.isFocused) Next();
             UpdateBeat();
         }
 
@@ -62,11 +101,13 @@ namespace TiltRush
             current = n;
             music.clip = tracks[current];
             music.Play();
+            fadeTarget = 1f;
         }
 
         public void ApplyVolumes()
         {
-            music.volume = SaveManager.Data.musicVolume;
+            if (music == null) return;
+            music.volume = SaveManager.Data.musicVolume * fade;
             sfx.volume = SaveManager.Data.sfxVolume;
         }
 
