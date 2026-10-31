@@ -37,8 +37,9 @@ namespace TiltRush
             var sc = cgo.AddComponent<CanvasScaler>();
             sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             sc.referenceResolution = new Vector2(1920, 1080);
-            sc.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            sc.matchWidthOrHeight = 0.5f;
+            // Expand: the canvas is always at least 1920 x 1080. Wide phones (20:9) get extra width,
+            // tablets extra height - nothing gets squeezed, so buttons never cover other content.
+            sc.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             cgo.AddComponent<GraphicRaycaster>();
 
             if (EventSystem.current == null)

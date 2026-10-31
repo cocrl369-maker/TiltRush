@@ -188,12 +188,15 @@ namespace TiltRush
             holder.anchorMin = holder.anchorMax = holder.pivot = new Vector2(0.5f, 1f);
             holder.anchoredPosition = new Vector2(0, -50); holder.sizeDelta = new Vector2(220, 220);
             picture(holder);
-            var t = UIKit.Label(btn.transform, name, name.Length > 12 ? 46 : 54, Color.white);
-            UIKit.Anchor(t.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -290), new Vector2(w - 40, 80));
+            var t = UIKit.Label(btn.transform, name, 52, Color.white);
+            UIKit.Anchor(t.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -285), new Vector2(w - 70, 84));
+            UIKit.ShrinkToFit(t);
             var d = UIKit.Label(btn.transform, desc, 30, Theme.TextDim);
-            UIKit.Anchor(d.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -375), new Vector2(w - 60, 120));
+            UIKit.Anchor(d.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -375), new Vector2(w - 80, 120));
+            UIKit.ShrinkToFit(d);
             info = UIKit.Label(btn.transform, "", 32, Neon.Yellow);
-            UIKit.Anchor(info.rectTransform, new Vector2(0.5f, 0f), new Vector2(0, 40), new Vector2(w - 40, 50));
+            UIKit.Anchor(info.rectTransform, new Vector2(0.5f, 0f), new Vector2(0, 40), new Vector2(w - 70, 50));
+            UIKit.ShrinkToFit(info);
             return btn;
         }
 

@@ -119,7 +119,10 @@ namespace TiltRush
                     break;
 
                 case GameModeId.Coop:
-                    FinishRound(r.Winner, "P1: " + r.Survival[0].ToString("0.0") + "s\nP2: " + r.Survival[1].ToString("0.0") + "s");
+                    string detail = r.Winner < 0
+                        ? "Both players crashed at the same moment after " + r.Survival[0].ToString("0.0") + " s."
+                        : "PLAYER " + (2 - r.Winner) + " crashed after " + r.Survival[1 - r.Winner].ToString("0.0") + " s.";
+                    FinishRound(r.Winner, detail);
                     break;
 
                 case GameModeId.Online:

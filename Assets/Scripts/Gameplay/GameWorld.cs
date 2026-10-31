@@ -925,8 +925,14 @@ namespace TiltRush
 
             if (Players.Count > 1)
             {
-                float diff = res.Survival[0] - res.Survival[1];
-                res.Winner = Mathf.Abs(diff) < 0.02f ? -1 : (diff > 0 ? 0 : 1);
+                // the round ends as soon as one player crashes -> whoever is still flying wins
+                bool a0 = Players[0].Alive, a1 = Players[1].Alive;
+                if (a0 != a1) res.Winner = a0 ? 0 : 1;
+                else
+                {
+                    float diff = res.Survival[0] - res.Survival[1];
+                    res.Winner = Mathf.Abs(diff) < 0.02f ? -1 : (diff > 0 ? 0 : 1);   // both crashed: who lasted longer
+                }
             }
             return res;
         }

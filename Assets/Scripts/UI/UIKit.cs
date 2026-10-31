@@ -84,6 +84,27 @@ namespace TiltRush
             return t;
         }
 
+        /// <summary>
+        /// Keeps a label inside its parent with a margin: long text wraps onto a new line and, if it still
+        /// does not fit, gets smaller (never over the edge).
+        /// </summary>
+        public static void FitInside(Text t, float marginX, float marginY)
+        {
+            var rt = Stretch(t.rectTransform);
+            rt.offsetMin = new Vector2(marginX, marginY); rt.offsetMax = new Vector2(-marginX, -marginY);
+            ShrinkToFit(t);
+        }
+
+        /// <summary>Wrap + shrink (best fit) between 45 % and 100 % of the font size.</summary>
+        public static void ShrinkToFit(Text t)
+        {
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.resizeTextForBestFit = true;
+            t.resizeTextMaxSize = t.fontSize;
+            t.resizeTextMinSize = Mathf.Max(12, Mathf.RoundToInt(t.fontSize * 0.45f));
+        }
+
         /// <summary>Big title: white text, very thick dark outline and a drop shadow (GD logo style).</summary>
         public static Text Title(Transform parent, string text, int size)
         {
@@ -230,7 +251,8 @@ namespace TiltRush
             });
             if (onClick != null) b.onClick.AddListener(onClick);
 
-            Stretch(Label(rt, text, fontSize, Color.white).rectTransform);
+            var label = Label(rt, text, fontSize, Color.white);
+            FitInside(label, Mathf.Min(22f, size.x * 0.08f), Mathf.Min(12f, size.y * 0.1f));
             return b;
         }
     }

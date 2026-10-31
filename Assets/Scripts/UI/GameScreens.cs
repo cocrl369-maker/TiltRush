@@ -314,6 +314,8 @@ namespace TiltRush
             var st = new UIStack((RectTransform)transform, 70);
             titleLabel = st.Label("", 90, Color.white, 150);
             bodyLabel = st.Label("", 46, Color.white, 400);
+            UIKit.ShrinkToFit(bodyLabel);                 // long texts get smaller instead of running into the buttons
+            UIKit.ShrinkToFit(titleLabel);
 
             buttonRoot = UIKit.Stretch(UIKit.Rect("Buttons", transform));
             buttonRoot.offsetMax = new Vector2(0, -690);
