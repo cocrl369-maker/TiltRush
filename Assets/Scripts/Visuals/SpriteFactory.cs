@@ -4,7 +4,11 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    public enum ShapeType { Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon }
+    public enum ShapeType
+    {
+        Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon,
+        Saw, Spike6, Spike10   // enemies: saw blade, small spiky star, big spiky ball
+    }
 
     /// <summary>
     /// Generates all sprites in code (white, tinted later via SpriteRenderer.color) -
@@ -33,6 +37,47 @@ namespace TiltRush
         public static Sprite SoftBand()
         {
             return Cached("softband", () => Make(64, 64, (x, y) => Mathf.Pow(1f - Mathf.Abs(y), 2f)));
+        }
+
+        /// <summary>Vertical gradient: transparent at the bottom, opaque at the top (background).</summary>
+        public static Sprite VGradient()
+        {
+            return Cached("vgrad", () => Make(64, 64, (x, y) => { float t = (y + 1f) * 0.5f; return t * t * (3f - 2f * t); }));
+        }
+
+        /// <summary>Background block: rounded square outline with a smaller square inside (GD block look).</summary>
+        public static Sprite TileOutline()
+        {
+            return Cached("tileline", () => Make(Res, Res, (x, y) =>
+            {
+                float outer = RoundBox(x, y, 0.86f, 0.12f), inner = RoundBox(x, y, 0.42f, 0.06f);
+                float a1 = Mathf.Clamp01(0.5f - (Mathf.Abs(outer) - 0.035f) / 0.02f);
+                float a2 = Mathf.Clamp01(0.5f - (Mathf.Abs(inner) - 0.025f) / 0.02f) * 0.7f;
+                return Mathf.Max(a1, a2);
+            }));
+        }
+
+        /// <summary>Background block: filled rounded square.</summary>
+        public static Sprite TileFill()
+        {
+            return Cached("tilefill", () => Make(Res, Res, (x, y) => Mathf.Clamp01(0.5f - RoundBox(x, y, 0.9f, 0.12f) / 0.02f)));
+        }
+
+        /// <summary>Two angry slanted eyes (big enemies). Fits -1..1, eyes in the middle band.</summary>
+        public static Sprite AngryEyes()
+        {
+            return Cached("eyes", () => Make(Res, Res, (x, y) =>
+            {
+                float d = Mathf.Min(Poly(x, y, EyeL), Poly(-x, y, EyeL));
+                return Mathf.Clamp01(0.5f - d / 0.03f);
+            }));
+        }
+        static readonly Vector2[] EyeL = { new Vector2(-0.82f, 0.32f), new Vector2(-0.12f, 0.02f), new Vector2(-0.18f, -0.32f), new Vector2(-0.72f, -0.22f) };
+
+        static float RoundBox(float x, float y, float half, float r)
+        {
+            float qx = Mathf.Abs(x) - (half - r), qy = Mathf.Abs(y) - (half - r);
+            return new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0f) - r;
         }
 
         /// <summary>Dark edges, transparent centre - gives the menus depth.</summary>
@@ -76,6 +121,20 @@ namespace TiltRush
                 case ShapeType.Wing:  return Poly(x, y, WingV);
                 case ShapeType.Falcon: return Poly(x, y, FalconV);
                 case ShapeType.Diamond: return (Mathf.Abs(x) + Mathf.Abs(y) - 0.95f) * 0.7071f;
+                case ShapeType.Saw:
+                {
+                    // 8 asymmetric teeth -> looks like a turning saw blade
+                    float u = Mathf.Repeat(Mathf.Atan2(y, x) / 6.2832f * 8f, 1f);
+                    return (Mathf.Sqrt(x * x + y * y) - (0.64f + 0.26f * (1f - u))) * 0.8f;
+                }
+                case ShapeType.Spike6:
+                case ShapeType.Spike10:
+                {
+                    float n = s == ShapeType.Spike6 ? 6f : 10f;
+                    float u = Mathf.Repeat(Mathf.Atan2(y, x) / 6.2832f * n, 1f);
+                    float tri = 1f - Mathf.Abs(u * 2f - 1f);           // 0 between spikes, 1 at a spike tip
+                    return (Mathf.Sqrt(x * x + y * y) - (0.6f + 0.32f * tri * tri)) * 0.75f;
+                }
                 default: // Triangle
                     float d1 = -y - 0.6f;
                     float d2 = (-1.5f * (x + 0.85f) + 0.85f * (y + 0.6f)) / 1.724f;

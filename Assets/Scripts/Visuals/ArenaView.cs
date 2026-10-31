@@ -3,13 +3,13 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>
-    /// Draws the playfield: darker interior + glowing border. The border reacts to the game: its colour shifts from
-    /// cool white-cyan to hot red as the difficulty rises, and it pulses with the music (or a calm heartbeat
-    /// when no music is playing).
+    /// Draws the playfield: slightly darker interior (the colourful background shines through) + glowing border
+    /// in the theme's accent colour (GameTheme). The border pulses with the music, or a calm heartbeat without music.
     /// </summary>
     public class ArenaView : MonoBehaviour
     {
         SpriteRenderer[] cores, glows;
+        SpriteRenderer inside;
 
         public static Transform Build(Transform parent)
         {
@@ -19,7 +19,7 @@ namespace TiltRush
             Vector2 s = Config.ArenaSize;
             const float t = 0.1f, g = 0.9f;
 
-            Quad(root, SpriteFactory.Pixel(), Vector2.zero, s, 0f, new Color(0, 0, 0, 0.6f), -50);
+            v.inside = Quad(root, SpriteFactory.Pixel(), Vector2.zero, s, 0f, Color.clear, -50);
 
             // top, bottom, right, left
             Vector2[] pos = { new Vector2(0, s.y / 2 + t / 2), new Vector2(0, -s.y / 2 - t / 2), new Vector2(s.x / 2 + t / 2, 0), new Vector2(-s.x / 2 - t / 2, 0) };
@@ -66,9 +66,10 @@ namespace TiltRush
 
         void Apply(float pulse)
         {
-            float d = NeonBackground.Intensity;
-            float hue = Mathf.Lerp(0.52f, 0.98f, Mathf.SmoothStep(0f, 1f, d));   // cyan -> violet -> red
-            Color c = Color.HSVToRGB(hue, Mathf.Lerp(0.12f, 0.75f, d), 1f);
+            float d = GameTheme.Level;
+            var th = GameTheme.Now;
+            Color c = th.Accent;
+            inside.color = new Color(th.Dark.r, th.Dark.g, th.Dark.b, 0.22f);   // calmer playfield, background still visible
             float core = Mathf.Clamp01(0.5f + 0.4f * pulse);
             float glow = (0.08f + 0.35f * pulse) * (0.45f + 0.55f * d);
             for (int i = 0; i < 4; i++)

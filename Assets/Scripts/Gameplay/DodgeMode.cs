@@ -25,7 +25,6 @@ namespace TiltRush
         class Ctx { public Vector2 Arena, Half, Player; public float D, Speed; }
         class Entry { public string Name; public float MinDiff; public bool Announce; public Func<Ctx, float> Spawn; }
 
-        static readonly Color DotFill = new Color32(255, 30, 30, 255);
         const float TwoPi = 6.2832f;
 
         readonly Transform root;
@@ -107,12 +106,14 @@ namespace TiltRush
                     if (viewPool.Count > 0) { d.View = viewPool.Pop(); d.View.gameObject.SetActive(true); }
                     else
                     {
-                        d.View = ShapeView.Create(root, ShapeType.Circle, d.Radius, DotFill, Color.white, 0.3f, 5);
+                        d.View = ShapeView.Create(root, ShapeType.Saw, d.Radius * 1.3f, GameTheme.EnemyBody, GameTheme.EnemyRim(EnemyType.Normal), 0.3f, 5);
                         d.View.transform.GetChild(0).gameObject.SetActive(false);   // no glow: saves draw calls with hundreds of dots
                     }
                 }
                 d.Pos = new Vector2(m.x, m.y);
                 d.View.transform.position = d.Pos;
+                d.View.transform.localRotation = Quaternion.Euler(0, 0, (d.Age + d.Delay * 37f) * 200f);    // little saws spin
+                d.View.SetColors(GameTheme.EnemyBody, GameTheme.EnemyRim(EnemyType.Normal));
                 float pop = t < 0.22f ? Enemy.EaseOutBack(t / 0.22f) : 1f;          // dots pop in
                 d.View.transform.localScale = Vector3.one * Mathf.Max(0.0001f, m.z * pop);
                 d.View.Alpha = t < d.Warm ? 0.25f + 0.2f * Mathf.Sin(Time.time * 20f) : 1f;

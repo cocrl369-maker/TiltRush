@@ -20,8 +20,10 @@ namespace TiltRush
             o.center = new Vector2(def.X * arena.x, def.Y * arena.y);
             go.transform.position = o.center;
 
-            Color fill = new Color32(24, 30, 44, 255);
-            Color line = new Color32(120, 140, 175, 255);
+            // GD-style block: very dark body, outline in the theme's accent colour
+            var th = GameTheme.Evaluate(Mathf.Max(GameTheme.Level, 0.35f));
+            Color fill = Color.Lerp(th.Dark, Color.black, 0.3f);
+            Color line = Color.Lerp(th.Accent, Color.white, 0.2f);
             if (def.Circle)
             {
                 o.circle = true; o.radius = def.A;
@@ -33,6 +35,11 @@ namespace TiltRush
                 o.Quad(go.transform, SpriteFactory.Glow(), new Vector2(def.A * 1.3f, def.B * 2.2f), new Color(line.r, line.g, line.b, 0.15f), -21);
                 o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A, def.B), line, -20);
                 o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.12f, def.B - 0.12f), fill, -19);
+                if (def.A > 0.6f && def.B > 0.6f)   // inner frame like a GD block
+                {
+                    o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.36f, def.B - 0.36f), new Color(line.r, line.g, line.b, 0.35f), -18);
+                    o.Quad(go.transform, SpriteFactory.Pixel(), new Vector2(def.A - 0.44f, def.B - 0.44f), fill, -17);
+                }
             }
             return o;
         }

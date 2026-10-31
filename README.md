@@ -43,7 +43,8 @@ Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `d
 | launch ring behaviour                       | `Gameplay/LaunchRing.cs` |
 | round logic / spawning / collisions         | `Gameplay/GameWorld.cs` |
 | controls                                    | `Input/MoveInputs.cs` |
-| background stripes                          | `Visuals/NeonBackground.cs` |
+| colours (difficulty colour journey)         | `Visuals/GameTheme.cs` |
+| background (gradient, blocks, shapes)       | `Visuals/NeonBackground.cs` |
 | shapes (new player shapes)                  | `Visuals/SpriteFactory.cs` |
 | match flow, rounds, Elo handling            | `Core/SessionController.cs` |
 | menus / screens                             | `UI/*.cs` |
@@ -107,3 +108,13 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Living arena border** (`Visuals/ArenaView.cs`): colour goes from cool cyan to hot red with the difficulty and pulses with the
   music (`AudioManager.Beat`); without music it beats like a calm heart that speeds up.
 - **Screen transitions** (`ScreenFade` in `UI/UIManager.cs`): menus fade and grow softly into place, the old screen fades out.
+
+## Look (Geometry-Dash style)
+- **Colours** (`Visuals/GameTheme.cs`): turquoise-blue at the start -> blue -> purple -> magenta -> red -> glowing orange.
+  The harder it gets, the more saturated and brighter everything becomes. `Hues` = colour journey, the `Lerp` values = how bright.
+- **Background** (`Visuals/NeonBackground.cs`): colour gradient, two layers of drifting blocks (parallax), big floating outline shapes;
+  pulses with the music and drifts faster at high difficulty.
+- **Enemies** (`Gameplay/Enemy.cs`): dark bodies with glowing rims (readable on every colour). Normal = spinning saw with a glowing eye,
+  Fast = small spiky star, Big = spiky ball with angry eyes that look where it is going. The spikes stick out a bit beyond the
+  hit circle (forgiving). Dodge dots are little saws too.
+- **Readability**: the player ship has a thick dark outline, walls have a dark core with a red rim, the sword lane is dark with light red edges.

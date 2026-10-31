@@ -21,9 +21,10 @@ namespace TiltRush
             Vector2 u = new Vector2(-dir.y, dir.x);   // long axis is perpendicular to the travel direction
             go.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(u.y, u.x) * Mathf.Rad2Deg);
 
-            w.Layer("Glow", SpriteFactory.Glow(), new Vector2(length * 1.15f, w.thickness * 5f), new Color(1f, 0.1f, 0.1f, 0.35f), 4);
-            w.Layer("Border", SpriteFactory.Pixel(), new Vector2(length, w.thickness), new Color32(255, 90, 90, 255), 5);
-            w.Layer("Inner", SpriteFactory.Pixel(), new Vector2(length - 0.1f, w.thickness - 0.1f), new Color32(170, 0, 0, 255), 6);
+            // dark core + glowing red rim (readable on every background colour)
+            w.Layer("Glow", SpriteFactory.Glow(), new Vector2(length * 1.15f, w.thickness * 5f), new Color(1f, 0.1f, 0.1f, 0.45f), 4);
+            w.Layer("Border", SpriteFactory.Pixel(), new Vector2(length, w.thickness), new Color32(255, 70, 70, 255), 5);
+            w.Layer("Inner", SpriteFactory.Pixel(), new Vector2(length - 0.12f, w.thickness - 0.12f), new Color32(60, 0, 12, 255), 6);
             return w;
         }
 
@@ -84,6 +85,7 @@ namespace TiltRush
             s.warnRoot.transform.rotation = Quaternion.Euler(0, 0, ang);
             float lw = Config.SwordLaneWidth;
             s.strip = Quad(s.warnRoot.transform, new Vector2(travelDist, lw), Vector2.zero, -30);
+            s.strip.color = new Color(0.1f, 0f, 0.02f, 1f);   // dark lane + light red edges: visible on every background
             s.edgeA = Quad(s.warnRoot.transform, new Vector2(travelDist, 0.06f), new Vector2(0, lw * 0.5f), -29);
             s.edgeB = Quad(s.warnRoot.transform, new Vector2(travelDist, 0.06f), new Vector2(0, -lw * 0.5f), -29);
 
@@ -126,7 +128,7 @@ namespace TiltRush
             {
                 warn -= dt;
                 float a = 0.16f + 0.14f * Mathf.Sin(Time.time * (warn < 0.5f ? 30f : 16f));   // blinks faster right before the sword comes
-                SetAlpha(strip, a);
+                SetAlpha(strip, a * 2f);
                 SetAlpha(edgeA, a * 3f);
                 SetAlpha(edgeB, a * 3f);
                 if (warn <= 0f) { flying = true; warnRoot.SetActive(false); blade.SetActive(true); Place(); }

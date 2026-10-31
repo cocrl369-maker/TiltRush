@@ -3,49 +3,49 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>
-    /// Black background with a few thin, softly glowing lines that criss-cross like a net, with glowing
-    /// nodes where they meet. Colours form a gradient and drift; everything gets brighter and livelier
-    /// as Intensity (= difficulty) rises.
+    /// Geometry-Dash style background: a colour gradient, two layers of big blocks drifting diagonally (parallax),
+    /// and a few large floating outline shapes. The colours come from GameTheme: calm at the start, more colourful
+    /// and brighter the harder it gets. The blocks pulse softly with the music and drift faster at high difficulty.
     /// </summary>
     public class NeonBackground : MonoBehaviour
     {
-        public static float Intensity = 0.1f;   // 0..1, set by GameWorld
+        public static float Intensity = 0.1f;   // 0..1, set by GameWorld (= difficulty)
 
-        const int Vertical = 7, Horizontal = 5;   // number of lines per direction (fewer = calmer)
+        const float FarSize = 2.6f, NearSize = 4.4f;
+        const int FarCols = 18, FarRows = 10, NearCols = 12, NearRows = 7, FloaterCount = 9;
 
-        class NetLine
-        {
-            public SpriteRenderer Core, Glow;
-            public bool IsVertical;
-            public float Pos01, Angle0, Phase, Alpha;
-            public Vector2 Center, Dir;
-        }
-
-        NetLine[] lines;
-        SpriteRenderer[] nodes;
+        SpriteRenderer baseQuad, gradient;
+        SpriteRenderer[] far, near, floaters;
+        Vector2[] floatPos, floatVel;
+        float[] floatSpin, floatSize;
+        Vector2 scrollFar, scrollNear;
         float shown = 0.1f;
         Camera cam;
 
         void Start()
         {
-            var rnd = new System.Random(11);   // fixed seed -> same irregular net every time
-            lines = new NetLine[Vertical + Horizontal];
-            for (int i = 0; i < lines.Length; i++)
+            baseQuad = Make("Base", SpriteFactory.Pixel(), -120);
+            gradient = Make("Gradient", SpriteFactory.VGradient(), -119);
+
+            near = new SpriteRenderer[NearCols * NearRows];
+            for (int i = 0; i < near.Length; i++) near[i] = Make("Block", SpriteFactory.TileFill(), -114);
+            far = new SpriteRenderer[FarCols * FarRows];
+            for (int i = 0; i < far.Length; i++) far[i] = Make("Tile", SpriteFactory.TileOutline(), -113);
+
+            var rnd = new System.Random(7);   // fixed seed -> same arrangement every time
+            ShapeType[] kinds = { ShapeType.Diamond, ShapeType.Square, ShapeType.Circle, ShapeType.Triangle };
+            floaters = new SpriteRenderer[FloaterCount];
+            floatPos = new Vector2[FloaterCount]; floatVel = new Vector2[FloaterCount];
+            floatSpin = new float[FloaterCount]; floatSize = new float[FloaterCount];
+            for (int i = 0; i < FloaterCount; i++)
             {
-                bool v = i < Vertical;
-                int idx = v ? i : i - Vertical, cnt = v ? Vertical : Horizontal;
-                lines[i] = new NetLine
-                {
-                    IsVertical = v,
-                    Pos01 = (idx + 0.5f + ((float)rnd.NextDouble() - 0.5f) * 0.8f) / cnt,      // irregular spacing
-                    Angle0 = ((float)rnd.NextDouble() * 2f - 1f) * 0.55f,                      // random tilt
-                    Phase = (float)rnd.NextDouble() * 6.28f,
-                    Glow = Make("Glow", SpriteFactory.SoftBand(), -102),
-                    Core = Make("Core", SpriteFactory.Pixel(), -101)
-                };
+                floaters[i] = Make("Floater", SpriteFactory.Outline(kinds[i % kinds.Length]), -112);
+                floatPos[i] = new Vector2((float)rnd.NextDouble() * 24f - 12f, (float)rnd.NextDouble() * 14f - 7f);
+                float a = (float)rnd.NextDouble() * 6.28f;
+                floatVel[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (0.15f + 0.25f * (float)rnd.NextDouble());
+                floatSpin[i] = ((float)rnd.NextDouble() * 2f - 1f) * 25f;
+                floatSize[i] = 1.6f + 2.4f * (float)rnd.NextDouble();
             }
-            nodes = new SpriteRenderer[Vertical * Horizontal];
-            for (int i = 0; i < nodes.Length; i++) nodes[i] = Make("Node", SpriteFactory.Glow(), -100);
         }
 
         SpriteRenderer Make(string n, Sprite s, int order)
@@ -60,56 +60,86 @@ namespace TiltRush
         void Update()
         {
             if (cam == null) cam = Camera.main;
-            if (cam == null || lines == null) return;
+            if (cam == null || far == null) return;
+
+            float dt = Time.unscaledDeltaTime, t = Time.unscaledTime;
+            shown = Mathf.Lerp(shown, Intensity, 1f - Mathf.Exp(-1.5f * dt));
+            GameTheme.SetLevel(shown);
+            var th = GameTheme.Now;
+            float beat = (App.I != null && App.I.Audio != null) ? App.I.Audio.Beat : 0f;
 
             transform.position = new Vector3(cam.transform.position.x, cam.transform.position.y, 0f);
-            shown = Mathf.Lerp(shown, Intensity, Time.unscaledDeltaTime * 1.5f);
-            float h = cam.orthographicSize * 2f, w = h * cam.aspect, t = Time.time;
-            float len = Mathf.Sqrt(w * w + h * h) * 1.3f;
+            float h = cam.orthographicSize * 2f, w = h * cam.aspect;
 
-            for (int i = 0; i < lines.Length; i++)
+            baseQuad.transform.localScale = new Vector3(w + 2f, h + 2f, 1f);
+            baseQuad.color = th.BgBottom;
+            gradient.transform.localScale = new Vector3(w + 2f, h + 2f, 1f);
+            gradient.color = th.BgTop;
+
+            // diagonal drift, faster when it gets harder (near layer moves faster = depth)
+            Vector2 dir = new Vector2(0.94f, 0.34f);
+            float speed = 0.3f + 1.1f * shown;
+            scrollFar += dir * speed * 0.45f * dt;
+            scrollNear += dir * speed * dt;
+
+            // far layer: outlined blocks, a soft light wave runs across them
+            float farA = Mathf.Lerp(0.07f, 0.16f, shown) * (1f + 0.8f * beat);
+            Grid(far, FarCols, FarRows, FarSize, scrollFar, (ix, iy, p) =>
             {
-                var l = lines[i];
-                float a = l.Angle0 + 0.12f * Mathf.Sin(t * 0.25f + l.Phase);
-                l.Dir = l.IsVertical ? new Vector2(Mathf.Sin(a), Mathf.Cos(a)) : new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-                l.Center = l.IsVertical
-                    ? new Vector2((l.Pos01 - 0.5f) * w + 0.6f * Mathf.Sin(t * 0.2f + l.Phase), 0f)
-                    : new Vector2(0f, (l.Pos01 - 0.5f) * h + 0.4f * Mathf.Sin(t * 0.23f + l.Phase));
+                float wave = 0.6f + 0.4f * Mathf.Sin(t * 1.4f - (p.x + p.y) * 0.25f);
+                return new Color(th.Tile.r, th.Tile.g, th.Tile.b, farA * wave);
+            });
 
-                float hue = Mathf.Repeat(0.5f + i / (float)lines.Length * 0.4f + shown * 0.25f + t * 0.02f, 1f);
-                float wave = 0.5f + 0.5f * Mathf.Sin(t * (1f + shown * 1.5f) - i * 0.9f);
-                l.Alpha = Mathf.Lerp(0.06f, 0.5f, shown) * (0.55f + 0.45f * wave);
-                Color c = Color.HSVToRGB(hue, 0.75f, 1f);
-                float rot = Mathf.Atan2(l.Dir.y, l.Dir.x) * Mathf.Rad2Deg;
+            // near layer: big filled blocks, some darker, some lighter (checker-like pattern)
+            Grid(near, NearCols, NearRows, NearSize, scrollNear, (ix, iy, p) =>
+            {
+                float hsh = Hash(ix, iy);
+                if (hsh < 0.38f) return new Color(th.Dark.r, th.Dark.g, th.Dark.b, 0.22f + 0.1f * shown);
+                if (hsh < 0.6f) return new Color(th.Tile.r, th.Tile.g, th.Tile.b, (0.035f + 0.05f * shown) * (1f + beat));
+                return Color.clear;
+            });
 
-                l.Core.transform.localPosition = l.Center;
-                l.Core.transform.localRotation = Quaternion.Euler(0, 0, rot);
-                l.Core.transform.localScale = new Vector3(len, 0.045f, 1f);
-                l.Core.color = new Color(c.r, c.g, c.b, l.Alpha);
-
-                l.Glow.transform.localPosition = l.Center;
-                l.Glow.transform.localRotation = Quaternion.Euler(0, 0, rot);
-                l.Glow.transform.localScale = new Vector3(len, 0.9f, 1f);
-                l.Glow.color = new Color(c.r, c.g, c.b, l.Alpha * 0.45f);
+            // big floating outline shapes
+            for (int i = 0; i < FloaterCount; i++)
+            {
+                floatPos[i] += floatVel[i] * (0.6f + shown) * dt;
+                float hw = w * 0.5f + floatSize[i], hh = h * 0.5f + floatSize[i];
+                if (floatPos[i].x > hw) floatPos[i].x -= 2f * hw; else if (floatPos[i].x < -hw) floatPos[i].x += 2f * hw;
+                if (floatPos[i].y > hh) floatPos[i].y -= 2f * hh; else if (floatPos[i].y < -hh) floatPos[i].y += 2f * hh;
+                var tr = floaters[i].transform;
+                tr.localPosition = floatPos[i];
+                tr.localRotation = Quaternion.Euler(0, 0, floatSpin[i] * t);
+                tr.localScale = Vector3.one * floatSize[i] * (1f + 0.06f * beat);
+                floaters[i].color = new Color(th.Tile.r, th.Tile.g, th.Tile.b, Mathf.Lerp(0.06f, 0.13f, shown));
             }
+        }
 
-            // Glowing nodes where a vertical-ish and a horizontal-ish line cross
-            for (int i = 0; i < Vertical; i++)
-                for (int j = 0; j < Horizontal; j++)
+        delegate Color TileColor(int ix, int iy, Vector2 pos);
+
+        /// <summary>Lays out a scrolling grid. Each tile keeps its "world index" while moving, so patterns stay stable.</summary>
+        static void Grid(SpriteRenderer[] tiles, int cols, int rows, float size, Vector2 scroll, TileColor color)
+        {
+            int kx = Mathf.FloorToInt(scroll.x / size), ky = Mathf.FloorToInt(scroll.y / size);
+            float fx = scroll.x - kx * size, fy = scroll.y - ky * size;
+            for (int j = 0; j < rows; j++)
+                for (int i = 0; i < cols; i++)
                 {
-                    var l1 = lines[i]; var l2 = lines[Vertical + j];
-                    var node = nodes[i * Horizontal + j];
-                    float den = l1.Dir.x * l2.Dir.y - l1.Dir.y * l2.Dir.x;
-                    if (Mathf.Abs(den) < 0.1f) { node.color = Color.clear; continue; }
-                    float tt = ((l2.Center.x - l1.Center.x) * l2.Dir.y - (l2.Center.y - l1.Center.y) * l2.Dir.x) / den;
-                    Vector2 p = l1.Center + l1.Dir * tt;
-                    node.transform.localPosition = p;
-                    node.transform.localScale = Vector3.one * (0.7f + 0.3f * Mathf.Sin(t * 1.3f + i + j));
-                    float al = (l1.Alpha + l2.Alpha) * 0.5f;
-                    float hue = Mathf.Repeat(0.5f + (i + j) / (float)(Vertical + Horizontal) * 0.4f + shown * 0.25f + t * 0.02f, 1f);
-                    Color c = Color.HSVToRGB(hue, 0.6f, 1f);
-                    node.color = new Color(c.r, c.g, c.b, al * 1.2f);
+                    var r = tiles[j * cols + i];
+                    Vector2 p = new Vector2((i - cols * 0.5f) * size + fx, (j - rows * 0.5f) * size + fy);
+                    r.transform.localPosition = p;
+                    r.transform.localScale = Vector3.one * size;
+                    r.color = color(i - kx, j - ky, p);
                 }
+        }
+
+        static float Hash(int x, int y)
+        {
+            unchecked
+            {
+                int h = x * 374761393 + y * 668265263;
+                h = (h ^ (h >> 13)) * 1274126177;
+                return ((h ^ (h >> 16)) & 0xFFFF) / 65535f;
+            }
         }
     }
 }

@@ -484,7 +484,7 @@ namespace TiltRush
             if (e.Dangerous) AddBonus(Config.KillPoints[(int)e.Type], pointsMul);   // dots still spawning give nothing
             e.Dead = true;
             Enemies.RemoveAt(i);
-            Fx.Burst(e.Pos, Neon.Red, 0.1f, 0.5f, 0.3f);
+            Fx.Burst(e.Pos, e.SparkColor, 0.1f, 0.5f, 0.3f);
             Fx.Sparks(e.Pos, e.SparkColor, e.Type == EnemyType.Big ? 12 : 7, e.Type == EnemyType.Big ? 6.5f : 5f);
             e.gameObject.SetActive(false);
             enemyPool.Push(e);

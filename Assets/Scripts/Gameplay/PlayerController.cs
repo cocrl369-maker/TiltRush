@@ -34,6 +34,7 @@ namespace TiltRush
             transform.position = pos;
             BuildTrail(pos);
             view = ShapeView.Create(transform, style.Shape, Radius, style.Primary, style.Outline, 0.5f, 10);
+            view.AddBacking(new Color(0f, 0f, 0f, 0.7f), 1.3f);   // thick dark outline: readable on every background
             shield = ShapeView.Create(transform, ShapeType.Circle, 0.5f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
             shield.gameObject.SetActive(false);
             storm = ShapeView.Create(transform, ShapeType.Circle, 0.42f, Color.clear, new Color32(150, 130, 255, 255), 0.6f, 13);
@@ -106,7 +107,7 @@ namespace TiltRush
                 g.transform.SetParent(root, false);
                 var r = g.AddComponent<SpriteRenderer>();
                 r.sprite = SpriteFactory.Fill(ShapeType.Circle);
-                r.sortingOrder = 8;                             // below the ship (10)
+                r.sortingOrder = 7;                             // below the ship (10)
                 trail[i] = r;
                 trailPos[i] = pos;
             }
