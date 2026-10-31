@@ -79,7 +79,7 @@ namespace TiltRush
         public const float NukeKillMultiplier = 0.25f;              // nuke kills count less so it can't dominate the score
 
         // Gadgets
-        public const float GadgetSpawnInterval = 8f;
+        public const float GadgetSpawnInterval = 4f;   // average seconds between pickups
         public const float GadgetLifetime = 8f;
         public const float SlowMoScale = 0.35f;
         public const float ShockwaveRadius = 6.5f;

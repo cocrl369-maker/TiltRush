@@ -8,6 +8,7 @@ namespace TiltRush
         public Color Tile;              // light colour for the background blocks
         public Color Accent;            // bright colour: arena border, obstacle outlines
         public Color Dark;              // very dark tint of the theme (enemy bodies, dark blocks)
+        public float Hue;               // base hue of the theme 0..1
     }
 
     /// <summary>
@@ -41,6 +42,7 @@ namespace TiltRush
             t.Tile = HSV(hue + 0.02f, sat * 0.45f, 1f);
             t.Accent = HSV(hue - 0.03f, Mathf.Lerp(0.3f, 0.75f, d), 1f);
             t.Dark = HSV(hue, 0.7f, 0.08f);
+            t.Hue = Mathf.Repeat(hue, 1f);
             return t;
         }
 

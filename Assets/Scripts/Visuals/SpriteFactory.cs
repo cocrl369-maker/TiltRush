@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace TiltRush
 {
+    /// <summary>Pictograms on the pickups: you can see roughly what a gadget does.</summary>
+    public enum GadgetIcon { Clock, Snowflake, Shield, Shockwave, Nuke, Crosshair, Lance, Bolt, Turret, Ghost }
+
     public enum ShapeType
     {
         Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon,
@@ -213,6 +216,90 @@ namespace TiltRush
                     : Mathf.Sqrt(x * x + (y + 0.05f) * (y + 0.05f)) - 0.2f;
                 return Mathf.Clamp01(0.5f - d / 0.03f);
             }));
+        }
+
+        /// <summary>White pictogram for a gadget (drawn on top of the round pickup token).</summary>
+        public static Sprite Gadget(GadgetIcon icon)
+        {
+            return Cached("gadget" + icon, () => Make(Res, Res, (x, y) => Mathf.Clamp01(0.5f - GadgetSdf(icon, x, y) / 0.035f)));
+        }
+
+        static float Seg(float px, float py, float ax, float ay, float bx, float by, float w)
+        {
+            float pax = px - ax, pay = py - ay, bax = bx - ax, bay = by - ay;
+            float h = Mathf.Clamp01((pax * bax + pay * bay) / (bax * bax + bay * bay));
+            float dx = pax - bax * h, dy = pay - bay * h;
+            return Mathf.Sqrt(dx * dx + dy * dy) - w * 0.5f;
+        }
+
+        static float Ring(float x, float y, float r, float w) { return Mathf.Abs(Mathf.Sqrt(x * x + y * y) - r) - w * 0.5f; }
+        static float Disc(float x, float y, float cx, float cy, float r) { return Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r; }
+
+        static readonly Vector2[] ShieldV = { new Vector2(-0.7f, 0.75f), new Vector2(0f, 0.92f), new Vector2(0.7f, 0.75f), new Vector2(0.66f, 0.05f),
+                                              new Vector2(0.4f, -0.5f), new Vector2(0f, -0.9f), new Vector2(-0.4f, -0.5f), new Vector2(-0.66f, 0.05f) };
+        static readonly Vector2[] GadgetBoltV = { new Vector2(0.25f, 0.92f), new Vector2(-0.55f, -0.08f), new Vector2(-0.05f, -0.08f), new Vector2(-0.25f, -0.92f), new Vector2(0.58f, 0.15f), new Vector2(0.06f, 0.15f) };
+
+        static float GadgetSdf(GadgetIcon icon, float x, float y)
+        {
+            switch (icon)
+            {
+                case GadgetIcon.Clock:        // Slow-Mo: clock
+                    return Mathf.Min(Ring(x, y, 0.72f, 0.16f),
+                           Mathf.Min(Seg(x, y, 0, 0, 0, 0.48f, 0.14f), Mathf.Min(Seg(x, y, 0, 0, 0.36f, -0.12f, 0.14f), Disc(x, y, 0, 0, 0.12f))));
+                case GadgetIcon.Snowflake:    // Freeze: snowflake
+                {
+                    float d = 9f;
+                    for (int k = 0; k < 6; k++)
+                    {
+                        float a = k * Mathf.PI / 3f + Mathf.PI / 2f, ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                        d = Mathf.Min(d, Seg(x, y, 0, 0, ca * 0.85f, sa * 0.85f, 0.13f));
+                        float bx = ca * 0.5f, by = sa * 0.5f;          // little branches
+                        for (int s = -1; s <= 1; s += 2)
+                        {
+                            float b = a + s * 0.7f;
+                            d = Mathf.Min(d, Seg(x, y, bx, by, bx + Mathf.Cos(b) * 0.28f, by + Mathf.Sin(b) * 0.28f, 0.1f));
+                        }
+                    }
+                    return d;
+                }
+                case GadgetIcon.Shield:       // Shield
+                    return Mathf.Max(Poly(x, y, ShieldV), -Mathf.Max(Poly(x / 0.6f, (y - 0.04f) / 0.6f, ShieldV) * 0.6f, -(Mathf.Abs(x) - 0.06f)));
+                case GadgetIcon.Shockwave:    // Shockwave: rings
+                    return Mathf.Min(Disc(x, y, 0, 0, 0.2f), Mathf.Min(Ring(x, y, 0.5f, 0.12f), Ring(x, y, 0.82f, 0.1f)));
+                case GadgetIcon.Nuke:         // Nuke: radiation sign
+                {
+                    float r = Mathf.Sqrt(x * x + y * y);
+                    float a = Mathf.Repeat(Mathf.Atan2(y, x) - Mathf.PI / 2f + Mathf.PI / 3f, 2f * Mathf.PI / 3f) - Mathf.PI / 3f;   // 3 blades, one points up
+                    float blade = Mathf.Max(Mathf.Max(0.3f - r, r - 0.88f), (Mathf.Abs(a) - Mathf.PI / 6f) * r);
+                    return Mathf.Min(blade, Disc(x, y, 0, 0, 0.17f));
+                }
+                case GadgetIcon.Crosshair:    // Seekers: target crosshair
+                    return Mathf.Min(Ring(x, y, 0.55f, 0.13f), Mathf.Min(Disc(x, y, 0, 0, 0.13f),
+                           Mathf.Min(Mathf.Min(Seg(x, y, 0, 0.35f, 0, 0.92f, 0.13f), Seg(x, y, 0, -0.35f, 0, -0.92f, 0.13f)),
+                                     Mathf.Min(Seg(x, y, 0.35f, 0, 0.92f, 0, 0.13f), Seg(x, y, -0.35f, 0, -0.92f, 0, 0.13f)))));
+                case GadgetIcon.Lance:        // Lance: three beams fanning out
+                {
+                    float d = Disc(x, y, 0, -0.72f, 0.17f);
+                    for (int k = -1; k <= 1; k++)
+                    {
+                        float a = Mathf.PI / 2f + k * 0.45f;
+                        d = Mathf.Min(d, Seg(x, y, 0, -0.72f, Mathf.Cos(a) * 1.55f, -0.72f + Mathf.Sin(a) * 1.55f, 0.15f));
+                    }
+                    return d;
+                }
+                case GadgetIcon.Bolt:         // Storm: lightning
+                    return Poly(x, y, GadgetBoltV);
+                case GadgetIcon.Turret:       // Turret: base + barrel
+                    return Mathf.Min(Mathf.Min(Disc(x, y, -0.15f, -0.2f, 0.42f), Seg(x, y, -0.15f, -0.2f, 0.7f, 0.55f, 0.24f)),
+                                     Seg(x, y, -0.75f, -0.75f, 0.45f, -0.75f, 0.16f));
+                default:                      // Decoy: ghost
+                {
+                    float body = Mathf.Min(Disc(x, y, 0, 0.12f, 0.6f), Mathf.Max(Mathf.Abs(x) - 0.6f, Mathf.Max(y - 0.12f, -0.72f - y)));
+                    float waves = Mathf.Min(Disc(x, y, -0.4f, -0.78f, 0.2f), Mathf.Min(Disc(x, y, 0f, -0.78f, 0.2f), Disc(x, y, 0.4f, -0.78f, 0.2f)));
+                    float eyes = Mathf.Min(Disc(x, y, -0.22f, 0.18f, 0.13f), Disc(x, y, 0.22f, 0.18f, 0.13f));
+                    return Mathf.Max(Mathf.Max(body, -waves), -eyes);
+                }
+            }
         }
 
         /// <summary>Gear icon (options button).</summary>

@@ -114,6 +114,7 @@ namespace TiltRush
             var img = rt.gameObject.AddComponent<Image>();
             img.sprite = SpriteFactory.RoundedFill(); img.type = Image.Type.Sliced;
             img.color = Theme.Panel; img.raycastTarget = false;
+            rt.gameObject.AddComponent<PanelTint>();
 
             var rim = Stretch(Rect("Rim", rt));
             var ri = rim.gameObject.AddComponent<Image>();
@@ -138,7 +139,27 @@ namespace TiltRush
 
         public static void SetButtonColor(Button b, Color c, bool raw = false)
         {
-            b.GetComponent<Image>().color = raw ? c : Theme.Tone(c);
+            var fx = b.GetComponent<ButtonFx>();
+            if (fx != null) fx.SetBase(c, raw);
+            else b.GetComponent<Image>().color = raw ? c : Theme.Tone(c);
+        }
+
+        /// <summary>
+        /// Button colour that fits the background: the button keeps its own colour (green = go, red = danger ...)
+        /// but takes on a bit of the background's light; grey buttons take the background hue completely.
+        /// Brightness and saturation stay high so buttons never disappear in the background.
+        /// </summary>
+        public static Color ThemedButton(Color c)
+        {
+            var th = GameTheme.Now;
+            float h, s, v;
+            Color.RGBToHSV(c, out h, out s, out v);
+            if (s < 0.2f)                                                        // neutral (BACK, MENU ...)
+                return Color.HSVToRGB(Mathf.Repeat(th.Hue + 0.03f, 1f), 0.45f, 0.62f);
+            Color toned = Theme.Tone(c);
+            Color mixed = Color.Lerp(toned, th.BgTop, 0.2f);
+            Color.RGBToHSV(mixed, out h, out s, out v);
+            return Color.HSVToRGB(h, Mathf.Max(s, 0.55f), Mathf.Max(v, 0.78f)); // never dull
         }
 
         /// <summary>
@@ -155,7 +176,7 @@ namespace TiltRush
             var img = rt.gameObject.AddComponent<Image>();
             img.sprite = SpriteFactory.RoundedFill();
             img.type = Image.Type.Sliced;
-            img.color = raw ? color : Theme.Tone(color);
+            img.color = raw ? color : ThemedButton(color);
 
             var shadow = rt.gameObject.AddComponent<Shadow>();
             shadow.effectColor = new Color(0, 0, 0, 0.45f);
@@ -193,6 +214,7 @@ namespace TiltRush
 
             var fx = rt.gameObject.AddComponent<ButtonFx>();
             fx.Pulse = pulse;
+            fx.Setup(img, ringImg, lightImg, color, raw);
 
             b.onClick.AddListener(() =>
             {
@@ -214,6 +236,34 @@ namespace TiltRush
         float scale = 1f, velocity;
         bool down, hover;
 
+        Image body, rim, bevel;
+        Color baseColor;
+        bool raw;
+
+        public void Setup(Image body, Image rim, Image bevel, Color c, bool raw)
+        {
+            this.body = body; this.rim = rim; this.bevel = bevel;
+            SetBase(c, raw);
+        }
+
+        public void SetBase(Color c, bool raw)
+        {
+            baseColor = c; this.raw = raw;
+            ApplyColors();
+        }
+
+        /// <summary>Follows the background colours (they change slowly in the menus and with the difficulty).</summary>
+        void ApplyColors()
+        {
+            if (body == null) return;
+            var th = GameTheme.Now;
+            body.color = raw ? baseColor : UIKit.ThemedButton(baseColor);
+            Color r = Color.Lerp(Theme.Outline, th.Dark, 0.5f); r.a = 0.92f;
+            rim.color = r;
+            Color b = Color.Lerp(Color.white, th.Tile, 0.4f); b.a = 0.4f;
+            bevel.color = b;
+        }
+
         void OnEnable() { scale = 1f; velocity = 0f; down = false; hover = false; transform.localScale = Vector3.one; }
 
         public void OnPointerDown(PointerEventData e) { down = true; if (SaveManager.Data.buttonSounds) App.I.Audio.Play("press"); }
@@ -229,6 +279,7 @@ namespace TiltRush
             if (Pulse && !down) goal += 0.025f * Mathf.Sin(Time.unscaledTime * 3f);
 
             // damped spring -> squash, then a little bounce back
+            ApplyColors();
             velocity += ((goal - scale) * 500f - velocity * 20f) * dt;
             scale += velocity * dt;
             transform.localScale = Vector3.one * scale;
@@ -241,6 +292,19 @@ namespace TiltRush
             img.sprite = SpriteFactory.RoundedRing(); img.type = Image.Type.Sliced;
             img.raycastTarget = false;
             rt.gameObject.AddComponent<UIBurst>();
+        }
+    }
+
+    /// <summary>Panels take a dark tint of the background colour, so they belong to the scene.</summary>
+    public class PanelTint : MonoBehaviour
+    {
+        Image img;
+        void Awake() { img = GetComponent<Image>(); }
+        void Update()
+        {
+            Color c = Color.Lerp(Theme.Panel, GameTheme.Now.Dark, 0.55f);
+            c.a = Theme.Panel.a;
+            img.color = c;
         }
     }
 

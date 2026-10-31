@@ -54,7 +54,7 @@ namespace TiltRush
 
         Action<RoundResult> onEnd;
         System.Random spawnRng, pickupRng, ringRng, wallRng, swordRng;
-        float spawnTimer = 1.0f, pickupTimer = 4f, wallTimer = 3f, swordTimer = 3f, endTimer, areaScale = 1f;
+        float spawnTimer = 1.0f, pickupTimer = 2.5f, wallTimer = 3f, swordTimer = 3f, endTimer, areaScale = 1f;
         bool wallsAnnounced, swordsAnnounced, ringsSpawned, gadgetsOn, completed;
         float[] deathTime;
         DodgeDirector director;      // DODGE mode only

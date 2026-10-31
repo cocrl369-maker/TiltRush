@@ -12,7 +12,7 @@ namespace TiltRush
     {
         public string Name, Description;
         public Color Color;
-        public ShapeType Icon;
+        public GadgetIcon Icon;   // pictogram on the pickup (SpriteFactory.Gadget)
         public float Weight = 1f;   // spawn probability weight
         public Action<GameWorld, PlayerController> Apply;
     }
@@ -21,35 +21,35 @@ namespace TiltRush
     {
         public static readonly List<GadgetDef> All = new List<GadgetDef>
         {
-            new GadgetDef { Name = "Slow-Mo", Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = ShapeType.Circle,
+            new GadgetDef { Name = "Slow-Mo", Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = GadgetIcon.Clock,
                 Apply = (w, p) => w.SlowTimer = 5f },
 
-            new GadgetDef { Name = "Freeze", Description = "Dots freeze in place", Color = new Color32(180, 220, 255, 255), Icon = ShapeType.Diamond,
+            new GadgetDef { Name = "Freeze", Description = "Dots freeze in place", Color = new Color32(180, 220, 255, 255), Icon = GadgetIcon.Snowflake,
                 Apply = (w, p) => w.FreezeTimer = 3.5f },
 
-            new GadgetDef { Name = "Shield", Description = "Invincible, destroys dots on touch", Color = Neon.Green, Icon = ShapeType.Square,
+            new GadgetDef { Name = "Shield", Description = "Invincible, destroys dots on touch", Color = Neon.Green, Icon = GadgetIcon.Shield,
                 Apply = (w, p) => p.GiveShield(6f) },
 
-            new GadgetDef { Name = "Shockwave", Description = "Blasts away nearby dots", Color = Neon.Orange, Icon = ShapeType.Triangle,
+            new GadgetDef { Name = "Shockwave", Description = "Blasts away nearby dots", Color = Neon.Orange, Icon = GadgetIcon.Shockwave,
                 Apply = (w, p) => w.Shockwave(p.Pos, Config.ShockwaveRadius) },
 
-            new GadgetDef { Name = "Nuke", Description = "Destroys every dot", Color = Neon.Pink, Icon = ShapeType.Circle, Weight = 0.5f,
+            new GadgetDef { Name = "Nuke", Description = "Destroys every dot", Color = Neon.Pink, Icon = GadgetIcon.Nuke, Weight = 0.5f,
                 Apply = (w, p) => w.KillAllEnemies() },
 
             // ---- inspired by the original's weapons, but with their own look and feel
-            new GadgetDef { Name = "Seekers", Description = "Homing darts hunt down the dots", Color = Neon.Lime, Icon = ShapeType.Arrow,
+            new GadgetDef { Name = "Seekers", Description = "Homing darts hunt down the dots", Color = Neon.Lime, Icon = GadgetIcon.Crosshair,
                 Apply = (w, p) => w.LaunchSeekers(p.Pos, 6) },
 
-            new GadgetDef { Name = "Lance", Description = "Fires three piercing beams ahead", Color = new Color32(255, 225, 100, 255), Icon = ShapeType.Dart,
+            new GadgetDef { Name = "Lance", Description = "Fires three piercing beams ahead", Color = new Color32(255, 225, 100, 255), Icon = GadgetIcon.Lance,
                 Apply = (w, p) => w.FireLance(p.Pos, p.Facing) },
 
-            new GadgetDef { Name = "Storm", Description = "Lightning leaps between nearby dots", Color = new Color32(150, 130, 255, 255), Icon = ShapeType.Kite,
+            new GadgetDef { Name = "Storm", Description = "Lightning leaps between nearby dots", Color = new Color32(150, 130, 255, 255), Icon = GadgetIcon.Bolt,
                 Apply = (w, p) => p.GiveStorm(5f) },
 
-            new GadgetDef { Name = "Turret", Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = ShapeType.Square,
+            new GadgetDef { Name = "Turret", Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = GadgetIcon.Turret,
                 Apply = (w, p) => w.PlaceTurret(p.Pos) },
 
-            new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = ShapeType.Ship,
+            new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost,
                 Apply = (w, p) => w.PlaceDecoy(p.Pos, p.Index) },
         };
 
@@ -72,6 +72,10 @@ namespace TiltRush
         public Vector2 Pos { get { return transform.position; } }
         ShapeView view;
 
+        Transform token;
+        SpriteRenderer icon;
+
+        /// <summary>Round token in the gadget colour with a white pictogram (clock, snowflake, shield ...).</summary>
         public static Pickup Spawn(Transform parent, GadgetDef def, Vector2 pos)
         {
             var go = new GameObject("Pickup_" + def.Name);
@@ -79,8 +83,19 @@ namespace TiltRush
             go.transform.position = pos;
             var p = go.AddComponent<Pickup>();
             p.Def = def; p.Life = Config.GadgetLifetime;
-            p.view = ShapeView.Create(go.transform, def.Icon, Radius,
-                new Color(def.Color.r, def.Color.g, def.Color.b, 0.25f), def.Color, 0.6f, 7);
+            p.token = new GameObject("Token").transform;
+            p.token.SetParent(go.transform, false);
+
+            Color dark = new Color(def.Color.r * 0.35f, def.Color.g * 0.35f, def.Color.b * 0.35f, 1f);
+            p.view = ShapeView.Create(p.token, ShapeType.Circle, Radius, dark, def.Color, 0.7f, 7);
+            p.view.AddBacking(new Color(0f, 0f, 0f, 0.75f), 1.12f);    // dark ring: visible on every background
+
+            var ig = new GameObject("Icon");
+            ig.transform.SetParent(p.token, false);
+            ig.transform.localScale = Vector3.one * Radius * 1.3f;
+            p.icon = ig.AddComponent<SpriteRenderer>();
+            p.icon.sprite = SpriteFactory.Gadget(def.Icon);
+            p.icon.sortingOrder = 9;
             return p;
         }
 
@@ -88,9 +103,12 @@ namespace TiltRush
         public bool Tick(float dt)
         {
             Life -= dt;
-            view.transform.localScale = Vector3.one * (1f + 0.12f * Mathf.Sin(Time.time * 8f));
-            view.transform.Rotate(0, 0, 60f * dt);
-            view.Alpha = Life < 2f ? (Mathf.Sin(Time.time * 20f) > 0 ? 1f : 0.3f) : 1f;
+            // gentle bounce and wobble (the pictogram stays upright and readable)
+            token.localScale = Vector3.one * (1f + 0.1f * Mathf.Sin(Time.time * 6f));
+            token.localRotation = Quaternion.Euler(0, 0, 10f * Mathf.Sin(Time.time * 3f));
+            float a = Life < 2f ? (Mathf.Sin(Time.time * 20f) > 0 ? 1f : 0.3f) : 1f;   // blinks before it disappears
+            view.Alpha = a;
+            icon.color = new Color(1f, 1f, 1f, a);
             return Life > 0f;
         }
     }

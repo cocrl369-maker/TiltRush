@@ -135,3 +135,15 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Skins** (`Core/Skins.cs`): 20 skins. 8 classic ones (free / campaign) + 12 two-colour skins unlocked by
   Classic/Hard scores, Dodge survival time, destroyed dots, pickups, rounds played and online wins.
   New unlocks are announced in the result dialog. The wardrobe shows progress for locked skins.
+
+## Help cards, gadget icons, themed buttons
+- **How to play** (`UI/HowToScreen.cs`): full-size cards with large text and pictures (gadgets, enemies, hazards, modes).
+  Swipe up/down to change cards; long cards scroll first, pulling past the end switches the card (rubber band).
+  PC: arrow buttons, arrow keys / W S / Page Up/Down, mouse wheel. Add content with `Heading`, `Para`, `Row(picture, title, colour, text)`.
+- **Gadget pickups** (`Gameplay/Gadgets.cs`): round token in the gadget colour with a white pictogram that shows what it does
+  (clock = Slow-Mo, snowflake = Freeze, shield, rings = Shockwave, radiation sign = Nuke, crosshair = Seekers, three beams = Lance,
+  lightning = Storm, turret, ghost = Decoy). Pictograms are drawn in `SpriteFactory.Gadget`. Pickups appear twice as often
+  (`Config.GadgetSpawnInterval` = 4 s).
+- **Buttons** (`UIKit.ThemedButton`): keep their own colour but take on some of the background light; grey buttons take the
+  background hue. Outline and bevel are tinted with the theme. Brightness/saturation have a minimum so buttons always stand out.
+  Panels get a dark tint of the background colour.

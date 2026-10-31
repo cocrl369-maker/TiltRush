@@ -155,47 +155,4 @@ namespace TiltRush
             campaignLabel.text = "CAMPAIGN\n<size=34>" + SaveManager.Data.campaignDone + " / " + Campaign.Levels.Length + "</size>";
         }
     }
-
-    public class HowToScreen : UIScreen
-    {
-        protected override bool HasVignette { get { return true; } }
-
-        protected override void Build()
-        {
-            new UIStack((RectTransform)transform, 30).Label("HOW TO PLAY", 80, Color.white, 100);
-
-            string col1 =
-                "<color=#00FFFF>GOAL</color>\nSurvive! The spiky dots hunt you down - saws, fast stars and big angry spike balls. The harder it gets, the more colourful the world.\n\n" +
-                "<color=#00FFFF>CONTROLS</color>\nPhone: tilt your device. Choose your favourite pose in Options > Tilt Setup.\n" +
-                "PC: WASD or arrow keys (click into the game window first). Co-op: P1 = WASD, P2 = arrows.\n\n" +
-                "<color=#00FFFF>SCORE</color>\nPoints for every second you survive - more when it gets harder. " +
-                "Bonus points for destroyed dots and pickups. Compare your Classic score on the leaderboard.";
-
-            var sb = new System.Text.StringBuilder("<color=#00FFFF>PICKUPS</color>\n");
-            foreach (var g in GadgetLibrary.All)
-                sb.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(g.Color)).Append('>').Append(g.Name).Append("</color> - ").Append(g.Description).Append('\n');
-            sb.Append("\n<color=#FFFF00>LAUNCH RINGS</color>\nYellow rings fling you backwards - escape danger or get thrown into it!");
-
-            var sb3 = new System.Text.StringBuilder();
-            sb3.Append("<color=#FF4040>RED WALLS</color>\nBars sweep across the arena. Slip around their ends!\n\n");
-            sb3.Append("<color=#FF9090>SWORDS</color>\nA light red lane warns you - then a sword races along it.\n\n");
-            sb3.Append("<color=#9FB4D2>OBSTACLES</color>\nDark blocks (campaign) block you and the dots, but never hurt. Hide behind them!\n\n");
-            sb3.Append("<color=#FF8FD0>DODGE MODE</color>\nThe dots do not chase you - they form shapes and waves. Watch out for the dotted lift, smileys and fireworks!\n\n");
-            sb3.Append("<color=#00FFFF>MODES</color>\n");
-            foreach (var m in Modes.All) sb3.Append(m.Name).Append(" - ").Append(m.Description).Append('\n');
-            sb3.Append("\n<color=#00FFFF>UNLOCKS</color>\nColours: campaign levels. Skins: campaign, high scores, Dodge times, destroyed dots, pickups and online wins - see the Wardrobe.");
-
-            Column(-640, col1);
-            Column(0, sb.ToString());
-            Column(640, sb3.ToString());
-            MenuUtil.AddBack(transform, () => UI.Show<MainMenuScreen>());
-        }
-
-        void Column(float x, string text)
-        {
-            UIKit.Panel(transform, x, 140, 610, 790);
-            var t = new UIStack((RectTransform)transform, 155, x, 560).Label(text, 30, Color.white, 750, TextAnchor.UpperLeft);
-            t.resizeTextForBestFit = true; t.resizeTextMinSize = 16; t.resizeTextMaxSize = 30;
-        }
-    }
 }
