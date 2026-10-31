@@ -7,6 +7,8 @@ namespace TiltRush
         public int Index;
         public bool Alive = true;
         public float ShieldTime;
+        public int Lives = 1;
+        public float InvulnTime;                // after losing a life: blinking, nothing can hurt you
         public float StormTime, StormCd;        // lightning gadget
         public float ShrinkTime, BoostTime, OrbitTime;
         public float FireCd, SpreadTime;        // asteroid field cannon
@@ -109,6 +111,11 @@ namespace TiltRush
                 shield.Alpha = ShieldTime < 1.5f ? (Mathf.Sin(Time.time * 25f) > 0 ? 1f : 0.3f) : 1f;
             }
 
+            if (InvulnTime > 0f)
+            {
+                InvulnTime -= dt;
+                view.Alpha = InvulnTime > 0f && Mathf.Sin(Time.time * 30f) > 0f ? 0.25f : 1f;
+            }
             if (ShrinkTime > 0f) ShrinkTime -= dt;
             if (SpreadTime > 0f) SpreadTime -= dt;
             if (BoostTime > 0f) BoostTime -= dt;
@@ -196,6 +203,17 @@ namespace TiltRush
         public void GiveShield(float seconds) { ShieldTime = seconds; shield.gameObject.SetActive(true); }
         public void GiveStorm(float seconds) { StormTime = seconds; StormCd = 0f; storm.gameObject.SetActive(true); }
         public void Launch(Vector2 impulse) { launchVel = impulse; }
+
+        /// <summary>Loses one life (if more are left): short invulnerability. Returns false when it was the last one.</summary>
+        public bool LoseLife()
+        {
+            if (Lives <= 1) return false;
+            Lives--;
+            InvulnTime = Config.RespawnInvulnerable;
+            Fx.Burst(Pos, Color.white, 0.2f, 1.8f, 0.45f);
+            Fx.Sparks(Pos, style.Primary, 16, 7f, 0.5f);
+            return true;
+        }
 
         public void Kill()
         {

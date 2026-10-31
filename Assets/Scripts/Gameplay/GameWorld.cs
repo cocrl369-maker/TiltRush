@@ -112,6 +112,7 @@ namespace TiltRush
                 var p = go.AddComponent<PlayerController>();
                 Vector2 pos = mode.Players == 1 ? Vector2.zero : new Vector2(i == 0 ? -4f : 4f, 0f);
                 p.Init(i, InputFactory.Create(i, mode.Players), pos, PlayerStyle.FromSave(i));
+                p.Lives = Mathf.Max(1, mode.Lives);
                 Players.Add(p);
             }
             deathTime = new float[mode.Players];
@@ -379,7 +380,7 @@ namespace TiltRush
 
                 foreach (var p in Players)
                 {
-                    if (!p.Alive) continue;
+                    if (!p.Alive || p.InvulnTime > 0f) continue;
                     float reach = e.Radius + p.Radius * 0.8f;
                     if ((e.Pos - p.Pos).sqrMagnitude > reach * reach) continue;
 
@@ -481,7 +482,7 @@ namespace TiltRush
         {
             foreach (var p in Players)
             {
-                if (!p.Alive || p.ShieldTime > 0f) continue;
+                if (!p.Alive || p.ShieldTime > 0f || p.InvulnTime > 0f) continue;
                 float r = p.Radius * 0.8f;
                 bool hit = false;
                 foreach (var w in walls) if (w.Hits(p.Pos, r)) { hit = true; break; }
@@ -502,6 +503,15 @@ namespace TiltRush
         void KillPlayer(PlayerController p)
         {
             if (tutorial != null) { tutorial.OnHit(p); App.I.Audio.Play("warn"); return; }   // nobody dies in the tutorial
+            if (p.InvulnTime > 0f) return;
+            if (p.LoseLife())                                                                    // Dodge / Asteroid field: 3 lives
+            {
+                App.I.Shake(0.3f, 0.35f);
+                App.I.Audio.Play("die", 0.6f);
+                App.I.Vibrate();
+                Toast?.Invoke(p.Lives == 1 ? "LAST LIFE!" : p.Lives + " LIVES LEFT", Neon.Red);
+                return;
+            }
             p.Kill();
             App.I.Shake(0.35f, 0.45f);
             deathTime[p.Index] = Elapsed;

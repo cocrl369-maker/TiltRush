@@ -44,6 +44,8 @@ namespace TiltRush
         public const float PlayerMaxSpeed = 8f;
         public const float PlayerAcceleration = 42f;
 
+        public const float RespawnInvulnerable = 2.5f;   // seconds of blinking invulnerability after losing a life
+
         // Dots (normal enemies)
         public const int MaxEnemies = 260;
         public const float EnemySpeedGrowth = 1.4f;       // dots get (1 + difficulty * this) times faster

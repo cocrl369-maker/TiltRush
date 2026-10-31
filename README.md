@@ -177,3 +177,5 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   Black Hole, Orbit (`GadgetDef.InAsteroids / InNormal`). No Slow-Mo, Freeze, Turret, Decoy.
 - **Freeze**: freezes every dot within `Config.FreezeRadius` (a bit bigger than the shockwave) into ice for `FreezeDuration`;
   frozen dots are harmless and are smashed (with points) when you fly into them.
+- **Lives**: `ModeDef.Lives` (Dodge and Asteroid Field = 3). After a hit you lose a heart and blink invulnerable for
+  `Config.RespawnInvulnerable` seconds; hearts are shown at the top of the HUD, the last one beats.

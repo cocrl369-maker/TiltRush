@@ -20,6 +20,7 @@ namespace TiltRush
         public int BestOf = 0;            // 0 = single endless run
         public float HazardRateMul = 1f;  // how often red walls / swords come
         public float RampSeconds = 0f;    // time until full difficulty (0 = Config.DifficultyRampSeconds)
+        public int Lives = 1;             // hits you can take (more than 1: hearts in the HUD)
     }
 
     public static class Modes
@@ -47,15 +48,15 @@ namespace TiltRush
         public static readonly ModeDef Dodge = new ModeDef
         {
             Id = GameModeId.Dodge, Name = "DODGE", Color = Neon.Pink,
-            Description = "No chasing: dodge shapes, waves and gags.",
-            Gadgets = false, LaunchRings = false, RampSeconds = 110f
+            Description = "No chasing: dodge shapes, waves and gags. 3 lives.",
+            Gadgets = false, LaunchRings = false, RampSeconds = 110f, Lives = 3
         };
 
         public static readonly ModeDef Asteroids = new ModeDef
         {
             Id = GameModeId.Asteroids, Name = "ASTEROID FIELD", Color = Neon.Orange,
-            Description = "Your auto-cannon fires where your tip points. Blast the rocks!",
-            LaunchRings = false, RampSeconds = 160f
+            Description = "Your auto-cannon fires where your tip points. Blast the rocks! 3 lives.",
+            LaunchRings = false, RampSeconds = 160f, Lives = 3
         };
 
         public static readonly ModeDef Coop = new ModeDef

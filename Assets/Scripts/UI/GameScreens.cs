@@ -12,6 +12,8 @@ namespace TiltRush
         int bonusSum;
         Text bonusLabel;
         RectTransform pauseRt;
+        RectTransform heartRow;
+        Image[] hearts = new Image[5];
 
         // tutorial: BLIP's speech bubble
         RectTransform speechRoot, blip;
@@ -54,6 +56,16 @@ namespace TiltRush
 
             BuildSpeech();
             BuildSticks();
+
+            // lives (Dodge / Asteroid field): hearts at the top centre
+            heartRow = UIKit.Rect("Hearts", safe);
+            UIKit.Anchor(heartRow, new Vector2(0.5f, 1f), new Vector2(0, -28), new Vector2(400, 70));
+            for (int i = 0; i < hearts.Length; i++)
+            {
+                var back = UIKit.Icon(heartRow, SpriteFactory.Heart(), 66, new Color(0, 0, 0, 0.75f));
+                back.rectTransform.anchoredPosition = new Vector2((i - 1) * 76f, 0);
+                hearts[i] = UIKit.Icon(back.transform, SpriteFactory.Heart(), 54, Neon.Red);
+            }
         }
 
         void BuildSticks()
@@ -101,6 +113,24 @@ namespace TiltRush
                 foreach (var img in stickKnob[i].GetComponentsInChildren<Image>()) img.color = new Color(c.r, c.g, c.b, 0.85f * a);
                 SetAlpha(stickBase[i], a);
                 stickLabel[i].enabled = !s.Held;
+            }
+        }
+
+        void UpdateHearts(GameWorld w)
+        {
+            int max = w.Mode.Lives;
+            heartRow.gameObject.SetActive(max > 1 && w.Players.Count > 0);
+            if (max <= 1 || w.Players.Count == 0) return;
+            int left = w.Players[0].Alive ? w.Players[0].Lives : 0;
+            for (int i = 0; i < hearts.Length; i++)
+            {
+                var back = hearts[i].transform.parent.gameObject;
+                back.SetActive(i < max);
+                ((RectTransform)back.transform).anchoredPosition = new Vector2((i - (max - 1) / 2f) * 76f, 0);
+                bool full = i < left;
+                hearts[i].color = full ? (Color)new Color32(255, 60, 90, 255) : new Color(1f, 1f, 1f, 0.12f);
+                // the last heart beats
+                hearts[i].rectTransform.localScale = Vector3.one * (full && left == 1 ? 1f + 0.15f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f);
             }
         }
 
@@ -211,6 +241,7 @@ namespace TiltRush
             if (w == null) return;
 
             UpdateSticks();
+            UpdateHearts(w);
             bool tut = w.Mode.Id == GameModeId.Tutorial;
             speechRoot.gameObject.SetActive(tut);
             skipBtn.SetActive(tut);

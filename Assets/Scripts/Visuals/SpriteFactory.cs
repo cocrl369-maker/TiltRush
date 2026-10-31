@@ -416,6 +416,18 @@ namespace TiltRush
             }
         }
 
+        /// <summary>Heart (lives in the HUD).</summary>
+        public static Sprite Heart()
+        {
+            return Cached("heart", () => Make(Res, Res, (x, y) =>
+            {
+                float d = Mathf.Min(Disc(x, y, -0.4f, 0.28f, 0.45f), Disc(x, y, 0.4f, 0.28f, 0.45f));
+                d = Mathf.Min(d, Poly(x, y, HeartV));
+                return Mathf.Clamp01(0.5f - d / 0.03f);
+            }));
+        }
+        static readonly Vector2[] HeartV = { new Vector2(-0.82f, 0.12f), new Vector2(0.82f, 0.12f), new Vector2(0f, -0.88f) };
+
         /// <summary>Gear icon (options button).</summary>
         public static Sprite Gear()
         {
