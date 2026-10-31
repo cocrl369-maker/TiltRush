@@ -5,7 +5,7 @@ using UnityEngine;
 namespace TiltRush
 {
     /// <summary>Pictograms on the pickups: you can see roughly what a gadget does.</summary>
-    public enum GadgetIcon { Clock, Snowflake, Shield, Shockwave, Nuke, Crosshair, Lance, Bolt, Turret, Ghost }
+    public enum GadgetIcon { Clock, Snowflake, Shield, Shockwave, Nuke, Crosshair, Lance, Bolt, Turret, Ghost, Shrink, Boost, Vortex, Orbit }
 
     public enum ShapeType
     {
@@ -100,6 +100,33 @@ namespace TiltRush
         public static Sprite RoundedRing() { return Cached("rring", () => Rounded(true)); }
         /// <summary>Thick dark outline for the GD-style buttons.</summary>
         public static Sprite RoundedRingThick() { return Cached("rring2", () => Rounded(true, 12f)); }
+        /// <summary>Rounded fill that fades towards the bottom (sheen on buttons).</summary>
+        public static Sprite RoundedSheen() { return Cached("rsheen", () => Rounded(false, 7f, true)); }
+
+        /// <summary>Soft glow around a rounded rectangle, 9-sliced (button / panel glow).</summary>
+        public static Sprite RoundedGlow()
+        {
+            return Cached("rglow", () =>
+            {
+                const int n = 128;
+                const float radius = 30f, pad = 26f;
+                float half = n * 0.5f - pad;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+                var pixels = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float qx = Mathf.Abs(x + 0.5f - n * 0.5f) - (half - radius);
+                        float qy = Mathf.Abs(y + 0.5f - n * 0.5f) - (half - radius);
+                        float d = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0f) - radius;
+                        float a = d <= 0f ? 1f : Mathf.Exp(-d / 8f) * (1f - d / pad);
+                        pixels[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                    }
+                tex.SetPixels32(pixels); tex.Apply();
+                tex.wrapMode = TextureWrapMode.Clamp; tex.filterMode = FilterMode.Bilinear;
+                return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(60, 60, 60, 60));
+            });
+        }
 
         /// <summary>Sword sprite, 1 unit long, tip points up (+y).</summary>
         public static Sprite BladeFill() { return Cached("bfill", () => Blade(false)); }
@@ -292,6 +319,48 @@ namespace TiltRush
                 case GadgetIcon.Turret:       // Turret: base + barrel
                     return Mathf.Min(Mathf.Min(Disc(x, y, -0.15f, -0.2f, 0.42f), Seg(x, y, -0.15f, -0.2f, 0.7f, 0.55f, 0.24f)),
                                      Seg(x, y, -0.75f, -0.75f, 0.45f, -0.75f, 0.16f));
+                case GadgetIcon.Shrink:       // Shrink: four arrows pointing inwards
+                {
+                    float d = 9f;
+                    for (int k = 0; k < 4; k++)
+                    {
+                        float a = k * Mathf.PI / 2f + Mathf.PI / 4f, ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                        float tx = ca * 0.22f, ty = sa * 0.22f, ox = ca * 0.85f, oy = sa * 0.85f;
+                        d = Mathf.Min(d, Seg(x, y, tx, ty, ox, oy, 0.13f));
+                        float nx = -sa, ny = ca;                       // arrow head at the inner end
+                        d = Mathf.Min(d, Seg(x, y, tx, ty, tx + (ca + nx) * 0.25f, ty + (sa + ny) * 0.25f, 0.13f));
+                        d = Mathf.Min(d, Seg(x, y, tx, ty, tx + (ca - nx) * 0.25f, ty + (sa - ny) * 0.25f, 0.13f));
+                    }
+                    return d;
+                }
+                case GadgetIcon.Boost:        // Boost: double chevron
+                {
+                    float d = 9f;
+                    for (int k = 0; k < 2; k++)
+                    {
+                        float ox = -0.42f + k * 0.5f;
+                        d = Mathf.Min(d, Mathf.Min(Seg(x, y, ox, 0.6f, ox + 0.42f, 0f, 0.2f), Seg(x, y, ox + 0.42f, 0f, ox, -0.6f, 0.2f)));
+                    }
+                    return d;
+                }
+                case GadgetIcon.Vortex:       // Black hole: spiral arms around a dark core
+                {
+                    float r = Mathf.Sqrt(x * x + y * y), a = Mathf.Atan2(y, x);
+                    float arm = Mathf.Repeat(a * 3f / (2f * Mathf.PI) + r * 1.6f, 1f);    // 3 spiral arms
+                    float spiral = (Mathf.Abs(arm - 0.5f) - 0.14f) * r * 2.2f;
+                    spiral = Mathf.Max(spiral, Mathf.Max(0.28f - r, r - 0.88f));
+                    return Mathf.Min(spiral, Ring(x, y, 0.2f, 0.1f));
+                }
+                case GadgetIcon.Orbit:        // Orbit: core with three moons on a ring
+                {
+                    float d = Mathf.Min(Disc(x, y, 0, 0, 0.22f), Ring(x, y, 0.62f, 0.07f));
+                    for (int k = 0; k < 3; k++)
+                    {
+                        float a = Mathf.PI / 2f + k * 2f * Mathf.PI / 3f;
+                        d = Mathf.Min(d, Disc(x, y, Mathf.Cos(a) * 0.62f, Mathf.Sin(a) * 0.62f, 0.18f));
+                    }
+                    return d;
+                }
                 default:                      // Decoy: ghost
                 {
                     float body = Mathf.Min(Disc(x, y, 0, 0.12f, 0.6f), Mathf.Max(Mathf.Abs(x) - 0.6f, Mathf.Max(y - 0.12f, -0.72f - y)));
@@ -334,7 +403,7 @@ namespace TiltRush
             return s * Mathf.Sqrt(d);
         }
 
-        static Sprite Rounded(bool ring, float thick = 7f)
+        static Sprite Rounded(bool ring, float thick = 7f, bool fade = false)
         {
             const int n = 128;
             const float radius = 44f;
@@ -348,6 +417,7 @@ namespace TiltRush
                     float qy = Mathf.Abs(y + 0.5f - n * 0.5f) - (half - radius);
                     float d = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0f) - radius;
                     float a = ring ? 0.5f - (Mathf.Abs(d + thick * 0.5f) - thick * 0.5f) : 0.5f - d;
+                    if (fade) a *= Mathf.Pow((y + 0.5f) / n, 1.6f);           // bright at the top, gone at the bottom
                     pixels[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
                 }
             tex.SetPixels32(pixels);

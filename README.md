@@ -142,8 +142,17 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   PC: arrow buttons, arrow keys / W S / Page Up/Down, mouse wheel. Add content with `Heading`, `Para`, `Row(picture, title, colour, text)`.
 - **Gadget pickups** (`Gameplay/Gadgets.cs`): round token in the gadget colour with a white pictogram that shows what it does
   (clock = Slow-Mo, snowflake = Freeze, shield, rings = Shockwave, radiation sign = Nuke, crosshair = Seekers, three beams = Lance,
-  lightning = Storm, turret, ghost = Decoy). Pictograms are drawn in `SpriteFactory.Gadget`. Pickups appear twice as often
-  (`Config.GadgetSpawnInterval` = 4 s).
+  lightning = Storm, turret, ghost = Decoy). Pictograms are drawn in `SpriteFactory.Gadget`. Pickups appear often
+  (`Config.GadgetSpawnInterval` = 2.5 s).
 - **Buttons** (`UIKit.ThemedButton`): keep their own colour but take on some of the background light; grey buttons take the
   background hue. Outline and bevel are tinted with the theme. Brightness/saturation have a minimum so buttons always stand out.
   Panels get a dark tint of the background colour.
+
+## Layered UI and new gadgets
+- **Buttons** (`UIKit.MakeButton`, `ButtonFx.ApplyColors`): layered like the gadget tokens / background blocks -
+  soft glow, dark frame, dark inside tinted with the button colour + light sheen, thin inner line, bright neon border.
+  Colour swatches and locked buttons show their colour inside. Pressing/hovering brightens the inside and the glow.
+- **Panels** (`UIKit.Panel`, `PanelTint`): dark translucent layers, thin accent border, inner line and futuristic corner brackets,
+  all tinted with the background theme.
+- **New gadgets** (14 in total): SHRINK (tiny ship + small hit circle), BOOST (faster), BLACK HOLE (pulls dots in and swallows them,
+  `BlackHole` in `GadgetEffects.cs`), ORBIT (three orbs circle you and smash dots).

@@ -111,22 +111,49 @@ namespace TiltRush
         {
             var rt = Rect("Panel", parent);
             Anchor(rt, new Vector2(0.5f, 1f), new Vector2(centerX, -topY), new Vector2(w, h));
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = SpriteFactory.RoundedFill(); img.type = Image.Type.Sliced;
-            img.color = Theme.Panel; img.raycastTarget = false;
-            rt.gameObject.AddComponent<PanelTint>();
+            var tint = rt.gameObject.AddComponent<PanelTint>();
+            tint.Frame = Layer(rt, "Frame", SpriteFactory.RoundedFill(), 0f, 1.7f);
+            tint.Fill = Layer(rt, "Fill", SpriteFactory.RoundedFill(), 5f, 1.7f);
+            tint.Sheen = Layer(rt, "Sheen", SpriteFactory.RoundedSheen(), 5f, 1.7f);
+            tint.Inner = Layer(rt, "InnerLine", SpriteFactory.RoundedRing(), 16f, 2.2f);
+            tint.Border = Layer(rt, "Border", SpriteFactory.RoundedRing(), 4f, 1.4f);
 
-            var rim = Stretch(Rect("Rim", rt));
-            var ri = rim.gameObject.AddComponent<Image>();
-            ri.sprite = SpriteFactory.RoundedRingThick(); ri.type = Image.Type.Sliced;
-            ri.color = Theme.PanelRim; ri.raycastTarget = false;
-
-            var inner = Stretch(Rect("InnerRim", rt));              // thin light line just inside the dark rim
-            inner.offsetMin = new Vector2(10, 10); inner.offsetMax = new Vector2(-10, -10);
-            var ii = inner.gameObject.AddComponent<Image>();
-            ii.sprite = SpriteFactory.RoundedRing(); ii.type = Image.Type.Sliced;
-            ii.color = new Color(1f, 1f, 1f, 0.07f); ii.raycastTarget = false;
+            // futuristic corner brackets
+            const float len = 46f, th = 6f, off = 12f;
+            var brackets = new System.Collections.Generic.List<Image>();
+            for (int cx = 0; cx < 2; cx++)
+                for (int cy = 0; cy < 2; cy++)
+                {
+                    Vector2 corner = new Vector2(cx, cy);
+                    Vector2 dir = new Vector2(cx == 0 ? 1 : -1, cy == 0 ? 1 : -1);
+                    brackets.Add(Bar(rt, corner, dir * off, new Vector2(len, th), dir));
+                    brackets.Add(Bar(rt, corner, dir * off, new Vector2(th, len), dir));
+                }
+            tint.Brackets = brackets.ToArray();
             return rt;
+        }
+
+        static Image Bar(RectTransform parent, Vector2 corner, Vector2 pos, Vector2 size, Vector2 dir)
+        {
+            var rt = Rect("Bracket", parent);
+            rt.anchorMin = rt.anchorMax = corner;
+            rt.pivot = new Vector2(dir.x > 0 ? 0f : 1f, dir.y > 0 ? 0f : 1f);
+            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            var img = rt.gameObject.AddComponent<Image>();
+            img.raycastTarget = false;
+            return img;
+        }
+
+        /// <summary>One stretched, 9-sliced image layer inside a button / panel. inset &gt; 0 = smaller, &lt; 0 = bigger.</summary>
+        public static Image Layer(RectTransform parent, string name, Sprite sprite, float inset, float cornerSharpness)
+        {
+            var rt = Stretch(Rect(name, parent));
+            rt.offsetMin = new Vector2(inset, inset); rt.offsetMax = new Vector2(-inset, -inset);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = sprite; img.type = Image.Type.Sliced;
+            img.pixelsPerUnitMultiplier = cornerSharpness;     // > 1 = smaller corner radius (more "techy")
+            img.raycastTarget = false;
+            return img;
         }
 
         /// <summary>Darkened screen edges for depth.</summary>
@@ -173,39 +200,19 @@ namespace TiltRush
             var rt = Rect("Button_" + text, parent);
             rt.sizeDelta = size;
 
+            // invisible root graphic: catches the clicks
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = SpriteFactory.RoundedFill();
-            img.type = Image.Type.Sliced;
-            img.color = raw ? color : ThemedButton(color);
+            img.color = new Color(0, 0, 0, 0);
 
-            var shadow = rt.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0, 0, 0, 0.45f);
-            shadow.effectDistance = new Vector2(0, -9);
-
-            var shade = Rect("Shade", rt);                       // darker lower half
-            shade.anchorMin = Vector2.zero; shade.anchorMax = new Vector2(1, 0.5f);
-            shade.offsetMin = new Vector2(8, 8); shade.offsetMax = new Vector2(-8, 0);
-            var shadeImg = shade.gameObject.AddComponent<Image>();
-            shadeImg.sprite = SpriteFactory.RoundedFill(); shadeImg.type = Image.Type.Sliced;
-            shadeImg.color = new Color(0, 0, 0, 0.2f); shadeImg.raycastTarget = false;
-
-            var gloss = Rect("Gloss", rt);                       // soft highlight on top
-            gloss.anchorMin = new Vector2(0, 0.5f); gloss.anchorMax = Vector2.one;
-            gloss.offsetMin = new Vector2(16, 0); gloss.offsetMax = new Vector2(-16, -10);
-            var glossImg = gloss.gameObject.AddComponent<Image>();
-            glossImg.sprite = SpriteFactory.RoundedFill(); glossImg.type = Image.Type.Sliced;
-            glossImg.color = new Color(1, 1, 1, 0.16f); glossImg.raycastTarget = false;
-
-            var light = Stretch(Rect("LightRim", rt));             // thin bright bevel inside
-            light.offsetMin = new Vector2(9, 9); light.offsetMax = new Vector2(-9, -9);
-            var lightImg = light.gameObject.AddComponent<Image>();
-            lightImg.sprite = SpriteFactory.RoundedRing(); lightImg.type = Image.Type.Sliced;
-            lightImg.color = new Color(1, 1, 1, 0.35f); lightImg.raycastTarget = false;
-
-            var ring = Stretch(Rect("Rim", rt));                   // thick dark outline (GD look)
-            var ringImg = ring.gameObject.AddComponent<Image>();
-            ringImg.sprite = SpriteFactory.RoundedRingThick(); ringImg.type = Image.Type.Sliced;
-            ringImg.color = Theme.Outline; ringImg.raycastTarget = false;
+            // layered "futuristic" look, like the gadget tokens and the background blocks:
+            // glow -> dark frame -> dark tinted inside with a light sheen -> thin inner line -> bright neon border
+            var L = new ButtonLayers();
+            L.Glow = Layer(rt, "Glow", SpriteFactory.RoundedGlow(), -22f, 1f);
+            L.Frame = Layer(rt, "Frame", SpriteFactory.RoundedFill(), 0f, 1.7f);
+            L.Fill = Layer(rt, "Fill", SpriteFactory.RoundedFill(), 6f, 1.7f);
+            L.Sheen = Layer(rt, "Sheen", SpriteFactory.RoundedSheen(), 6f, 1.7f);
+            L.Inner = Layer(rt, "InnerLine", SpriteFactory.RoundedRing(), 17f, 2.2f);
+            L.Border = Layer(rt, "Border", SpriteFactory.RoundedRingThick(), 5f, 1.7f);
 
             var b = rt.gameObject.AddComponent<Button>();
             b.targetGraphic = img;
@@ -214,7 +221,7 @@ namespace TiltRush
 
             var fx = rt.gameObject.AddComponent<ButtonFx>();
             fx.Pulse = pulse;
-            fx.Setup(img, ringImg, lightImg, color, raw);
+            fx.Setup(L, color, raw);
 
             b.onClick.AddListener(() =>
             {
@@ -228,6 +235,9 @@ namespace TiltRush
         }
     }
 
+    /// <summary>The image layers of a button (see UIKit.MakeButton).</summary>
+    public class ButtonLayers { public Image Glow, Frame, Fill, Sheen, Inner, Border; }
+
     /// <summary>Press feedback: squash while pressed, spring back with overshoot, ring burst on click.</summary>
     public class ButtonFx : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
                             IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
@@ -236,13 +246,13 @@ namespace TiltRush
         float scale = 1f, velocity;
         bool down, hover;
 
-        Image body, rim, bevel;
+        ButtonLayers layers;
         Color baseColor;
         bool raw;
 
-        public void Setup(Image body, Image rim, Image bevel, Color c, bool raw)
+        public void Setup(ButtonLayers l, Color c, bool raw)
         {
-            this.body = body; this.rim = rim; this.bevel = bevel;
+            layers = l;
             SetBase(c, raw);
         }
 
@@ -252,16 +262,36 @@ namespace TiltRush
             ApplyColors();
         }
 
-        /// <summary>Follows the background colours (they change slowly in the menus and with the difficulty).</summary>
+        static Color A(Color c, float a) { c.a = a; return c; }
+
+        /// <summary>
+        /// Colours of all layers. Normal buttons: bright neon border + glow in the button colour (tinted by the background),
+        /// dark inside tinted with the same colour. 'raw' (colour swatches, locked): the inside shows the colour itself.
+        /// </summary>
         void ApplyColors()
         {
-            if (body == null) return;
+            if (layers == null) return;
             var th = GameTheme.Now;
-            body.color = raw ? baseColor : UIKit.ThemedButton(baseColor);
-            Color r = Color.Lerp(Theme.Outline, th.Dark, 0.5f); r.a = 0.92f;
-            rim.color = r;
-            Color b = Color.Lerp(Color.white, th.Tile, 0.4f); b.a = 0.4f;
-            bevel.color = b;
+            float press = down ? 1f : (hover ? 0.4f : 0f);
+            if (raw)
+            {
+                layers.Fill.color = Color.Lerp(baseColor, Color.white, 0.12f * press);
+                layers.Border.color = Color.Lerp(baseColor, Color.white, 0.55f);
+                layers.Inner.color = A(Color.white, 0.3f);
+                layers.Sheen.color = A(Color.white, 0.18f);
+                layers.Glow.color = A(baseColor, 0.25f);
+            }
+            else
+            {
+                Color c = UIKit.ThemedButton(baseColor);
+                Color inside = Color.Lerp(c * 0.3f, th.Dark, 0.25f);
+                layers.Fill.color = A(Color.Lerp(inside, c * 0.55f, press), 0.94f);
+                layers.Border.color = Color.Lerp(c, Color.white, 0.15f + 0.25f * press);
+                layers.Inner.color = A(c, 0.5f);
+                layers.Sheen.color = A(c, 0.38f);
+                layers.Glow.color = A(c, 0.32f + 0.25f * press);
+            }
+            layers.Frame.color = A(Color.Lerp(Theme.Outline, th.Dark, 0.4f), 0.95f);
         }
 
         void OnEnable() { scale = 1f; velocity = 0f; down = false; hover = false; transform.localScale = Vector3.one; }
@@ -298,13 +328,20 @@ namespace TiltRush
     /// <summary>Panels take a dark tint of the background colour, so they belong to the scene.</summary>
     public class PanelTint : MonoBehaviour
     {
-        Image img;
-        void Awake() { img = GetComponent<Image>(); }
+        public Image Frame, Fill, Sheen, Inner, Border;
+        public Image[] Brackets;
+
         void Update()
         {
-            Color c = Color.Lerp(Theme.Panel, GameTheme.Now.Dark, 0.55f);
-            c.a = Theme.Panel.a;
-            img.color = c;
+            var th = GameTheme.Now;
+            Frame.color = new Color(0f, 0f, 0f, 0.55f);
+            Color f = Color.Lerp(Theme.Panel, th.Dark, 0.55f); f.a = 0.62f;
+            Fill.color = f;
+            Sheen.color = new Color(th.Tile.r, th.Tile.g, th.Tile.b, 0.06f);
+            Inner.color = new Color(th.Tile.r, th.Tile.g, th.Tile.b, 0.12f);
+            Border.color = new Color(th.Accent.r, th.Accent.g, th.Accent.b, 0.45f);
+            Color br = Color.Lerp(th.Accent, Color.white, 0.3f);
+            foreach (var b in Brackets) b.color = br;
         }
     }
 

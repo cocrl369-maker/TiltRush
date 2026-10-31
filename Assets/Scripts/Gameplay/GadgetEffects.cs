@@ -135,4 +135,58 @@ namespace TiltRush
             return true;
         }
     }
+
+    /// <summary>Black hole: pulls dots in from far away and swallows them. Lasts a few seconds.</summary>
+    public class BlackHole : MonoBehaviour
+    {
+        public const float Reach = 7f;
+        static readonly Color Violet = new Color32(170, 90, 255, 255);
+        float life = 4.5f, age;
+        ShapeView core;
+        Transform spiral;
+        SpriteRenderer spiralR;
+        public Vector2 Pos { get { return transform.position; } }
+
+        public static BlackHole Spawn(Transform parent, Vector2 pos)
+        {
+            var go = new GameObject("BlackHole");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var b = go.AddComponent<BlackHole>();
+            b.core = ShapeView.Create(go.transform, ShapeType.Circle, 0.45f, new Color(0.03f, 0f, 0.06f, 1f), Violet, 0.9f, 6);
+            var s = new GameObject("Spiral");
+            s.transform.SetParent(go.transform, false);
+            b.spiral = s.transform;
+            b.spiralR = s.AddComponent<SpriteRenderer>();
+            b.spiralR.sprite = SpriteFactory.Gadget(GadgetIcon.Vortex);
+            b.spiralR.color = new Color(0.8f, 0.6f, 1f, 0.85f);
+            b.spiralR.sortingOrder = 7;
+            Fx.Burst(pos, Violet, 2.5f, 0.3f, 0.5f);
+            return b;
+        }
+
+        /// <returns>false when it has collapsed</returns>
+        public bool Tick(float dt, GameWorld w)
+        {
+            life -= dt; age += dt;
+            float grow = Mathf.Min(1f, age * 3f) * Mathf.Clamp01(life * 2f);
+            core.transform.localScale = Vector3.one * grow * (1f + 0.08f * Mathf.Sin(age * 12f));
+            spiral.localScale = Vector3.one * 2.2f * grow;
+            spiral.Rotate(0, 0, -260f * dt);
+
+            for (int i = w.Enemies.Count - 1; i >= 0; i--)
+            {
+                var e = w.Enemies[i];
+                if (!e.Dangerous) continue;
+                Vector2 d = Pos - e.Pos;
+                float dist = d.magnitude;
+                if (dist > Reach) continue;
+                if (dist < 0.5f) { w.KillEnemyObj(e); continue; }
+                float pull = (3f + (Reach - dist) * 1.6f) * dt;          // stronger when closer
+                e.transform.position = e.Pos + d / dist * Mathf.Min(pull, dist);
+            }
+            if (life <= 0f) { Fx.Burst(Pos, Violet, 0.3f, 2.2f, 0.4f); Fx.Sparks(Pos, Violet, 20, 7f, 0.5f); return false; }
+            return true;
+        }
+    }
 }

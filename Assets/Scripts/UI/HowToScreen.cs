@@ -69,13 +69,14 @@ namespace TiltRush
             c.Para("Compare your CLASSIC score with other players on the LEADERBOARD.");
 
             var gadgets = GadgetLibrary.All;
-            int half = (gadgets.Count + 1) / 2;
-            for (int part = 0; part < 2; part++)
+            const int perCard = 5;
+            int parts = (gadgets.Count + perCard - 1) / perCard;
+            for (int part = 0; part < parts; part++)
             {
                 c = deck.NewCard();
-                c.Heading("PICKUPS " + (part + 1) + "/2", Neon.Lime);
+                c.Heading("PICKUPS " + (part + 1) + "/" + parts, Neon.Lime);
                 if (part == 0) c.Para("Fly over a pickup to use it immediately.");
-                for (int i = part * half; i < Mathf.Min(gadgets.Count, (part + 1) * half); i++)
+                for (int i = part * perCard; i < Mathf.Min(gadgets.Count, (part + 1) * perCard); i++)
                 {
                     var g = gadgets[i];
                     c.Row(holder => GadgetToken(holder, g), g.Name.ToUpper(), g.Color, g.Description);

@@ -8,6 +8,9 @@ namespace TiltRush
         public bool Alive = true;
         public float ShieldTime;
         public float StormTime, StormCd;        // lightning gadget
+        public float ShrinkTime, BoostTime, OrbitTime;
+        public const int OrbCount = 3;
+        public const float OrbRadius = 0.17f, OrbDistance = 0.95f;
         public float Radius = Config.PlayerRadius;
         public Vector2 Facing = Vector2.up;     // direction the tip points to
         public IMoveInput Controls;
@@ -16,6 +19,8 @@ namespace TiltRush
         public Vector2 Velocity { get { return vel + launchVel; } }
 
         ShapeView view, shield, storm;
+        ShapeView[] orbs;
+        float sizeK = 1f, orbAngle;
         Vector2 vel, launchVel;
         float angle;
         PlayerStyle style;
@@ -40,14 +45,28 @@ namespace TiltRush
             shield.gameObject.SetActive(false);
             storm = ShapeView.Create(transform, ShapeType.Circle, 0.42f, Color.clear, new Color32(150, 130, 255, 255), 0.6f, 13);
             storm.gameObject.SetActive(false);
+            orbs = new ShapeView[OrbCount];
+            for (int i = 0; i < OrbCount; i++)
+            {
+                orbs[i] = ShapeView.Create(transform, ShapeType.Circle, OrbRadius, new Color32(30, 90, 140, 255), new Color32(120, 215, 255, 255), 0.7f, 12);
+                orbs[i].AddBacking(new Color(0, 0, 0, 0.7f), 1.25f);
+                orbs[i].gameObject.SetActive(false);
+            }
         }
 
         public void Tick(float dt)
         {
             if (!Alive) return;
 
-            Vector2 wanted = Controls.Read() * Config.PlayerMaxSpeed;
-            vel = Vector2.MoveTowards(vel, wanted, Config.PlayerAcceleration * dt);
+            bool boost = BoostTime > 0f;
+            Vector2 wanted = Controls.Read() * Config.PlayerMaxSpeed * (boost ? 1.6f : 1f);
+            vel = Vector2.MoveTowards(vel, wanted, Config.PlayerAcceleration * (boost ? 1.6f : 1f) * dt);
+
+            // shrink gadget: smaller ship and smaller hit circle
+            float goal = ShrinkTime > 0f ? 0.55f : 1f;
+            sizeK = Mathf.MoveTowards(sizeK, goal, dt * 3f);
+            Radius = Config.PlayerRadius * sizeK;
+            view.transform.localScale = Vector3.one * sizeK;
             launchVel *= Mathf.Exp(-Config.LaunchDamping * dt);
 
             Vector2 p = Pos + (vel + launchVel) * dt;
@@ -87,6 +106,22 @@ namespace TiltRush
                 ShieldTime -= dt;
                 shield.gameObject.SetActive(ShieldTime > 0f);
                 shield.Alpha = ShieldTime < 1.5f ? (Mathf.Sin(Time.time * 25f) > 0 ? 1f : 0.3f) : 1f;
+            }
+
+            if (ShrinkTime > 0f) ShrinkTime -= dt;
+            if (BoostTime > 0f) BoostTime -= dt;
+            if (OrbitTime > 0f)
+            {
+                OrbitTime -= dt;
+                orbAngle += dt * 4.5f;
+                bool on = OrbitTime > 0f;
+                float a = OrbitTime < 1.5f ? (Mathf.Sin(Time.time * 25f) > 0 ? 1f : 0.3f) : 1f;
+                for (int i = 0; i < OrbCount; i++)
+                {
+                    orbs[i].gameObject.SetActive(on);
+                    orbs[i].transform.localPosition = OrbPos(i) - Pos;
+                    orbs[i].Alpha = a;
+                }
             }
 
             if (StormTime > 0f)
@@ -141,6 +176,17 @@ namespace TiltRush
             }
         }
 
+        /// <summary>World position of orb i (Orbit gadget).</summary>
+        public Vector2 OrbPos(int i)
+        {
+            float a = orbAngle + i * 2f * Mathf.PI / OrbCount;
+            return Pos + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * OrbDistance;
+        }
+
+        public void GiveShrink(float seconds) { ShrinkTime = seconds; }
+        public void GiveBoost(float seconds) { BoostTime = seconds; Fx.Sparks(Pos, new Color32(255, 160, 40, 255), 14, 7f, 0.4f); }
+        public void GiveOrbit(float seconds) { OrbitTime = seconds; }
+
         public void GiveShield(float seconds) { ShieldTime = seconds; shield.gameObject.SetActive(true); }
         public void GiveStorm(float seconds) { StormTime = seconds; StormCd = 0f; storm.gameObject.SetActive(true); }
         public void Launch(Vector2 impulse) { launchVel = impulse; }
@@ -151,6 +197,7 @@ namespace TiltRush
             view.gameObject.SetActive(false);
             shield.gameObject.SetActive(false);
             storm.gameObject.SetActive(false);
+            foreach (var o in orbs) o.gameObject.SetActive(false);
             Fx.Burst(Pos, Color.white, 0.2f, 2.5f, 0.6f);
             Fx.Sparks(Pos, style.Primary, 26, 9f, 0.7f, 0.08f);
             Fx.Sparks(Pos, Color.white, 14, 6f, 0.5f, 0.06f);

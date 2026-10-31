@@ -43,6 +43,7 @@ namespace TiltRush
         readonly List<Seeker> seekers = new List<Seeker>();
         readonly List<Turret> turrets = new List<Turret>();
         readonly List<Decoy> decoys = new List<Decoy>();
+        readonly List<BlackHole> holes = new List<BlackHole>();
         readonly Stack<Enemy> enemyPool = new Stack<Enemy>();   // killed dots are reused instead of destroyed
 
         public float Elapsed, Difficulty, CountdownLeft = 3f, Score;
@@ -54,7 +55,7 @@ namespace TiltRush
 
         Action<RoundResult> onEnd;
         System.Random spawnRng, pickupRng, ringRng, wallRng, swordRng;
-        float spawnTimer = 1.0f, pickupTimer = 2.5f, wallTimer = 3f, swordTimer = 3f, endTimer, areaScale = 1f;
+        float spawnTimer = 1.0f, pickupTimer = 1.5f, wallTimer = 3f, swordTimer = 3f, endTimer, areaScale = 1f;
         bool wallsAnnounced, swordsAnnounced, ringsSpawned, gadgetsOn, completed;
         float[] deathTime;
         DodgeDirector director;      // DODGE mode only
@@ -565,6 +566,8 @@ namespace TiltRush
             }
         }
 
+        public void PlaceBlackHole(Vector2 pos) { holes.Add(BlackHole.Spawn(transform, pos)); App.I.Shake(0.15f, 0.3f); }
+
         public void PlaceTurret(Vector2 pos) { turrets.Add(Turret.Spawn(transform, pos)); }
         public void PlaceDecoy(Vector2 pos, int playerIndex) { decoys.Add(Decoy.Spawn(transform, pos, PlayerStyle.FromSave(playerIndex))); }
 
@@ -576,6 +579,24 @@ namespace TiltRush
                 if (!turrets[i].Tick(dt, this)) { Destroy(turrets[i].gameObject); turrets.RemoveAt(i); }
             for (int i = decoys.Count - 1; i >= 0; i--)
                 if (!decoys[i].Tick(dt)) { Destroy(decoys[i].gameObject); decoys.RemoveAt(i); }
+            for (int i = holes.Count - 1; i >= 0; i--)
+                if (!holes[i].Tick(dt, this)) { Destroy(holes[i].gameObject); holes.RemoveAt(i); }
+
+            // orbit gadget: the orbs smash every dot they touch
+            foreach (var p in Players)
+            {
+                if (!p.Alive || p.OrbitTime <= 0f) continue;
+                for (int k = 0; k < PlayerController.OrbCount; k++)
+                {
+                    Vector2 o = p.OrbPos(k);
+                    for (int i = Enemies.Count - 1; i >= 0; i--)
+                    {
+                        var e = Enemies[i];
+                        float reach = e.Radius + PlayerController.OrbRadius;
+                        if (e.Dangerous && (e.Pos - o).sqrMagnitude < reach * reach) KillEnemy(i);
+                    }
+                }
+            }
 
             foreach (var p in Players)
             {

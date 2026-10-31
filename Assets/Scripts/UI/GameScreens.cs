@@ -114,6 +114,9 @@ namespace TiltRush
                 string who = w.Players.Count > 1 ? "P" + (p.Index + 1) + " " : "";
                 if (p.ShieldTime > 0) sb.AppendLine(who + "SHIELD " + p.ShieldTime.ToString("0.0"));
                 if (p.StormTime > 0) sb.AppendLine(who + "STORM " + p.StormTime.ToString("0.0"));
+                if (p.ShrinkTime > 0) sb.AppendLine(who + "SHRINK " + p.ShrinkTime.ToString("0.0"));
+                if (p.BoostTime > 0) sb.AppendLine(who + "BOOST " + p.BoostTime.ToString("0.0"));
+                if (p.OrbitTime > 0) sb.AppendLine(who + "ORBIT " + p.OrbitTime.ToString("0.0"));
             }
             effectLabel.text = sb.ToString();
 

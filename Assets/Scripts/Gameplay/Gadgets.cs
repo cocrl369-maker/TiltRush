@@ -51,6 +51,18 @@ namespace TiltRush
 
             new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost,
                 Apply = (w, p) => w.PlaceDecoy(p.Pos, p.Index) },
+
+            new GadgetDef { Name = "Shrink", Description = "You become tiny - slip through the gaps", Color = new Color32(255, 240, 120, 255), Icon = GadgetIcon.Shrink,
+                Apply = (w, p) => p.GiveShrink(7f) },
+
+            new GadgetDef { Name = "Boost", Description = "Fly much faster for a few seconds", Color = new Color32(255, 160, 40, 255), Icon = GadgetIcon.Boost,
+                Apply = (w, p) => p.GiveBoost(6f) },
+
+            new GadgetDef { Name = "Black Hole", Description = "Sucks in nearby dots and swallows them", Color = new Color32(170, 90, 255, 255), Icon = GadgetIcon.Vortex, Weight = 0.7f,
+                Apply = (w, p) => w.PlaceBlackHole(p.Pos) },
+
+            new GadgetDef { Name = "Orbit", Description = "Three orbs circle around you and smash dots", Color = new Color32(90, 200, 255, 255), Icon = GadgetIcon.Orbit,
+                Apply = (w, p) => p.GiveOrbit(8f) },
         };
 
         public static GadgetDef PickRandom(System.Random rng)
