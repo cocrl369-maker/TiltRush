@@ -1,0 +1,197 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace TiltRush
+{
+    public enum ShapeType { Circle, Square, Triangle, Diamond, Arrow, Dart, Kite, Ship, Needle, Comet, Wing, Falcon }
+
+    /// <summary>
+    /// Generates all sprites in code (white, tinted later via SpriteRenderer.color) -
+    /// no art assets needed. Add a new shape: add an enum entry + a case in Sdf().
+    /// </summary>
+    public static class SpriteFactory
+    {
+        const int Res = 128;
+        static readonly Dictionary<string, Sprite> cache = new Dictionary<string, Sprite>();
+        delegate float AlphaFn(float x, float y);   // x,y in -1..1
+
+        public static Sprite Fill(ShapeType s) { return Cached("fill" + s, () => Shape(s, false)); }
+        public static Sprite Outline(ShapeType s) { return Cached("line" + s, () => Shape(s, true)); }
+        public static Sprite Pixel() { return Cached("pixel", () => Make(4, 4, (x, y) => 1f)); }
+        public static Sprite Glow()
+        {
+            return Cached("glow", () => Make(Res, Res, (x, y) =>
+                Mathf.Pow(Mathf.Clamp01(1f - Mathf.Sqrt(x * x + y * y)), 2.2f)));
+        }
+        public static Sprite SoftLine()
+        {
+            return Cached("softline", () => Make(64, 4, (x, y) => Mathf.Pow(1f - Mathf.Abs(x), 2f)));
+        }
+
+        /// <summary>Soft band: fades out across its height (used for glowing lines).</summary>
+        public static Sprite SoftBand()
+        {
+            return Cached("softband", () => Make(64, 64, (x, y) => Mathf.Pow(1f - Mathf.Abs(y), 2f)));
+        }
+
+        /// <summary>Dark edges, transparent centre - gives the menus depth.</summary>
+        public static Sprite Vignette()
+        {
+            return Cached("vignette", () => Make(128, 128, (x, y) =>
+            {
+                float r = Mathf.Sqrt(x * x + y * y) / 1.414f;
+                float t = Mathf.Clamp01((r - 0.45f) / 0.55f);
+                return t * t * (3f - 2f * t) * 0.7f;
+            }));
+        }
+
+        /// <summary>Rounded rectangle, 9-sliced (use Image.Type.Sliced). Used for the buttons.</summary>
+        public static Sprite RoundedFill() { return Cached("rfill", () => Rounded(false)); }
+        public static Sprite RoundedRing() { return Cached("rring", () => Rounded(true)); }
+
+        /// <summary>Sword sprite, 1 unit long, tip points up (+y).</summary>
+        public static Sprite BladeFill() { return Cached("bfill", () => Blade(false)); }
+        public static Sprite BladeLine() { return Cached("bline", () => Blade(true)); }
+
+        static Sprite Cached(string key, Func<Sprite> make)
+        {
+            if (!cache.TryGetValue(key, out var s) || s == null) { s = make(); cache[key] = s; }
+            return s;
+        }
+
+        // Signed distance (negative = inside), shapes fit inside -1..1
+        static float Sdf(ShapeType s, float x, float y)
+        {
+            switch (s)
+            {
+                case ShapeType.Circle: return Mathf.Sqrt(x * x + y * y) - 0.9f;
+                case ShapeType.Square: return Mathf.Max(Mathf.Abs(x), Mathf.Abs(y)) - 0.8f;
+                case ShapeType.Arrow: return Poly(x, y, ArrowV);
+                case ShapeType.Dart:  return Poly(x, y, DartV);
+                case ShapeType.Kite:  return Poly(x, y, KiteV);
+                case ShapeType.Ship:  return Poly(x, y, ShipV);
+                case ShapeType.Needle: return Poly(x, y, NeedleV);
+                case ShapeType.Comet: return Poly(x, y, CometV);
+                case ShapeType.Wing:  return Poly(x, y, WingV);
+                case ShapeType.Falcon: return Poly(x, y, FalconV);
+                case ShapeType.Diamond: return (Mathf.Abs(x) + Mathf.Abs(y) - 0.95f) * 0.7071f;
+                default: // Triangle
+                    float d1 = -y - 0.6f;
+                    float d2 = (-1.5f * (x + 0.85f) + 0.85f * (y + 0.6f)) / 1.724f;
+                    float d3 = (1.5f * (x - 0.85f) + 0.85f * (y + 0.6f)) / 1.724f;
+                    return Mathf.Max(d1, Mathf.Max(d2, d3));
+            }
+        }
+
+        // Pointed player shapes - the tip is at +y (up) and gets rotated towards the movement direction.
+        static readonly Vector2[] ArrowV = { new Vector2(0, 0.95f), new Vector2(0.75f, -0.85f), new Vector2(-0.75f, -0.85f) };
+        static readonly Vector2[] DartV  = { new Vector2(0, 0.95f), new Vector2(0.75f, -0.85f), new Vector2(0, -0.4f), new Vector2(-0.75f, -0.85f) };
+        static readonly Vector2[] KiteV  = { new Vector2(0, 0.95f), new Vector2(0.6f, -0.1f), new Vector2(0, -0.85f), new Vector2(-0.6f, -0.1f) };
+        static readonly Vector2[] NeedleV = { new Vector2(0, 0.98f), new Vector2(0.32f, -0.85f), new Vector2(0, -0.55f), new Vector2(-0.32f, -0.85f) };
+        static readonly Vector2[] CometV = { new Vector2(0, 0.95f), new Vector2(0.4f, 0.3f), new Vector2(0.62f, -0.2f), new Vector2(0.5f, -0.6f), new Vector2(0.2f, -0.85f),
+                                             new Vector2(-0.2f, -0.85f), new Vector2(-0.5f, -0.6f), new Vector2(-0.62f, -0.2f), new Vector2(-0.4f, 0.3f) };
+        static readonly Vector2[] WingV  = { new Vector2(0, 0.9f), new Vector2(0.9f, -0.7f), new Vector2(0.3f, -0.5f), new Vector2(0, -0.85f), new Vector2(-0.3f, -0.5f), new Vector2(-0.9f, -0.7f) };
+        static readonly Vector2[] FalconV = { new Vector2(0, 0.95f), new Vector2(0.55f, 0.1f), new Vector2(0.95f, -0.75f), new Vector2(0.35f, -0.45f), new Vector2(0, -0.85f),
+                                              new Vector2(-0.35f, -0.45f), new Vector2(-0.95f, -0.75f), new Vector2(-0.55f, 0.1f) };
+        static readonly Vector2[] ShipV  = { new Vector2(0, 0.95f), new Vector2(0.8f, -0.3f), new Vector2(0.5f, -0.85f), new Vector2(-0.5f, -0.85f), new Vector2(-0.8f, -0.3f) };
+
+        // Signed distance to a polygon (negative inside)
+        static float Poly(float px, float py, Vector2[] v)
+        {
+            int n = v.Length;
+            float d = (px - v[0].x) * (px - v[0].x) + (py - v[0].y) * (py - v[0].y);
+            float s = 1f;
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                float ex = v[j].x - v[i].x, ey = v[j].y - v[i].y;
+                float wx = px - v[i].x, wy = py - v[i].y;
+                float t = Mathf.Clamp01((wx * ex + wy * ey) / (ex * ex + ey * ey));
+                float bx = wx - ex * t, by = wy - ey * t;
+                d = Mathf.Min(d, bx * bx + by * by);
+                bool c1 = py >= v[i].y, c2 = py < v[j].y, c3 = ex * wy > ey * wx;
+                if ((c1 && c2 && c3) || (!c1 && !c2 && !c3)) s = -s;
+            }
+            return s * Mathf.Sqrt(d);
+        }
+
+        static Sprite Rounded(bool ring)
+        {
+            const int n = 128;
+            const float radius = 44f, thick = 7f;
+            float half = n * 0.5f - 1.5f;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            var pixels = new Color32[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float qx = Mathf.Abs(x + 0.5f - n * 0.5f) - (half - radius);
+                    float qy = Mathf.Abs(y + 0.5f - n * 0.5f) - (half - radius);
+                    float d = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0f) - radius;
+                    float a = ring ? 0.5f - (Mathf.Abs(d + thick * 0.5f) - thick * 0.5f) : 0.5f - d;
+                    pixels[y * n + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f, 0,
+                                 SpriteMeshType.FullRect, new Vector4(48, 48, 48, 48));
+        }
+
+        // Sword polygons in pixels (64 x 256 texture, tip up)
+        static readonly Vector2[] BladeV = { new Vector2(0, 126), new Vector2(13, 92), new Vector2(13, -58), new Vector2(-13, -58), new Vector2(-13, 92) };
+        static readonly Vector2[] GuardV = { new Vector2(-28, -58), new Vector2(28, -58), new Vector2(28, -70), new Vector2(-28, -70) };
+        static readonly Vector2[] HiltV  = { new Vector2(-6, -70), new Vector2(6, -70), new Vector2(6, -122), new Vector2(-6, -122) };
+
+        static Sprite Blade(bool outline)
+        {
+            const int w = 64, h = 256;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var pixels = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float px = x + 0.5f - w * 0.5f, py = y + 0.5f - h * 0.5f;
+                    float d = Mathf.Min(Poly(px, py, BladeV), Mathf.Min(Poly(px, py, GuardV), Poly(px, py, HiltV)));
+                    float a = outline ? 0.5f - (Mathf.Abs(d + 2f) - 2f) : 0.5f - d;
+                    pixels[y * w + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+            tex.SetPixels32(pixels);
+            tex.Apply();
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 256f);
+        }
+
+        static Sprite Shape(ShapeType s, bool outline)
+        {
+            const float aa = 0.03f;      // edge softness
+            const float thick = 0.16f;   // outline thickness
+            return Make(Res, Res, (x, y) =>
+            {
+                float d = Sdf(s, x, y);
+                if (!outline) return Mathf.Clamp01(0.5f - d / aa);
+                float band = Mathf.Abs(d + thick * 0.5f) - thick * 0.5f;
+                return Mathf.Clamp01(0.5f - band / aa);
+            });
+        }
+
+        static Sprite Make(int w, int h, AlphaFn f)
+        {
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float a = f((x + 0.5f) / w * 2f - 1f, (y + 0.5f) / h * 2f - 1f);
+                    px[y * w + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255f));
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), w);
+        }
+    }
+}

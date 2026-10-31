@@ -1,0 +1,73 @@
+# TILT RUSH – Unity (Android) – Setup
+
+1. Unity 2021.3 LTS or newer (also works in Unity 6): new **2D (Built-in)** project.
+2. Copy the folder `Assets/Scripts` into your project's `Assets` folder.
+3. **Project Settings > Player > Other Settings > Active Input Handling = "Input Manager (Old)" or "Both"**
+   (the code uses the classic `Input` class incl. `Input.acceleration`).
+4. Press Play. No scene setup is needed - `App.cs` boots itself in any scene.
+   Set the Game view to **16:9** (landscape). Click once into the Game view so it receives keyboard input.
+5. Android build: File > Build Settings > Android, orientation Landscape (Auto Rotation) - the game also sets this itself.
+
+## Controls
+- Editor/PC: WASD or arrow keys (Co-op: P1 = WASD, P2 = arrows)
+- Phone: tilt ONLY (neutral position is captured when the 3-2-1 countdown ends). Co-op on one phone: P1 tilts, P2 uses a touch stick.
+- PC / Unity editor / Device Simulator: keyboard only.
+
+## Music (Newgrounds)
+Download tracks from Newgrounds (check the artist's licence and credit them!) and put the files into
+`Assets/Resources/Music/`. They play automatically in random order. The current track name is shown in Options.
+Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die` (otherwise generated beeps are used).
+
+## Where do I change what?
+| I want to change...                         | File |
+|---------------------------------------------|------|
+| speeds, spawn rates, difficulty curve, Elo, best-of | `Core/Config.cs` |
+| modes (add / tweak)                         | `Core/GameModes.cs` |
+| gadgets (add new ones in 1 line + effect)   | `Gameplay/Gadgets.cs` |
+| enemy types                                 | `Gameplay/Enemy.cs` |
+| launch ring behaviour                       | `Gameplay/LaunchRing.cs` |
+| round logic / spawning / collisions         | `Gameplay/GameWorld.cs` |
+| controls                                    | `Input/MoveInputs.cs` |
+| background stripes                          | `Visuals/NeonBackground.cs` |
+| shapes (new player shapes)                  | `Visuals/SpriteFactory.cs` |
+| match flow, rounds, Elo handling            | `Core/SessionController.cs` |
+| menus / screens                             | `UI/*.cs` |
+| real online backend                         | implement `Online/IOnlineService.cs`, assign in `Core/App.cs` |
+
+## Online PvP
+Implemented as a "same-seed race": both players play the identical map (same seed) on their own device;
+the longer survivor wins the round, first to 3 wins the match (best of 5). The included `MockOnlineService`
+simulates an opponent so the full flow (matchmaking, rounds, Elo change) is testable offline.
+For real online play, implement `IOnlineService` (Unity Gaming Services, Photon, Nakama, Firebase...).
+Do the Elo calculation on the server later to prevent cheating.
+
+## Difficulty progression
+Dots from the start -> red walls from difficulty 0.3 -> swords (with light red warning lane) from 0.55. All values in `Core/Config.cs`.
+The arena automatically fills the whole screen (safe area aware); `Config.CameraSize` controls how small everything looks.
+
+## Score, leaderboard, shake
+- Score = points per second survived (`Config.ScorePerSecond`), multiplied up to 3x with difficulty (`ScoreDifficultyBonus`).
+- Classic scores are submitted to the leaderboard (`IOnlineService.SubmitScore / GetLeaderboard`). The mock service
+  uses made-up players; plug in a real backend (e.g. Unity Gaming Services Leaderboards) to compare with real people.
+  Player names are free text - a real backend should filter/moderate them.
+- Launch rings appear after `Config.LaunchRingStartTime` (60 s).
+- Screen shake (nuke, shockwave, death) can be switched off in Options; strength is set in the `App.I.Shake(...)` calls in `GameWorld.cs`.
+- Bonus points: dots destroyed by shield / shockwave / nuke (`Config.KillPoints`, nuke kills count `NukeKillMultiplier` = 25%) and
+  every pickup (`Config.GadgetPoints`). All bonuses are multiplied by the difficulty factor.
+
+## Gadgets, campaign, tilt setup, design
+- Gadgets (`Gameplay/Gadgets.cs`): Slow-Mo, Freeze, Shield, Shockwave, Nuke, Seekers (homing darts), Lance (3 beams), Storm (chain lightning),
+  Turret, Decoy (dots chase the hologram). New gadget = one entry in `GadgetLibrary.All` + an effect method in `GameWorld`.
+- Campaign (`Campaign/Campaign.cs`): 12 levels. Each has a duration, number of dots (normal/fast/big), walls, swords, rings, speed curve and
+  permanent obstacles (grey blocks/pillars that block you and the dots but never hurt). Edit the table to change levels.
+- Unlocks (`Core/Unlocks.cs`): skins and colours are unlocked by completed campaign levels. Tables are in the same order as `Config.PlayerShapes` / `Config.Palette`.
+- Tilt setup (Options > Tilt Setup): Auto (pose at round start), presets (Flat / Relaxed / Upright / Lying down) or CALIBRATE NOW
+  (current pose becomes the neutral pose). A live preview dot shows the input.
+- Look: `Theme` in `UI/UIKit.cs` (colour softening, panels). `Theme.Tone` controls how muted the button colours are.
+
+## Hard and Dodge
+- HARD (`Modes.Hard` in `Core/GameModes.cs`): same rules as Classic (pickups, rings after 60 s, walls, swords) but 2.2x as many dots.
+- DODGE (`Gameplay/DodgeMode.cs`): the dots never chase you. A director sends patterns: rain, curtain (wall with gaps), ring, conga line, flock,
+  smiley (blinks and talks), fireworks (light red warning rings), elevator (wall with a moving, piped doorway), pinwheel, heart, windmill.
+  A pattern is one function that adds dots with a movement formula - to add a gag write a method like `Smiley()` and register it in the constructor
+  (name, difficulty at which it appears, announce on screen).
