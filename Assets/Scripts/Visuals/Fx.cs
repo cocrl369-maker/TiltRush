@@ -31,6 +31,12 @@ namespace TiltRush
             alive++;
         }
 
+        /// <summary>Glowing sparks flying out of a point (see SparkSystem).</summary>
+        public static void Sparks(Vector2 pos, Color c, int count, float speed = 6f, float life = 0.45f, float width = 0.06f)
+        {
+            SparkSystem.Emit(pos, c, count, speed, life, width);
+        }
+
         /// <summary>Wide soft beam with a bright core (Lance gadget).</summary>
         public static void Beam(Vector2 from, Vector2 dir, float length, Color c)
         {
@@ -120,5 +126,92 @@ namespace TiltRush
         }
 
         void OnDestroy() { if (gameObject.activeSelf) alive--; }
+    }
+}
+
+namespace TiltRush
+{
+    /// <summary>
+    /// Sparks: small glowing streaks that fly out and fade (dot destroyed, player hit, pickups, launch rings).
+    /// One component draws all sparks with a fixed set of renderers (ring buffer: the oldest spark is reused),
+    /// so even a nuke with hundreds of kills costs nothing extra. Purely visual - uses UnityEngine.Random,
+    /// never the seeded game RNGs.
+    /// </summary>
+    public class SparkSystem : MonoBehaviour
+    {
+        const int Max = 320;
+        static SparkSystem inst;
+
+        SpriteRenderer[] rs;
+        Vector2[] pos, vel;
+        float[] life, maxLife, size;
+        Color[] col;
+        int next;
+
+        static SparkSystem I
+        {
+            get
+            {
+                if (inst == null) inst = new GameObject("Sparks").AddComponent<SparkSystem>();
+                return inst;
+            }
+        }
+
+        void Awake()
+        {
+            rs = new SpriteRenderer[Max];
+            pos = new Vector2[Max]; vel = new Vector2[Max];
+            life = new float[Max]; maxLife = new float[Max]; size = new float[Max];
+            col = new Color[Max];
+            for (int i = 0; i < Max; i++)
+            {
+                var g = new GameObject("Spark");
+                g.transform.SetParent(transform, false);
+                rs[i] = g.AddComponent<SpriteRenderer>();
+                rs[i].sprite = SpriteFactory.Pixel();
+                rs[i].sortingOrder = 19;
+                rs[i].enabled = false;
+            }
+        }
+
+        public static void Emit(Vector2 at, Color c, int count, float speed, float lifetime, float width)
+        {
+            var s = I;
+            for (int n = 0; n < count; n++)
+            {
+                int i = s.next; s.next = (s.next + 1) % Max;
+                float a = Random.value * 6.2832f;
+                float sp = speed * Random.Range(0.45f, 1.15f);
+                s.pos[i] = at;
+                s.vel[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * sp;
+                s.maxLife[i] = s.life[i] = lifetime * Random.Range(0.6f, 1.2f);
+                s.size[i] = width * Random.Range(0.7f, 1.2f);
+                // a few sparks are white-hot, the rest have the colour of the source
+                s.col[i] = Random.value < 0.25f ? Color.Lerp(c, Color.white, 0.7f) : c;
+                s.rs[i].enabled = true;
+            }
+        }
+
+        void Update()
+        {
+            float dt = Time.deltaTime;
+            if (dt <= 0f) return;                                   // paused
+            float drag = Mathf.Exp(-4f * dt);
+            for (int i = 0; i < Max; i++)
+            {
+                if (!rs[i].enabled) continue;
+                life[i] -= dt;
+                if (life[i] <= 0f) { rs[i].enabled = false; continue; }
+                vel[i] *= drag;
+                pos[i] += vel[i] * dt;
+                float k = life[i] / maxLife[i];                      // 1 -> 0
+                float speed = vel[i].magnitude;
+                var t = rs[i].transform;
+                t.position = pos[i];
+                if (speed > 0.01f) t.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(vel[i].y, vel[i].x) * Mathf.Rad2Deg);
+                t.localScale = new Vector3(Mathf.Max(size[i], speed * 0.035f), size[i] * (0.4f + 0.6f * k), 1f);   // streak
+                Color c = col[i]; c.a *= k; rs[i].color = c;
+            }
+        }
     }
 }

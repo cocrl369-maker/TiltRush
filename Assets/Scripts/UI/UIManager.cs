@@ -62,6 +62,7 @@ namespace TiltRush
         {
             var rt = UIKit.Stretch(UIKit.Rect(typeof(T).Name, canvas.transform));
             var s = rt.gameObject.AddComponent<T>();
+            rt.gameObject.AddComponent<ScreenFade>();
             s.Init(this);
             screens[typeof(T)] = s;
             s.gameObject.SetActive(false);
@@ -73,7 +74,9 @@ namespace TiltRush
         /// <summary>Show one screen and hide all others.</summary>
         public T Show<T>() where T : UIScreen
         {
-            foreach (var s in screens.Values) s.gameObject.SetActive(false);
+            var target = screens[typeof(T)];
+            foreach (var s in screens.Values)
+                if (s != target) s.GetComponent<ScreenFade>().FadeOut();   // old screens fade out, then switch off
             belowOverlay = null;
             return Activate<T>();
         }
@@ -88,14 +91,17 @@ namespace TiltRush
         public void Hide<T>() where T : UIScreen
         {
             var s = screens[typeof(T)];
-            s.gameObject.SetActive(false);
+            s.GetComponent<ScreenFade>().FadeOut();
             if (Current == s) { Current = belowOverlay; belowOverlay = null; }
         }
 
         T Activate<T>() where T : UIScreen
         {
             var s = (T)screens[typeof(T)];
+            var fade = s.GetComponent<ScreenFade>();
+            bool visible = s.gameObject.activeSelf && !fade.FadingOut;   // e.g. a dialog that only gets new text
             s.gameObject.SetActive(true);
+            if (!visible) fade.FadeIn();
             s.OnShow();
             Current = s;
             return s;
@@ -105,6 +111,69 @@ namespace TiltRush
         {
             Get<DialogScreen>().Set(title, body, buttons);
             Show<DialogScreen>();
+        }
+    }
+
+    /// <summary>
+    /// Soft screen transitions: a new screen fades in and grows slightly into place, the old one fades out quickly
+    /// (and stops taking clicks immediately). Uses unscaled time, so it also works while the game is paused.
+    /// </summary>
+    public class ScreenFade : MonoBehaviour
+    {
+        const float InTime = 0.22f, OutTime = 0.14f;
+        CanvasGroup group;
+        float t = 1f;
+        bool fadingOut;
+
+        public bool FadingOut { get { return fadingOut; } }
+
+        void Awake()
+        {
+            group = GetComponent<CanvasGroup>();
+            if (group == null) group = gameObject.AddComponent<CanvasGroup>();
+        }
+
+        public void FadeIn()
+        {
+            fadingOut = false; t = 0f;
+            group.blocksRaycasts = true; group.interactable = true;
+            Apply();
+        }
+
+        public void FadeOut()
+        {
+            if (!gameObject.activeSelf || fadingOut) return;
+            fadingOut = true; t = 0f;
+            group.blocksRaycasts = false; group.interactable = false;
+        }
+
+        void Update()
+        {
+            if (t >= 1f && !fadingOut) return;
+            t += Time.unscaledDeltaTime / (fadingOut ? OutTime : InTime);
+            Apply();
+            if (fadingOut && t >= 1f)
+            {
+                fadingOut = false;
+                gameObject.SetActive(false);
+                group.alpha = 1f; transform.localScale = Vector3.one; group.blocksRaycasts = true; group.interactable = true;
+            }
+        }
+
+        void Apply()
+        {
+            float k = Mathf.Clamp01(t);
+            if (fadingOut)
+            {
+                group.alpha = 1f - k;
+                transform.localScale = Vector3.one * Mathf.Lerp(1f, 1.015f, k);
+            }
+            else
+            {
+                float e = 1f - (1f - k) * (1f - k) * (1f - k);   // ease out
+                group.alpha = e;
+                transform.localScale = Vector3.one * Mathf.Lerp(0.97f, 1f, e);
+            }
         }
     }
 }

@@ -50,6 +50,7 @@ namespace TiltRush
             Vector2 dir = v.sqrMagnitude > 0.5f ? -v.normalized : -p.Facing;   // standing still: fling backwards from the tip
             p.Launch(dir * Config.LaunchForce);
             Fx.Burst(transform.position, Neon.Yellow, Radius, 2.2f, 0.4f);
+            Fx.Sparks(transform.position, Neon.Yellow, 14, 8f, 0.4f);
             App.I.Audio.Play("launch");
             cooldown = 0.8f;
         }

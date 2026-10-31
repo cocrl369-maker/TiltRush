@@ -15,6 +15,12 @@ namespace TiltRush
         int current = -1;
         readonly Dictionary<string, AudioClip> sfxCache = new Dictionary<string, AudioClip>();
 
+        // Beat detection for visuals: 0..1, jumps up on loud moments of the music and decays quickly.
+        public float Beat { get; private set; }
+        public bool HasMusic { get; private set; }
+        readonly float[] samples = new float[256];
+        float avgLevel = 0.05f;
+
         public string CurrentTrackName => (current >= 0 && tracks != null && current < tracks.Length) ? tracks[current].name : "-";
 
         void Awake()
@@ -28,6 +34,23 @@ namespace TiltRush
         void Update()
         {
             if (tracks.Length > 0 && !music.isPlaying && Application.isFocused) Next();
+            UpdateBeat();
+        }
+
+        void UpdateBeat()
+        {
+            float dt = Time.unscaledDeltaTime;
+            if (!music.isPlaying || music.volume <= 0.01f) { HasMusic = false; Beat = Mathf.MoveTowards(Beat, 0f, dt * 3f); return; }
+
+            music.GetOutputData(samples, 0);
+            float sum = 0f;
+            for (int i = 0; i < samples.Length; i++) sum += samples[i] * samples[i];
+            float rms = Mathf.Sqrt(sum / samples.Length);
+
+            avgLevel = Mathf.Lerp(avgLevel, rms, 1f - Mathf.Exp(-0.8f * dt));     // slow average = "normal" loudness
+            HasMusic = avgLevel > 0.0005f;
+            float target = Mathf.Clamp01((rms / Mathf.Max(0.0005f, avgLevel) - 0.85f) * 1.6f);
+            Beat = target > Beat ? Mathf.Lerp(Beat, target, 0.6f) : Mathf.MoveTowards(Beat, target, dt * 2.5f);
         }
 
         public void Next()

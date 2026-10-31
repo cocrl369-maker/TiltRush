@@ -24,10 +24,19 @@ namespace TiltRush
         public bool Dead;
         public float Radius;
         public bool Dangerous { get { return warm <= 0f; } }
+        public Color SparkColor { get { return Color.Lerp(defs[(int)Type].Fill, defs[(int)Type].Line, 0.4f); } }
         public Vector2 Pos { get { return transform.position; } }
 
         ShapeView view;
-        float speed, warm, phase;
+        float speed, warm, phase, age, bump;
+        const float PopTime = 0.28f, BumpTime = 0.2f;
+
+        /// <summary>0 -> 1 with a little overshoot ("pop").</summary>
+        public static float EaseOutBack(float x)
+        {
+            x = Mathf.Clamp01(x) - 1f;
+            return 1f + 2.70158f * x * x * x + 1.70158f * x * x;
+        }
 
         /// <summary>Creates an (inactive) dot. GameWorld keeps killed dots in a pool and reuses them via Setup.</summary>
         public static Enemy Create(Transform parent)
@@ -47,6 +56,8 @@ namespace TiltRush
             transform.position = pos;
             Type = type; Dead = false; Radius = d.Radius; speed = d.Speed * speedMul;
             warm = Config.EnemySpawnWarning; this.phase = phase;
+            age = 0f; bump = 0f;
+            view.transform.localScale = Vector3.zero;
             view.SetRadius(d.Radius);
             view.SetColors(d.Fill, d.Line);
             view.Alpha = 0.3f;
@@ -55,10 +66,17 @@ namespace TiltRush
         /// <param name="edt">enemy delta time (slow-mo / freeze applied)</param>
         public void Tick(float edt, float dt, GameWorld w)
         {
+            // pop in when spawning, little bump when the dot becomes dangerous
+            age += dt;
+            float s = age < PopTime ? EaseOutBack(age / PopTime) : 1f;
+            if (bump > 0f) { bump -= dt; s *= 1f + 0.45f * Mathf.Sin(Mathf.PI * Mathf.Clamp01(1f - bump / BumpTime)); }
+            view.transform.localScale = Vector3.one * s;
+
             if (warm > 0f)
             {
                 warm -= dt;
                 view.Alpha = warm > 0f ? 0.25f + 0.2f * Mathf.Sin(Time.time * 20f) : 1f;
+                if (warm <= 0f) bump = BumpTime;
                 return;
             }
 

@@ -97,3 +97,13 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Pooling:** dots, Dodge dots and effects are reused instead of being created/destroyed all the time (less GC stutter on Android).
 - **Online fairness:** online rounds use the same arena size on every phone (`Config.OnlineArenaSize`); the camera zooms to fit.
   Spawns use the seeded RNGs and game time only, so both players get the same dots at the same places.
+
+## Visual effects
+- **Sparks** (`SparkSystem` in `Visuals/Fx.cs`, call `Fx.Sparks(...)`): destroyed dots, player death, pickups, launch rings.
+  One component with a fixed ring buffer of 320 streaks - cheap even when a nuke destroys hundreds of dots.
+- **Light trail** (`PlayerController`): a tapered tail of soft dots in your ship's colour; longer when you are fast or launched.
+  Tune `TrailLen` / `TrailSample`.
+- **Pop-in** (`Enemy`): new dots pop in with a little overshoot and bump once when they become dangerous. Dodge dots pop in too.
+- **Living arena border** (`Visuals/ArenaView.cs`): colour goes from cool cyan to hot red with the difficulty and pulses with the
+  music (`AudioManager.Beat`); without music it beats like a calm heart that speeds up.
+- **Screen transitions** (`ScreenFade` in `UI/UIManager.cs`): menus fade and grow softly into place, the old screen fades out.

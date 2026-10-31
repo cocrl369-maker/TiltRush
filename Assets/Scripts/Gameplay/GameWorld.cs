@@ -485,6 +485,7 @@ namespace TiltRush
             e.Dead = true;
             Enemies.RemoveAt(i);
             Fx.Burst(e.Pos, Neon.Red, 0.1f, 0.5f, 0.3f);
+            Fx.Sparks(e.Pos, e.SparkColor, e.Type == EnemyType.Big ? 12 : 7, e.Type == EnemyType.Big ? 6.5f : 5f);
             e.gameObject.SetActive(false);
             enemyPool.Push(e);
         }
@@ -603,6 +604,7 @@ namespace TiltRush
                     int pts = AddBonus(Config.GadgetPoints);
                     Toast?.Invoke(pk.Def.Name.ToUpper() + "  +" + pts, pk.Def.Color);
                     Fx.Burst(pk.Pos, pk.Def.Color, 0.3f, 1.8f, 0.4f);
+                    Fx.Sparks(pk.Pos, pk.Def.Color, 16, 7f, 0.5f);
                     App.I.Audio.Play("pickup");
                     collected = true;
                     break;

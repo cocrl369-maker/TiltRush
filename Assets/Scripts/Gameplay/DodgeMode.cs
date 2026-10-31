@@ -113,7 +113,8 @@ namespace TiltRush
                 }
                 d.Pos = new Vector2(m.x, m.y);
                 d.View.transform.position = d.Pos;
-                d.View.transform.localScale = Vector3.one * Mathf.Max(0.0001f, m.z);
+                float pop = t < 0.22f ? Enemy.EaseOutBack(t / 0.22f) : 1f;          // dots pop in
+                d.View.transform.localScale = Vector3.one * Mathf.Max(0.0001f, m.z * pop);
                 d.View.Alpha = t < d.Warm ? 0.25f + 0.2f * Mathf.Sin(Time.time * 20f) : 1f;
                 d.Lethal = t >= d.Warm && m.z > 0.3f;
             }

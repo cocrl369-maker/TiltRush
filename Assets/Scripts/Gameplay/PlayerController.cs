@@ -18,11 +18,21 @@ namespace TiltRush
         ShapeView view, shield, storm;
         Vector2 vel, launchVel;
         float angle;
+        PlayerStyle style;
+
+        // light trail: a tapered tail of soft dots at the last positions
+        const int TrailLen = 16;
+        const float TrailSample = 1f / 60f;
+        SpriteRenderer[] trail;
+        readonly Vector2[] trailPos = new Vector2[TrailLen];
+        int trailHead;
+        float trailTimer;
 
         public void Init(int index, IMoveInput controls, Vector2 pos, PlayerStyle style)
         {
-            Index = index; Controls = controls;
+            Index = index; Controls = controls; this.style = style;
             transform.position = pos;
+            BuildTrail(pos);
             view = ShapeView.Create(transform, style.Shape, Radius, style.Primary, style.Outline, 0.5f, 10);
             shield = ShapeView.Create(transform, ShapeType.Circle, 0.5f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
             shield.gameObject.SetActive(false);
@@ -85,6 +95,50 @@ namespace TiltRush
             }
         }
 
+        void BuildTrail(Vector2 pos)
+        {
+            var root = new GameObject("Trail").transform;
+            root.SetParent(transform.parent, false);           // world space, not attached to the moving ship
+            trail = new SpriteRenderer[TrailLen];
+            for (int i = 0; i < TrailLen; i++)
+            {
+                var g = new GameObject("T");
+                g.transform.SetParent(root, false);
+                var r = g.AddComponent<SpriteRenderer>();
+                r.sprite = SpriteFactory.Fill(ShapeType.Circle);
+                r.sortingOrder = 8;                             // below the ship (10)
+                trail[i] = r;
+                trailPos[i] = pos;
+            }
+        }
+
+        void LateUpdate()
+        {
+            if (trail == null) return;
+            if (!Alive) { foreach (var r in trail) r.enabled = false; return; }
+
+            trailTimer += Time.deltaTime;                       // (stops while paused)
+            while (trailTimer >= TrailSample)
+            {
+                trailTimer -= TrailSample;
+                trailHead = (trailHead + 1) % TrailLen;
+                trailPos[trailHead] = Pos;
+            }
+
+            Color c = Color.Lerp(style.Primary, style.Outline, 0.25f);
+            float speed01 = Mathf.Clamp01(Velocity.magnitude / Config.PlayerMaxSpeed);
+            for (int i = 0; i < TrailLen; i++)
+            {
+                var r = trail[i];
+                Vector2 p = trailPos[(trailHead - i + TrailLen) % TrailLen];
+                float k = 1f - i / (float)TrailLen;                                  // 1 at the ship, 0 at the end
+                r.transform.position = p;
+                r.transform.localScale = Vector3.one * (Radius * 1.7f * k + 0.02f);
+                r.color = new Color(c.r, c.g, c.b, 0.45f * k * k * speed01);
+                r.enabled = speed01 > 0.02f;
+            }
+        }
+
         public void GiveShield(float seconds) { ShieldTime = seconds; shield.gameObject.SetActive(true); }
         public void GiveStorm(float seconds) { StormTime = seconds; StormCd = 0f; storm.gameObject.SetActive(true); }
         public void Launch(Vector2 impulse) { launchVel = impulse; }
@@ -96,6 +150,8 @@ namespace TiltRush
             shield.gameObject.SetActive(false);
             storm.gameObject.SetActive(false);
             Fx.Burst(Pos, Color.white, 0.2f, 2.5f, 0.6f);
+            Fx.Sparks(Pos, style.Primary, 26, 9f, 0.7f, 0.08f);
+            Fx.Sparks(Pos, Color.white, 14, 6f, 0.5f, 0.06f);
         }
     }
 }
