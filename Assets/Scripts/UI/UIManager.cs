@@ -58,6 +58,7 @@ namespace TiltRush
             AddScreen<LeaderboardScreen>();
             AddScreen<CampaignScreen>();
             AddScreen<TiltSetupScreen>();
+            AddScreen<CreditsScreen>();
             AddScreen<HudScreen>();
             AddScreen<PauseScreen>();     // keep overlays/dialog last so they render on top
             AddScreen<DialogScreen>();

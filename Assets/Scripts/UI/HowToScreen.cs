@@ -69,7 +69,7 @@ namespace TiltRush
             c.Heading("SCORE", Neon.Yellow);
             c.Para("You earn points for every second you survive - and more the harder it gets.");
             c.Para("Bonus points for every dot you destroy and every pickup you collect.");
-            c.Para("Compare your CLASSIC score with other players on the LEADERBOARD.");
+            c.Para("Every mode except Campaign and Co-op has its own LEADERBOARD. Online PvP is ranked by ELO.");
 
             var gadgets = GadgetLibrary.All;
             const int perCard = 5;
@@ -109,16 +109,6 @@ namespace TiltRush
             c.Para("Complete campaign levels to unlock new colours.");
             c.Para("New skins are unlocked by playing: high scores in Classic and Hard, long Dodge runs, destroyed dots, collected pickups and online wins.");
             c.Para("Open the WARDROBE and tap a locked skin to see what is still missing.");
-
-            // optional: Assets/Resources/Music/credits.txt (one line per track)
-            var credits = Resources.Load<TextAsset>("Music/credits");
-            if (credits != null && credits.text.Trim().Length > 0)
-            {
-                c = deck.NewCard();
-                c.Heading("MUSIC CREDITS", Neon.Aqua);
-                foreach (var line in credits.text.Split('\n'))
-                    if (line.Trim().Length > 0) c.Para(line.Trim());
-            }
 
             deck.Finish();
         }

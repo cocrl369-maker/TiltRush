@@ -102,7 +102,6 @@ namespace TiltRush
         public const float LaunchDamping = 3.5f;
 
         // Online (Unity Gaming Services) - the leaderboard must exist in the Unity Cloud dashboard with this ID
-        public const string LeaderboardId = "classic";
         public const float MatchmakingSeconds = 25f;      // then you play against a bot
 
         // Elo & matches

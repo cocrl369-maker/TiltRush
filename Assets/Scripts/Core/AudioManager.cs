@@ -10,8 +10,8 @@ namespace TiltRush
     ///   Music/Campaign, Music/Classic, Music/Hard, Music/Dodge, Music/Asteroids, Music/Coop, Music/Online, Music/Tutorial
     ///                    optional: own music for one mode
     /// A missing folder falls back to Music/Game, then to every file in Music. Tracks play in random order and
-    /// cross-fade when you go from the menu into a game. Optional credits: Assets/Resources/Music/credits.txt
-    /// (one line per track) - shown as the last card in HOW TO PLAY.
+    /// cross-fade when you go from the menu into a game. Name the artists in Assets/Resources/credits.txt
+    /// (shown by the CREDITS button in the main menu).
     /// SFX: drop clips into Assets/Resources/Sfx named click, pickup, launch, die ... Missing ones are generated.
     /// </summary>
     public class AudioManager : MonoBehaviour

@@ -33,7 +33,7 @@
 Put .mp3 / .ogg / .wav files into sub-folders of `Assets/Resources/Music/`:
 `Menu` (menus), `Game` (all modes), optional per mode: `Campaign`, `Classic`, `Hard`, `Dodge`, `Asteroids`, `Coop`, `Online`, `Tutorial`.
 Missing folders fall back to `Game`, then to everything in `Music`. Tracks play in random order and cross-fade between menu and game.
-Credits: `Assets/Resources/Music/credits.txt` (one line per track) appears as the last card in HOW TO PLAY.
+Credits: `Assets/Resources/credits.txt` (lines starting with `#` are headings) - shown by the CREDITS button in the main menu.
 Tip: select the music files in Unity and set Load Type = Streaming (saves memory on the phone).
 Own sound effects: `Assets/Resources/Sfx/` named `click`, `pickup`, `launch`, `die`, `shoot`, `crack` (otherwise generated sounds are used;
 the generated `die` sound is a scattering-toy-bricks sound made in code, `AudioManager.BrickBreak`).
@@ -68,7 +68,8 @@ Without extra packages the game uses `MockOnlineService` (simulated players). Re
 1. Unity Hub / Unity: log in, then Edit > Project Settings > Services: link (or create) a Unity Cloud project.
 2. Window > Package Manager > Unity Registry: install **Leaderboards** (real leaderboard) and **Lobby**
    (or **Multiplayer Services**) for online PvP. Authentication + Core come automatically.
-3. cloud.unity.com > your project > Leaderboards > Create leaderboard: ID `classic`, sort descending, update "Keep best".
+3. cloud.unity.com > your project > Leaderboards: create `classic`, `hard`, `dodge`, `asteroids` (sort descending, "Keep best score")
+   and `online` (sort descending, "Keep latest score" - it holds the current ELO). IDs are in `Online/Boards.cs`.
    Authentication: enable "Anonymous" sign-in (on by default). Lobby needs no setup.
 `Assets/Scripts/TiltRush.asmdef` detects the packages (version defines `TILTRUSH_LEADERBOARDS`, `TILTRUSH_LOBBY`) and
 `OnlineFactory` then creates `UgsOnlineService`. Options > Profile shows the online status.

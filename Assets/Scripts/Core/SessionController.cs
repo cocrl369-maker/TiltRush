@@ -215,10 +215,11 @@ namespace TiltRush
 
             System.Action<string> show = extra =>
             {
-                if (mode.Id == GameModeId.Classic)
+                string boardId = Boards.IdFor(mode.Id);
+                if (boardId != null)
                     app.UI.ShowDialog(title, body + extra,
                         new UIStack.Item("RETRY", Neon.Lime, () => Start(mode)),
-                        new UIStack.Item("LEADERBOARD", Neon.Orange, () => app.UI.Show<LeaderboardScreen>()),
+                        new UIStack.Item("LEADERBOARD", Neon.Orange, () => LeaderboardScreen.Open(boardId)),
                         new UIStack.Item("MENU", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
                 else
                     app.UI.ShowDialog(title, body + extra,
@@ -227,10 +228,11 @@ namespace TiltRush
             };
             show("");
 
-            if (mode.Id == GameModeId.Classic)
+            string board = Boards.IdFor(mode.Id);
+            if (board != null)
             {
                 int t = token;
-                app.Online.SubmitScore("classic", d.playerName, score,
+                app.Online.SubmitScore(board, d.playerName, score,
                     rank => { if (t == token && rank > 0 && app.UI.Current is DialogScreen) show("\nWorld rank: #" + rank); },
                     err => { });
             }
@@ -270,6 +272,7 @@ namespace TiltRush
                 if (won) d.onlineWins++; else d.onlineLosses++;
                 SaveManager.Save();
                 app.Online.ReportMatch(match.MatchId, won, d.elo);
+                app.Online.SubmitScore("online", d.playerName, d.elo, rank => { }, err => { });   // ELO ranking
 
                 app.UI.ShowDialog(won ? "VICTORY!" : "DEFEAT",
                     score + "\n\nELO " + old + " -> " + d.elo + "  (" + (delta >= 0 ? "+" : "") + delta + ")" + NewSkinsText(),

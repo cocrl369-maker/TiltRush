@@ -51,21 +51,25 @@ namespace TiltRush
             "Echo", "Blitz", "Sora", "Nyx", "Rift", "Juno", "Axel", "Kilo", "Dash", "Flux"
         };
 
-        static List<ScoreEntry> fake;
+        static readonly Dictionary<string, List<ScoreEntry>> fake = new Dictionary<string, List<ScoreEntry>>();
 
-        /// <summary>Fixed, made-up players (same every run) so the board looks populated.</summary>
-        static List<ScoreEntry> Fake()
+        /// <summary>Fixed, made-up players per board (same every run) so the boards look populated.</summary>
+        static List<ScoreEntry> Fake(string board)
         {
-            if (fake != null) return fake;
-            var rnd = new System.Random(42);
-            fake = new List<ScoreEntry>();
+            List<ScoreEntry> list;
+            if (fake.TryGetValue(board, out list)) return list;
+            var rnd = new System.Random(board.GetHashCode() & 0x7fffffff);
+            bool elo = board == "online";
+            double top = board == "hard" ? 6000 : board == "dodge" ? 5000 : board == "asteroids" ? 9000 : 8000;
+            list = new List<ScoreEntry>();
             for (int i = 0; i < 40; i++)
-                fake.Add(new ScoreEntry
+                list.Add(new ScoreEntry
                 {
-                    Name = Names[i % Names.Length] + (i >= Names.Length ? (i * 7 % 90 + 10).ToString() : ""),
-                    Score = 100 + (int)(8000 * Math.Pow(rnd.NextDouble(), 2.0))
+                    Name = Names[(i + rnd.Next(Names.Length)) % Names.Length] + (i >= Names.Length / 2 ? (rnd.Next(90) + 10).ToString() : ""),
+                    Score = elo ? 250 + (int)(700 * Math.Pow(rnd.NextDouble(), 1.5)) : 100 + (int)(top * Math.Pow(rnd.NextDouble(), 2.0))
                 });
-            return fake;
+            fake[board] = list;
+            return list;
         }
 
         public void SubmitScore(string mode, string playerName, int score, Action<int> onRank, Action<string> onError)
@@ -75,7 +79,7 @@ namespace TiltRush
             {
                 yield return new WaitForSecondsRealtime(0.4f);
                 int rank = 1;
-                foreach (var e in Fake()) if (e.Score > score) rank++;
+                foreach (var e in Fake(mode)) if (e.Score > score) rank++;
                 onRank(rank);
             }
         }
@@ -88,9 +92,9 @@ namespace TiltRush
                 yield return new WaitForSecondsRealtime(0.5f);
 
                 var all = new List<ScoreEntry>();
-                foreach (var e in Fake()) all.Add(new ScoreEntry { Name = e.Name, Score = e.Score });
-                var d = SaveManager.Data;
-                if (d.bestClassicScore > 0) all.Add(new ScoreEntry { Name = d.playerName, Score = d.bestClassicScore, IsYou = true });
+                foreach (var e in Fake(mode)) all.Add(new ScoreEntry { Name = e.Name, Score = e.Score });
+                int mine = Boards.MyBest(mode);
+                if (mine > 0) all.Add(new ScoreEntry { Name = SaveManager.Data.playerName, Score = mine, IsYou = true });
                 all.Sort((a, b) => b.Score.CompareTo(a.Score));
                 for (int i = 0; i < all.Count; i++) all[i].Rank = i + 1;
 

@@ -35,7 +35,7 @@ namespace TiltRush
     /// <summary>
     /// Real online play with Unity Gaming Services (UGS).
     /// - Login: anonymous (automatic, no account needed for the player).
-    /// - Leaderboard: package "Leaderboards", leaderboard ID = Config.LeaderboardId ("classic").
+    /// - Leaderboards: package "Leaderboards", one leaderboard per mode (IDs in Online/Boards.cs).
     /// - Online PvP: package "Lobby" (or "Multiplayer Services"). Players with a similar ELO meet in a lobby,
     ///   the host sets the seed, both play the same map and write their round times into the lobby.
     ///   If nobody is found within Config.MatchmakingSeconds you play against a bot (the simulation).
@@ -96,7 +96,7 @@ namespace TiltRush
             try
             {
                 await SyncName(playerName);
-                var entry = await LeaderboardsService.Instance.AddPlayerScoreAsync(Config.LeaderboardId, score);
+                var entry = await LeaderboardsService.Instance.AddPlayerScoreAsync(mode, score);
                 onRank(entry.Rank + 1);
             }
             catch (Exception e) { onError(e.Message); }
@@ -113,7 +113,7 @@ namespace TiltRush
             if (!ready) { mock.GetLeaderboard(mode, count, onResult, onError); return; }
             try
             {
-                var page = await LeaderboardsService.Instance.GetScoresAsync(Config.LeaderboardId);
+                var page = await LeaderboardsService.Instance.GetScoresAsync(mode);
                 var list = new List<ScoreEntry>();
                 bool youIn = false;
                 foreach (var e in page.Results)
@@ -127,7 +127,7 @@ namespace TiltRush
                 {
                     try
                     {
-                        var me = await LeaderboardsService.Instance.GetPlayerScoreAsync(Config.LeaderboardId);
+                        var me = await LeaderboardsService.Instance.GetPlayerScoreAsync(mode);
                         list.Add(new ScoreEntry { Rank = me.Rank + 1, Name = CleanName(me.PlayerName), Score = (int)me.Score, IsYou = true });
                     }
                     catch (Exception) { }   // no score yet

@@ -58,7 +58,7 @@ namespace TiltRush
             prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
             prt.sizeDelta = new Vector2(120, 120); prt.anchoredPosition = new Vector2(0, 22);
 
-            var board = SideButton(root, 420, "LEADERBOARD", Neon.Orange, () => UI.Show<LeaderboardScreen>());
+            var board = SideButton(root, 420, "LEADERBOARD", Neon.Orange, () => LeaderboardScreen.Open(null));
             var star = UIKit.Icon(board.transform, SpriteFactory.Fill(ShapeType.Star), 120, new Color(1f, 0.9f, 0.25f, 1f));
             star.rectTransform.anchoredPosition = new Vector2(0, 22);
             star.gameObject.AddComponent<Outline>().Also(o => { o.effectColor = Theme.Outline; o.effectDistance = new Vector2(4, -4); });
@@ -73,6 +73,9 @@ namespace TiltRush
 
             campaignInfo = UIKit.Label(root, "", 30, Theme.TextDim);
             UIKit.Anchor(campaignInfo.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, -235), new Vector2(700, 44));
+
+            var credits = UIKit.MakeButton(root, "CREDITS", Neon.Indigo, new Vector2(280, 100), () => UI.Show<CreditsScreen>(), 38);
+            UIKit.Anchor((RectTransform)credits.transform, new Vector2(1f, 0f), new Vector2(-40, 40), new Vector2(280, 100));
 
             stats = UIKit.Label(root, "", 30, Theme.TextDim, TextAnchor.LowerLeft);
             UIKit.Anchor(stats.rectTransform, new Vector2(0f, 0f), new Vector2(40, 30), new Vector2(900, 50));
@@ -164,7 +167,7 @@ namespace TiltRush
             coopInfo.text = "1 phone, 2 players";
 
             MenuUtil.AddButton(transform, "BACK", Neon.Gray, -230f, Back, 420f);
-            MenuUtil.AddButton(transform, "LEADERBOARD", Neon.Orange, 230f, () => UI.Show<LeaderboardScreen>(), 420f);
+            MenuUtil.AddButton(transform, "LEADERBOARD", Neon.Orange, 230f, () => LeaderboardScreen.Open(null), 420f);
         }
 
         Group NewGroup(string name, ModeDef a, System.Action<RectTransform> iconA, out Text infoA,
