@@ -144,7 +144,12 @@ namespace TiltRush
         void Update()
         {
             if (!Input.GetKeyDown(KeyCode.Escape)) return;   // also the Android back button
-            if (GameWorld.Current != null) { if (GameWorld.Current.Paused) Resume(); else Pause(); }
+            if (GameWorld.Current != null)
+            {
+                // in the options / tilt setup during a pause: back to the pause menu
+                if (GameWorld.Current.Paused && !(UI.Current is PauseScreen) && !(UI.Current is HudScreen)) { BackToPause(); return; }
+                if (GameWorld.Current.Paused) Resume(); else Pause();
+            }
             else if (UI.Current is MainMenuScreen) Application.Quit();
             else if (!(UI.Current is DialogScreen)) UI.Show<MainMenuScreen>();
         }
@@ -181,6 +186,14 @@ namespace TiltRush
         {
             if (GameWorld.Current != null) GameWorld.Current.Resume();
             UI.Hide<PauseScreen>();
+        }
+
+        /// <summary>Options opened from the pause menu: return to the paused game.</summary>
+        public void BackToPause()
+        {
+            SaveManager.Save();
+            UI.Show<HudScreen>();
+            UI.ShowOverlay<PauseScreen>();
         }
 
         public void QuitToMenu()

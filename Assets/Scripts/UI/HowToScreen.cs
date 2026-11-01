@@ -6,9 +6,8 @@ using UnityEngine.UI;
 namespace TiltRush
 {
     /// <summary>
-    /// "How to play" as big cards: one card fills the screen, swipe up/down to change cards
-    /// (or use the arrow buttons / arrow keys / mouse wheel). Long cards scroll first; swiping past the end
-    /// goes to the next card. Text is large, gadgets / enemies / hazards are shown with their pictures.
+    /// "How to play" as ONE long page that scrolls smoothly with momentum (swipe, arrow buttons, arrow keys,
+    /// mouse wheel). Text is large, gadgets / enemies / hazards are shown with their pictures.
     /// </summary>
     public class HowToScreen : UIScreen
     {
@@ -27,10 +26,10 @@ namespace TiltRush
             BuildCards();
 
             // arrows on the right side (for PC and for people who do not swipe)
-            var up = UIKit.MakeButton(transform, "", Neon.Blue, new Vector2(110, 110), () => deck.Go(-1), 40);
+            var up = UIKit.MakeButton(transform, "", Neon.Blue, new Vector2(110, 110), () => deck.ScrollBy(-520f), 40);
             UIKit.Anchor((RectTransform)up.transform, new Vector2(1f, 0.5f), new Vector2(-30, 140), new Vector2(110, 110));
             Arrow(up.transform, 0f);
-            var down = UIKit.MakeButton(transform, "", Neon.Blue, new Vector2(110, 110), () => deck.Go(1), 40);
+            var down = UIKit.MakeButton(transform, "", Neon.Blue, new Vector2(110, 110), () => deck.ScrollBy(520f), 40);
             UIKit.Anchor((RectTransform)down.transform, new Vector2(1f, 0.5f), new Vector2(-30, -140), new Vector2(110, 110));
             Arrow(down.transform, 180f);
 
@@ -48,8 +47,8 @@ namespace TiltRush
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.PageDown)) deck.Go(1);
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.PageUp)) deck.Go(-1);
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.PageDown)) deck.ScrollBy(520f);
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.PageUp)) deck.ScrollBy(-520f);
         }
 
         // ------------------------------------------------------------------ content
@@ -63,48 +62,37 @@ namespace TiltRush
                 ? "Tilt your phone to move. Pick your favourite way to hold it in OPTIONS > CONTROLS > TILT SETUP."
                 : Platform.MoveHint);
             c.Para(Platform.CoopHint);
-            c.Hint("Swipe up for the next card");
+            c.Hint("Swipe up to read more");
 
-            c = deck.NewCard();
             c.Heading("SCORE", Neon.Yellow);
             c.Para("You earn points for every second you survive - and more the harder it gets.");
             c.Para("Bonus points for every dot you destroy and every pickup you collect.");
             c.Para("Every mode except Campaign and Co-op has its own LEADERBOARD. Online PvP is ranked by ELO.");
 
             var gadgets = GadgetLibrary.All;
-            const int perCard = 5;
-            int parts = (gadgets.Count + perCard - 1) / perCard;
-            for (int part = 0; part < parts; part++)
+            c.Heading("PICKUPS", Neon.Lime);
+            c.Para("Fly over a pickup to use it immediately.");
+            foreach (var g in gadgets)
             {
-                c = deck.NewCard();
-                c.Heading("PICKUPS " + (part + 1) + "/" + parts, Neon.Lime);
-                if (part == 0) c.Para("Fly over a pickup to use it immediately.");
-                for (int i = part * perCard; i < Mathf.Min(gadgets.Count, (part + 1) * perCard); i++)
-                {
-                    var g = gadgets[i];
-                    c.Row(holder => GadgetToken(holder, g), g.Name.ToUpper(), g.Color, g.Description);
-                }
+                var gd = g;
+                c.Row(holder => GadgetToken(holder, gd), gd.Name.ToUpper(), gd.Color, gd.Description);
             }
 
-            c = deck.NewCard();
             c.Heading("ENEMIES", Neon.Red);
             c.Row(h => EnemyIcon(h, ShapeType.Saw, EnemyType.Normal, false), "SAW", GameTheme.EnemyRim(EnemyType.Normal), "The normal dot. Chases you at medium speed.");
             c.Row(h => EnemyIcon(h, ShapeType.Spike6, EnemyType.Fast, false), "SPIKE STAR", GameTheme.EnemyRim(EnemyType.Fast), "Small and fast - keep moving!");
             c.Row(h => EnemyIcon(h, ShapeType.Spike10, EnemyType.Big, true), "SPIKE BALL", GameTheme.EnemyRim(EnemyType.Big), "Big and slow, but hard to get around.");
             c.Para("New dots blink for a moment before they become dangerous.");
 
-            c = deck.NewCard();
             c.Heading("HAZARDS", Neon.Orange);
             c.Row(h => Bar(h), "RED WALLS", new Color32(255, 90, 90, 255), "Bars sweep across the arena. Slip around their ends!");
             c.Row(h => Blade(h), "SWORDS", new Color32(255, 150, 150, 255), "A dark lane with light red edges warns you - then a sword races along it.");
             c.Row(h => RingIcon(h), "LAUNCH RINGS", Neon.Yellow, "Yellow rings fling you backwards - escape danger or get thrown into it!");
             c.Row(h => Block(h), "OBSTACLES", new Color32(160, 180, 220, 255), "Dark blocks (campaign) stop you and the dots, but never hurt. Hide behind them!");
 
-            c = deck.NewCard();
             c.Heading("MODES", Neon.Pink);
             foreach (var m in Modes.All) c.Row(h => ModeIcon(h, m.Color), m.Name, m.Color, m.Description);
 
-            c = deck.NewCard();
             c.Heading("SKINS & COLOURS", Neon.Purple);
             c.Para("Complete campaign levels to unlock new colours.");
             c.Para("New skins are unlocked by playing: high scores in Classic and Hard, long Dodge runs, destroyed dots, collected pickups and online wins.");
@@ -239,8 +227,9 @@ namespace TiltRush
         Image[] dots;
         Vector2 size;
         int index, leaving = -1;
-        float scroll, shownScroll, slide, leaveSlide;
+        float scroll, shownScroll, slide, leaveSlide, velocity;
         bool dragging;
+        RectTransform barTrack, barThumb;
         Canvas canvas;
 
         public static CardDeck Create(RectTransform parent, Vector2 size)
@@ -269,9 +258,21 @@ namespace TiltRush
             return c;
         }
 
-        /// <summary>Call after all cards are built: creates the page dots.</summary>
+        /// <summary>Call after all cards are built: page dots (several cards) or a scroll bar (one long card).</summary>
         public void Finish()
         {
+            if (cards.Count == 1)
+            {
+                barTrack = UIKit.Rect("ScrollTrack", viewport.parent);
+                barTrack.anchorMin = barTrack.anchorMax = barTrack.pivot = new Vector2(1f, 0.5f);
+                barTrack.sizeDelta = new Vector2(10, size.y - 40); barTrack.anchoredPosition = new Vector2(-14, 0);
+                var ti = barTrack.gameObject.AddComponent<Image>(); ti.color = new Color(1, 1, 1, 0.12f); ti.raycastTarget = false;
+                barThumb = UIKit.Rect("Thumb", barTrack);
+                barThumb.anchorMin = barThumb.anchorMax = barThumb.pivot = new Vector2(0.5f, 1f);
+                var th = barThumb.gameObject.AddComponent<Image>(); th.color = new Color(1, 1, 1, 0.6f); th.raycastTarget = false;
+                Show(0, false);
+                return;
+            }
             var bar = UIKit.Rect("Dots", viewport.parent);
             bar.anchorMin = bar.anchorMax = bar.pivot = new Vector2(1f, 0.5f);
             bar.sizeDelta = new Vector2(30, cards.Count * 36f);
@@ -307,6 +308,13 @@ namespace TiltRush
             Layout();
         }
 
+        /// <summary>Scrolls by a distance (arrow buttons / keys), smoothly.</summary>
+        public void ScrollBy(float d)
+        {
+            velocity = 0f;
+            scroll = Mathf.Clamp(scroll + d, 0f, MaxScroll(index));
+        }
+
         public void Go(int dir)
         {
             int target = index + dir;
@@ -316,34 +324,45 @@ namespace TiltRush
 
         float Scale { get { if (canvas == null) canvas = GetComponentInParent<Canvas>(); return canvas != null ? canvas.scaleFactor : 1f; } }
 
-        public void OnBeginDrag(PointerEventData e) { dragging = true; }
+        public void OnBeginDrag(PointerEventData e) { dragging = true; velocity = 0f; }
 
         public void OnDrag(PointerEventData e)
         {
-            scroll += e.delta.y / Scale;          // finger moves up -> content moves up -> read further down
+            float d = e.delta.y / Scale;          // finger moves up -> content moves up -> read further down
+            scroll += d;
+            float dt = Mathf.Max(0.001f, Time.unscaledDeltaTime);
+            velocity = Mathf.Lerp(velocity, d / dt, 0.4f);   // remembered for the momentum after letting go
         }
 
         public void OnEndDrag(PointerEventData e)
         {
             dragging = false;
             float max = MaxScroll(index);
-            if (scroll > max + SwitchDistance) Go(1);
-            else if (scroll < -SwitchDistance) Go(-1);
-            else scroll = Mathf.Clamp(scroll, 0f, max);
+            if (cards.Count > 1 && scroll > max + SwitchDistance) { velocity = 0f; Go(1); }
+            else if (cards.Count > 1 && scroll < -SwitchDistance) { velocity = 0f; Go(-1); }
+            else if (scroll < 0f || scroll > max) { scroll = Mathf.Clamp(scroll, 0f, max); velocity = 0f; }
         }
 
         public void OnScroll(PointerEventData e)
         {
             float max = MaxScroll(index);
-            if (e.scrollDelta.y < 0 && scroll >= max - 1f) { Go(1); return; }
-            if (e.scrollDelta.y > 0 && scroll <= 1f) { Go(-1); return; }
-            scroll = Mathf.Clamp(scroll - e.scrollDelta.y * 80f, 0f, max);
+            velocity = 0f;
+            if (cards.Count > 1 && e.scrollDelta.y < 0 && scroll >= max - 1f) { Go(1); return; }
+            if (cards.Count > 1 && e.scrollDelta.y > 0 && scroll <= 1f) { Go(-1); return; }
+            scroll = Mathf.Clamp(scroll - e.scrollDelta.y * 90f, 0f, max);
         }
 
         void Update()
         {
-            float dt = Time.unscaledDeltaTime, k = 1f - Mathf.Exp(-14f * dt);
+            float dt = Time.unscaledDeltaTime, k = 1f - Mathf.Exp(-18f * dt);
             float max = MaxScroll(index);
+            // momentum: keeps gliding after a swipe and slows down smoothly
+            if (!dragging && Mathf.Abs(velocity) > 5f)
+            {
+                scroll += velocity * dt;
+                velocity *= Mathf.Exp(-3.5f * dt);
+                if (scroll < 0f || scroll > max) { scroll = Mathf.Clamp(scroll, 0f, max); velocity = 0f; }
+            }
             // pulling past the ends feels like a rubber band
             float target = scroll;
             if (dragging)
@@ -364,6 +383,14 @@ namespace TiltRush
         void Layout()
         {
             if (cards.Count == 0) return;
+            if (barThumb != null)
+            {
+                float max = MaxScroll(index), track = barTrack.sizeDelta.y;
+                barTrack.gameObject.SetActive(max > 1f);
+                float h = Mathf.Max(60f, track * size.y / Mathf.Max(size.y, cards[index].Height));
+                barThumb.sizeDelta = new Vector2(10, h);
+                barThumb.anchoredPosition = new Vector2(0, -(track - h) * (max > 0f ? Mathf.Clamp01(shownScroll / max) : 0f));
+            }
             var cur = cards[index];
             cur.Root.anchoredPosition = new Vector2(0, -slide);
             cur.Content.anchoredPosition = new Vector2(0, shownScroll - 10f);

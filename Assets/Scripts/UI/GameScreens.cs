@@ -295,6 +295,7 @@ namespace TiltRush
             st.Label("PAUSED", 120, Color.white, 160);
             st.Space(10);
             st.Button("RESUME", Neon.Lime, 700, 160, () => App.I.Resume(), 72);
+            st.Button("OPTIONS", Neon.Blue, 700, 130, () => UI.Show<OptionsScreen>(), 60);   // game stays paused
             st.Button("QUIT", Neon.Red, 700, 130, () => App.I.QuitToMenu(), 60);
         }
     }

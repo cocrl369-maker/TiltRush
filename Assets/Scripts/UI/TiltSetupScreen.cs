@@ -16,6 +16,7 @@ namespace TiltRush
         RectTransform dot;
         IMoveInput preview;
         protected override bool HasVignette { get { return true; } }
+        public override string MusicContext { get { return GameWorld.Current != null ? null : "Menu"; } }
 
         static bool IsPhone { get { return (Application.isMobilePlatform && !Application.isEditor && SystemInfo.supportsAccelerometer) || Platform.RemoteConnected; } }
 

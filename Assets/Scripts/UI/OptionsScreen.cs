@@ -20,7 +20,11 @@ namespace TiltRush
         readonly List<System.Action> refreshers = new List<System.Action>();
         Text trackText, statsText, skinsText, onlineText;
         InputField nameField;
+        Button resetBtn;
         protected override bool HasVignette { get { return true; } }
+        /// <summary>Opened from the pause menu: keep the game music.</summary>
+        public override string MusicContext { get { return GameWorld.Current != null ? null : "Menu"; } }
+        static bool InGame { get { return GameWorld.Current != null; } }
 
         const float ColW = 760f, ColX = 420f, Top = 300f;
 
@@ -50,7 +54,11 @@ namespace TiltRush
             BuildControls(pages[3]);
             BuildProfile(pages[4]);
 
-            MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<MainMenuScreen>(); });
+            MenuUtil.AddBack(transform, () =>
+            {
+                if (InGame) App.I.BackToPause();               // came from the pause menu
+                else { SaveManager.Save(); UI.Show<MainMenuScreen>(); }
+            });
         }
 
         UIStack Column(RectTransform page, bool right)
@@ -150,7 +158,7 @@ namespace TiltRush
             });
             l.Space(10);
             skinsText = l.Label("", 36, Neon.Lime, 60);
-            l.Button("RESET PROGRESS", Neon.Red, 520, 96, ConfirmReset, 38);
+            resetBtn = l.Button("RESET PROGRESS", Neon.Red, 520, 96, ConfirmReset, 38);
             l.Space(10);
             onlineText = l.Label("", 28, Theme.TextDim, 70);
 
@@ -200,7 +208,11 @@ namespace TiltRush
                 "Online:  " + d.onlineWins + " W / " + d.onlineLosses + " L  (ELO " + d.elo + ")";
         }
 
-        public override void OnShow() { SetTab(tab); }
+        public override void OnShow()
+        {
+            resetBtn.gameObject.SetActive(!InGame);           // no resetting in the middle of a round
+            SetTab(tab);
+        }
     }
 
     static class RectExtensions

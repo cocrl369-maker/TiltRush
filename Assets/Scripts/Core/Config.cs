@@ -42,8 +42,8 @@ namespace TiltRush
         // Player
         public const float PlayerRadius = 0.26f;         // hit circle
         public const float PlayerVisualRadius = 0.4f;    // how big the ship is drawn (the tips are forgiving)
-        public const float PlayerMaxSpeed = 8f;
-        public const float PlayerAcceleration = 42f;
+        public const float PlayerMaxSpeed = 9f;          // was 8 - a little faster
+        public const float PlayerAcceleration = 47f;
 
         public const float RespawnInvulnerable = 2.5f;   // seconds of blinking invulnerability after losing a life
 
