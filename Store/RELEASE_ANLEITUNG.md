@@ -39,7 +39,7 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
 - [ ] **2.4** Anzeigen-Einheit **Interstitial_Android** öffnen → „Skip after 5 seconds“ aktiv.
 - [ ] **2.5** In Unity `Assets/Scripts/Core/Config.cs` öffnen und eintragen:
   ```csharp
-  public const string AdsGameIdAndroid = "5712345";   // deine Game ID
+  public const string AdsGameIdAndroid = "800420854";   // schon eingetragen
   ```
 - [ ] **2.6** Spiel testen: *Options > Profile* zeigt „Online: ONLINE“. Nach 2 Minuten im Menü erscheint eine **Test**-Werbung.
 
