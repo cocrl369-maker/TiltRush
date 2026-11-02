@@ -64,10 +64,12 @@ namespace TiltRush
             star.gameObject.AddComponent<Outline>().Also(o => { o.effectColor = Theme.Outline; o.effectDistance = new Vector2(4, -4); });
 
             // small round buttons at the bottom
-            var opt = RoundButton(root, -110, Neon.Blue, () => UI.Show<OptionsScreen>());
+            var opt = RoundButton(root, -220, Neon.Blue, () => UI.Show<OptionsScreen>());
             var gear = UIKit.Icon(opt.transform, SpriteFactory.Gear(), 84, Color.white);
             gear.gameObject.AddComponent<Spin>().Speed = -25f;
-            var help = RoundButton(root, 110, Neon.Aqua, () => UI.Show<HowToScreen>());
+            var ctrl = RoundButton(root, 0, Neon.Green, () => ControlsScreen.Open(() => UI.Show<MainMenuScreen>()));
+            UIKit.Icon(ctrl.transform, SpriteFactory.TiltIcon(), 96, Color.white);
+            var help = RoundButton(root, 220, Neon.Aqua, () => UI.Show<HowToScreen>());
             help.GetComponentInChildren<Text>().text = "?";
             help.GetComponentInChildren<Text>().fontSize = 76;
 
@@ -166,8 +168,9 @@ namespace TiltRush
                                             Modes.Online, h => Icon(h, SpriteFactory.Gadget(GadgetIcon.Crosshair), 180, Color.white), out onlineInfo);
             coopInfo.text = "1 phone, 2 players";
 
-            MenuUtil.AddButton(transform, "BACK", Neon.Gray, -230f, Back, 420f);
-            MenuUtil.AddButton(transform, "LEADERBOARD", Neon.Orange, 230f, () => LeaderboardScreen.Open(null), 420f);
+            MenuUtil.AddButton(transform, "BACK", Neon.Gray, -480f, Back, 400f);
+            MenuUtil.AddButton(transform, "CONTROLS", Neon.Green, 0f, () => ControlsScreen.Open(() => UI.Show<ModeSelectScreen>()), 400f);
+            MenuUtil.AddButton(transform, "LEADERBOARD", Neon.Orange, 480f, () => LeaderboardScreen.Open(null), 400f);
         }
 
         Group NewGroup(string name, ModeDef a, System.Action<RectTransform> iconA, out Text infoA,

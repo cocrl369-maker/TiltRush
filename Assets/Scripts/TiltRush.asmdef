@@ -7,7 +7,8 @@
         "Unity.Services.Authentication",
         "Unity.Services.Leaderboards",
         "Unity.Services.Lobbies",
-        "Unity.Services.Multiplayer"
+        "Unity.Services.Multiplayer",
+        "UnityEngine.Advertisements"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,7 +20,8 @@
     "versionDefines": [
         { "name": "com.unity.services.leaderboards", "expression": "1.0.0", "define": "TILTRUSH_LEADERBOARDS" },
         { "name": "com.unity.services.lobby", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
-        { "name": "com.unity.services.multiplayer", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" }
+        { "name": "com.unity.services.multiplayer", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
+        { "name": "com.unity.ads", "expression": "4.0.0", "define": "TILTRUSH_ADS" }
     ],
     "noEngineReferences": false
 }

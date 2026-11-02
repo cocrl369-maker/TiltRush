@@ -21,6 +21,7 @@ namespace TiltRush
         public AudioManager Audio;
         public IOnlineService Online;
         public SessionController Session;
+        public AdManager Ads;
         Camera cam;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -52,6 +53,7 @@ namespace TiltRush
             gameObject.AddComponent<NeonBackground>();
             Online = OnlineFactory.Create();           // real Unity Gaming Services if installed, else simulated
             Session = new SessionController(this);
+            Ads = gameObject.AddComponent<AdManager>();
 
             UI = gameObject.AddComponent<UIManager>();
             UI.Build();

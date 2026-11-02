@@ -205,3 +205,12 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Skins**: 28 in total. New ships: STARFIGHTER (default for new players), PAPER PLANE (finish the tutorial), JET (5 rounds),
   UFO (2,000 in Asteroid Field), SHARK (800 dots), SHUTTLE (campaign 15), VIPER (5,000 in Asteroid Field), STEALTH (campaign 20).
   Details (cockpit, fold, dome) are polygons in `SpriteFactory.CustomDetail`.
+
+## Controls screen, ads, store graphics
+- **Controls** (`UI/ControlsScreen.cs`): own screen (tilt setup, sensitivity, smoothing, axes, invert), button in the main menu
+  (round button in the middle), the mode select and the pause menu. BACK returns to where you came from.
+- **Ads** (`Core/Ads.cs`, Unity Ads / package "Advertisement Legacy"): interstitial every `Config.AdIntervalSeconds` (120 s),
+  never during a round, the tutorial or online matchmaking / matches; waits for a calm moment. First visit of the main menu asks
+  for consent to personalised ads (GDPR), changeable in Options > Profile. Fill in `Config.AdsGameIdAndroid`, set
+  `Config.AdsTestMode = false` for the store version. Privacy policy link: `Config.PrivacyPolicyUrl`.
+- **Store graphics**: `Store/icon_1024.png` (Unity app icon), `Store/icon_512.png` (Play Store icon), `Store/feature_1024x500.png`.

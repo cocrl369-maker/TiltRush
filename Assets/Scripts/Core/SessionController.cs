@@ -19,6 +19,10 @@ namespace TiltRush
 
         public string ScoreLine { get; private set; }
 
+        /// <summary>Online search or match running (no ads now).</summary>
+        public bool Busy { get { return mode != null && mode.Id == GameModeId.Online && (match != null || searching); } }
+        bool searching;
+
         public SessionController(App a) { app = a; ScoreLine = ""; }
 
         // ------------------------------------------------------------------ flow
@@ -62,6 +66,7 @@ namespace TiltRush
         public void Abort()
         {
             token++;                       // invalidates pending callbacks
+            searching = false;
             if (match != null || (mode != null && mode.Id == GameModeId.Online)) app.Online.LeaveMatch();
             if (world != null) Object.Destroy(world.gameObject);
             world = null;
@@ -75,9 +80,10 @@ namespace TiltRush
             app.UI.ShowDialog("SEARCHING...", "Looking for an opponent near ELO " + SaveManager.Data.elo,
                 new UIStack.Item("CANCEL", Neon.Gray, () => { Abort(); app.UI.Show<MainMenuScreen>(); }));
 
+            searching = true;
             app.Online.FindMatch(SaveManager.Data.elo,
-                mi => { if (t != token) return; match = mi; BeginRound(); },
-                err => { if (t != token) return; Error(err); });
+                mi => { if (t != token) return; searching = false; match = mi; BeginRound(); },
+                err => { if (t != token) return; searching = false; Error(err); });
         }
 
         void BeginRound()

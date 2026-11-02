@@ -59,6 +59,7 @@ namespace TiltRush
             AddScreen<CampaignScreen>();
             AddScreen<TiltSetupScreen>();
             AddScreen<CreditsScreen>();
+            AddScreen<ControlsScreen>();
             AddScreen<HudScreen>();
             AddScreen<PauseScreen>();     // keep overlays/dialog last so they render on top
             AddScreen<DialogScreen>();
@@ -124,6 +125,7 @@ namespace TiltRush
             s.gameObject.SetActive(true);
             if (!visible) fade.FadeIn();
             if (s.MusicContext != null && App.I != null && App.I.Audio != null) App.I.Audio.SetContext(s.MusicContext);
+            if (App.I != null && App.I.Ads != null) App.I.Ads.NotifyScreenChange();
             s.OnShow();
             Current = s;
             return s;

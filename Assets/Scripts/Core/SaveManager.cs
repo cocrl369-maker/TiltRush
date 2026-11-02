@@ -59,7 +59,8 @@ namespace TiltRush
         public Vector3 customNeutral;
         public int customOrientation;
 
-        public bool tutorialDone;          // the tutorial runs automatically on the very first start
+        public bool tutorialDone;
+        public bool adConsentAsked, adConsent;   // personalised ads allowed? (asked once, Options > Profile)          // the tutorial runs automatically on the very first start
 
         // Campaign: number of levels completed (in order)
         public int campaignDone = 0;
@@ -91,6 +92,7 @@ namespace TiltRush
             fresh.musicVolume = old.musicVolume; fresh.sfxVolume = old.sfxVolume; fresh.buttonSounds = old.buttonSounds; fresh.vibration = old.vibration;
             fresh.hudSize = old.hudSize; fresh.pauseLeft = old.pauseLeft; fresh.showFps = old.showFps; fresh.menuAnimations = old.menuAnimations;
             fresh.tiltSensitivity = old.tiltSensitivity; fresh.tiltSmoothing = old.tiltSmoothing; fresh.invertX = old.invertX; fresh.invertY = old.invertY; fresh.tiltAxes = old.tiltAxes;
+            fresh.tutorialDone = old.tutorialDone; fresh.adConsentAsked = old.adConsentAsked; fresh.adConsent = old.adConsent;
             fresh.tiltPreset = old.tiltPreset; fresh.hasCustomTilt = old.hasCustomTilt; fresh.customNeutral = old.customNeutral; fresh.customOrientation = old.customOrientation;
             Data = fresh;
             Data.skinsInitialized = true;

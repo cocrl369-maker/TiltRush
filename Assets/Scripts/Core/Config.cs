@@ -104,6 +104,18 @@ namespace TiltRush
         // Online (Unity Gaming Services) - the leaderboard must exist in the Unity Cloud dashboard with this ID
         public const float MatchmakingSeconds = 25f;      // then you play against a bot
 
+        // ---- Ads (Unity Ads). Fill in the Game ID from Unity Cloud > Monetization, and set AdsTestMode = false
+        //      for the version you upload to the store (test ads earn nothing, real ads in testing break the rules).
+        public const string AdsGameIdAndroid = "";               // e.g. "5712345"
+        public const string AdsGameIdIos = "";
+        public const string AdsInterstitialAndroid = "Interstitial_Android";
+        public const string AdsInterstitialIos = "Interstitial_iOS";
+        public const bool AdsTestMode = true;
+        public const float AdIntervalSeconds = 120f;             // at most one ad every 2 minutes (never during a round)
+
+        // ---- Store / legal: web address of your privacy policy (shown in Options > Profile)
+        public const string PrivacyPolicyUrl = "";
+
         // Elo & matches
         public const int StartElo = 400;
         public const int EloK = 32;

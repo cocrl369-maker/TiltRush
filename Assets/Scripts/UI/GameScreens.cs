@@ -291,12 +291,13 @@ namespace TiltRush
             var bg = ((RectTransform)transform).gameObject.AddComponent<Image>();
             bg.color = new Color(0, 0, 0, 0.8f);
 
-            var st = new UIStack((RectTransform)transform, 250);
+            var st = new UIStack((RectTransform)transform, 140);
             st.Label("PAUSED", 120, Color.white, 160);
-            st.Space(10);
-            st.Button("RESUME", Neon.Lime, 700, 160, () => App.I.Resume(), 72);
-            st.Button("OPTIONS", Neon.Blue, 700, 130, () => UI.Show<OptionsScreen>(), 60);   // game stays paused
-            st.Button("QUIT", Neon.Red, 700, 130, () => App.I.QuitToMenu(), 60);
+            st.Space(6);
+            st.Button("RESUME", Neon.Lime, 700, 150, () => App.I.Resume(), 72);
+            st.Button("CONTROLS", Neon.Green, 700, 118, () => ControlsScreen.Open(() => App.I.BackToPause()), 56);   // game stays paused
+            st.Button("OPTIONS", Neon.Blue, 700, 118, () => UI.Show<OptionsScreen>(), 56);
+            st.Button("QUIT", Neon.Red, 700, 118, () => App.I.QuitToMenu(), 56);
         }
     }
 

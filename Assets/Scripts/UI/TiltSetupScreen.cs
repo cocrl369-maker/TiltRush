@@ -62,7 +62,7 @@ namespace TiltRush
             msg = right.Label("", 28, Theme.TextDim, 90, TextAnchor.UpperCenter);
             right.Slider("SENSITIVITY", 1f, 6f, SaveManager.Data.tiltSensitivity, v => SaveManager.Data.tiltSensitivity = v);
 
-            MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<OptionsScreen>(); });
+            MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<ControlsScreen>(); });
         }
 
         static void Line(RectTransform parent, Vector2 size)

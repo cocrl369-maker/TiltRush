@@ -507,6 +507,23 @@ namespace TiltRush
         }
         static readonly Vector2[] HeartV = { new Vector2(-0.82f, 0.12f), new Vector2(0.82f, 0.12f), new Vector2(0f, -0.88f) };
 
+        /// <summary>Controls icon: a tilted phone with motion arcs left and right.</summary>
+        public static Sprite TiltIcon()
+        {
+            return Cached("tilticon", () => Make(Res, Res, (x, y) =>
+            {
+                float a = -0.45f, ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                float rx = x * ca - y * sa, ry = x * sa + y * ca;                        // rotate the phone
+                float qx = Mathf.Abs(rx) - 0.3f, qy = Mathf.Abs(ry) - 0.58f;
+                float box = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0f) - 0.1f;
+                float phone = Mathf.Abs(box) - 0.06f;
+                float dot = Disc(rx, ry, 0f, -0.5f, 0.05f);
+                float arcs = Mathf.Max(Ring(x, y, 0.9f, 0.09f), 0.38f - Mathf.Abs(x));   // only the left and right parts
+                arcs = Mathf.Max(arcs, Mathf.Abs(y) - 0.38f);
+                return Mathf.Clamp01(0.5f - Mathf.Min(phone, Mathf.Min(dot, arcs)) / 0.03f);
+            }));
+        }
+
         /// <summary>Gear icon (options button).</summary>
         public static Sprite Gear()
         {

@@ -5,14 +5,14 @@ using UnityEngine.UI;
 namespace TiltRush
 {
     /// <summary>
-    /// Settings with tabs: GRAPHICS, SOUND, INTERFACE, CONTROLS, PROFILE. Each row is label (left) + control (right).
+    /// Settings with tabs: GRAPHICS, SOUND, INTERFACE, PROFILE (the controls have their own screen: ControlsScreen). Each row is label (left) + control (right).
     /// Everything is saved in SaveData and takes effect immediately. Add a setting: a field in SaveData +
     /// one line here (Choice / Toggle / SliderRow) + use the value where it matters.
     /// </summary>
     public class OptionsScreen : UIScreen
     {
-        static readonly string[] TabNames = { "GRAPHICS", "SOUND", "INTERFACE", "CONTROLS", "PROFILE" };
-        static readonly Color[] TabColors = { Neon.Blue, Neon.Pink, Neon.Orange, Neon.Green, Neon.Purple };
+        static readonly string[] TabNames = { "GRAPHICS", "SOUND", "INTERFACE", "PROFILE" };
+        static readonly Color[] TabColors = { Neon.Blue, Neon.Pink, Neon.Orange, Neon.Purple };
 
         RectTransform[] pages;
         Button[] tabs;
@@ -34,7 +34,7 @@ namespace TiltRush
 
             // tab row
             tabs = new Button[TabNames.Length];
-            const float tw = 300f, tg = 18f;
+            const float tw = 340f, tg = 22f;
             for (int i = 0; i < tabs.Length; i++)
             {
                 int idx = i;
@@ -51,8 +51,7 @@ namespace TiltRush
             BuildGraphics(pages[0]);
             BuildSound(pages[1]);
             BuildInterface(pages[2]);
-            BuildControls(pages[3]);
-            BuildProfile(pages[4]);
+            BuildProfile(pages[3]);
 
             MenuUtil.AddBack(transform, () =>
             {
@@ -133,20 +132,6 @@ namespace TiltRush
         }
 
         // ------------------------------------------------------------------ CONTROLS
-        void BuildControls(RectTransform page)
-        {
-            var l = Column(page, false);
-            l.Button("TILT SETUP", Neon.Blue, ColW, 96, () => UI.Show<TiltSetupScreen>(), 40);
-            refreshers.Add(l.SliderRow("SENSITIVITY", 1f, 6f, () => SaveManager.Data.tiltSensitivity, v => SaveManager.Data.tiltSensitivity = v));
-            refreshers.Add(l.Choice("SMOOTHING", new[] { "DIRECT", "NORMAL", "SMOOTH" }, () => SaveManager.Data.tiltSmoothing, v => SaveManager.Data.tiltSmoothing = v));
-            refreshers.Add(l.Choice("TILT AXES", new[] { "STANDARD", "SWAPPED" }, () => SaveManager.Data.tiltAxes, v => SaveManager.Data.tiltAxes = v));
-
-            var r = Column(page, true);
-            refreshers.Add(r.Toggle("INVERT LEFT/RIGHT", () => SaveManager.Data.invertX, v => SaveManager.Data.invertX = v));
-            refreshers.Add(r.Toggle("INVERT UP/DOWN", () => SaveManager.Data.invertY, v => SaveManager.Data.invertY = v));
-            r.Label("Tilt right but the ship goes up/down? Switch TILT AXES to SWAPPED. " + Platform.CoopHint, 28, Theme.TextDim, 210, TextAnchor.UpperLeft);
-        }
-
         // ------------------------------------------------------------------ PROFILE
         void BuildProfile(RectTransform page)
         {
@@ -163,8 +148,16 @@ namespace TiltRush
             onlineText = l.Label("", 28, Theme.TextDim, 70);
 
             var r = Column(page, true);
+            refreshers.Add(r.Toggle("PERSONALISED ADS", () => SaveManager.Data.adConsent, v =>
+            {
+                SaveManager.Data.adConsent = v; SaveManager.Data.adConsentAsked = true;
+                if (App.I.Ads != null) App.I.Ads.ApplyConsent();
+            }));
+            if (Config.PrivacyPolicyUrl.Length > 0)
+                r.Button("PRIVACY POLICY", Neon.Indigo, 460, 80, () => Application.OpenURL(Config.PrivacyPolicyUrl), 32);
             r.Label("STATISTICS", 36, Neon.Aqua, 50);
-            statsText = r.Label("", 30, Color.white, 420, TextAnchor.UpperLeft);
+            statsText = r.Label("", 30, Color.white, 330, TextAnchor.UpperLeft);
+            UIKit.ShrinkToFit(statsText);
         }
 
         void ConfirmReset()
