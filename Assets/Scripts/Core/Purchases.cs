@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-#if TILTRUSH_IAP
+#if TILTRUSH_IAP || TILTRUSH_IAP5
 using UnityEngine.Purchasing;
+#endif
+#if TILTRUSH_IAP
 using UnityEngine.Purchasing.Extension;
 #endif
 
@@ -8,8 +12,8 @@ namespace TiltRush
 {
     /// <summary>
     /// In-app purchase "Remove ads" (Unity IAP, package "In-App Purchasing" = com.unity.purchasing).
-    /// Switches on automatically when package VERSION 4.x is installed (define TILTRUSH_IAP, see TiltRush.asmdef).
-    /// Version 5 has a completely new interface - with it the shop simply stays off (the game still compiles).
+    /// Switches on automatically when the package is installed (TiltRush.asmdef sets TILTRUSH_IAP5 for
+    /// version 5.x = current Unity IAP, or TILTRUSH_IAP for the old version 4.x).
     /// The product must exist in the Google Play Console (Monetize > Products > In-app products) with the
     /// ID Config.RemoveAdsProductId ("remove_ads"). Google restores the purchase automatically on reinstall.
     /// </summary>
@@ -58,6 +62,60 @@ namespace TiltRush
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason) { }
         public void OnPurchaseFailed(Product product, PurchaseFailureDescription description) { }
+#elif TILTRUSH_IAP5
+        // ---------------------------------------------------------------- Unity IAP 5 (current version)
+        StoreController store;
+
+        async void Start()
+        {
+            try
+            {
+                store = UnityIAPServices.StoreController();
+                store.OnProductsFetched += products =>
+                {
+                    foreach (var p in products)
+                    {
+                        if (p == null || p.definition == null || p.definition.id != Config.RemoveAdsProductId) continue;
+                        Available = p.availableToPurchase;
+                        if (p.metadata != null) Price = p.metadata.localizedPriceString;
+                    }
+                    store.FetchPurchases();                           // already bought earlier? (e.g. after reinstalling)
+                };
+                store.OnPurchasesFetched += orders =>
+                {
+                    foreach (var order in orders.ConfirmedOrders)
+                        foreach (var item in order.CartOrdered.Items())
+                            if (item.Product.definition.id == Config.RemoveAdsProductId) Unlock(false);
+                };
+                store.OnPurchasePending += order =>
+                {
+                    bool removeAds = false;
+                    foreach (var item in order.CartOrdered.Items())
+                        if (item.Product.definition.id == Config.RemoveAdsProductId) removeAds = true;
+                    store.ConfirmPurchase(order);
+                    if (removeAds) Unlock(true);
+                };
+
+                await store.Connect();
+                store.FetchProducts(new List<ProductDefinition> { new ProductDefinition(Config.RemoveAdsProductId, ProductType.NonConsumable) });
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("TILT RUSH shop: " + e.Message);
+            }
+        }
+
+        public void BuyRemoveAds()
+        {
+            if (store == null || !Available) { NotAvailable(); return; }
+            store.PurchaseProduct(Config.RemoveAdsProductId);
+        }
+
+        static void NotAvailable()
+        {
+            App.I.UI.ShowDialog("SHOP", "The shop is not available right now.\nPlease try again later.",
+                new UIStack.Item("OK", Neon.Gray, () => App.I.UI.Show<MainMenuScreen>()));
+        }
 #else
         public void BuyRemoveAds()
         {

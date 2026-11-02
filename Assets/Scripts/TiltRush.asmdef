@@ -10,7 +10,8 @@
         "Unity.Services.Multiplayer",
         "UnityEngine.Advertisements",
         "UnityEngine.Purchasing",
-        "UnityEngine.Purchasing.Stores"
+        "UnityEngine.Purchasing.Stores",
+        "Unity.Purchasing"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -24,7 +25,8 @@
         { "name": "com.unity.services.lobby", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
         { "name": "com.unity.services.multiplayer", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
         { "name": "com.unity.ads", "expression": "4.0.0", "define": "TILTRUSH_ADS" },
-        { "name": "com.unity.purchasing", "expression": "[4.8.0,5.0.0)", "define": "TILTRUSH_IAP" }
+        { "name": "com.unity.purchasing", "expression": "[4.8.0,5.0.0)", "define": "TILTRUSH_IAP" },
+        { "name": "com.unity.purchasing", "expression": "[5.0.0,6.0.0)", "define": "TILTRUSH_IAP5" }
     ],
     "noEngineReferences": false
 }
