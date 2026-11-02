@@ -8,7 +8,8 @@ namespace TiltRush
 {
     /// <summary>
     /// In-app purchase "Remove ads" (Unity IAP, package "In-App Purchasing" = com.unity.purchasing).
-    /// Switches on automatically when the package is installed (define TILTRUSH_IAP).
+    /// Switches on automatically when package VERSION 4.x is installed (define TILTRUSH_IAP, see TiltRush.asmdef).
+    /// Version 5 has a completely new interface - with it the shop simply stays off (the game still compiles).
     /// The product must exist in the Google Play Console (Monetize > Products > In-app products) with the
     /// ID Config.RemoveAdsProductId ("remove_ads"). Google restores the purchase automatically on reinstall.
     /// </summary>
