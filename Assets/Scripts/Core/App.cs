@@ -22,6 +22,7 @@ namespace TiltRush
         public IOnlineService Online;
         public SessionController Session;
         public AdManager Ads;
+        public Purchases Shop;
         Camera cam;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -54,6 +55,7 @@ namespace TiltRush
             Online = OnlineFactory.Create();           // real Unity Gaming Services if installed, else simulated
             Session = new SessionController(this);
             Ads = gameObject.AddComponent<AdManager>();
+            Shop = gameObject.AddComponent<Purchases>();
 
             UI = gameObject.AddComponent<UIManager>();
             UI.Build();

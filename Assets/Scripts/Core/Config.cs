@@ -112,6 +112,7 @@ namespace TiltRush
         public const string AdsInterstitialIos = "Interstitial_iOS";
         public const bool AdsTestMode = true;
         public const float AdIntervalSeconds = 120f;             // at most one ad every 2 minutes (never during a round)
+        public const string RemoveAdsProductId = "remove_ads";   // in-app product (Google Play Console)
 
         // ---- Store / legal: web address of your privacy policy (shown in Options > Profile)
         public const string PrivacyPolicyUrl = "";

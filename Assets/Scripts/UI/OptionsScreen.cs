@@ -18,7 +18,7 @@ namespace TiltRush
         Button[] tabs;
         int tab;
         readonly List<System.Action> refreshers = new List<System.Action>();
-        Text trackText, statsText, skinsText, onlineText;
+        Text trackText, statsText, skinsText, onlineText, nameHint;
         InputField nameField;
         Button resetBtn;
         protected override bool HasVignette { get { return true; } }
@@ -136,16 +136,20 @@ namespace TiltRush
         void BuildProfile(RectTransform page)
         {
             var l = Column(page, false);
-            nameField = l.TextField("PLAYER NAME (LEADERBOARD)", SaveManager.Data.playerName, 12, v =>
+            nameField = l.TextField("PLAYER NAME (LEADERBOARD)", SaveManager.Data.playerName, NameFilter.MaxLength, v =>
             {
                 v = v.Trim();
-                if (v.Length > 0) SaveManager.Data.playerName = v;
+                string problem = NameFilter.Check(v);
+                if (problem == null) { SaveManager.Data.playerName = v; nameHint.text = ""; }
+                else { nameHint.text = problem; nameField.text = SaveManager.Data.playerName; }   // keep the old name
             });
+            nameHint = l.Label("", 26, new Color(1f, 0.55f, 0.5f), 34);
             l.Space(10);
             skinsText = l.Label("", 36, Neon.Lime, 60);
             resetBtn = l.Button("RESET PROGRESS", Neon.Red, 520, 96, ConfirmReset, 38);
             l.Space(10);
-            onlineText = l.Label("", 28, Theme.TextDim, 70);
+            onlineText = l.Label("", 26, Theme.TextDim, 80);
+            UIKit.ShrinkToFit(onlineText);
 
             var r = Column(page, true);
             refreshers.Add(r.Toggle("PERSONALISED ADS", () => SaveManager.Data.adConsent, v =>
@@ -188,7 +192,7 @@ namespace TiltRush
             var d = SaveManager.Data;
             nameField.text = d.playerName;
             skinsText.text = "SKINS: " + Skins.UnlockedCount + " / " + Skins.All.Length;
-            onlineText.text = "Online: " + App.I.Online.Status;
+            onlineText.text = "Online: " + App.I.Online.Status + "\nPlayer ID: " + App.I.Online.PlayerId;
             statsText.text =
                 "Rounds played:  " + d.runsPlayed.ToString("N0") + "\n" +
                 "Time played:  " + Mathf.FloorToInt(d.totalPlaySeconds / 60f) + " min\n" +

@@ -12,6 +12,7 @@ namespace TiltRush
         int opponentElo;
 
         public string Status { get { return "OFFLINE (simulated players)"; } }
+        public string PlayerId { get { return "-"; } }
         public void LeaveMatch() { }
 
         // ---------------------------------------------------------------- PvP

@@ -24,6 +24,7 @@ namespace TiltRush
     public class MainMenuScreen : UIScreen
     {
         Text title, stats, campaignInfo;
+        Button noAds;
         PlayerPreview preview;
         RectTransform logo;
         protected override bool HasVignette { get { return true; } }
@@ -79,6 +80,9 @@ namespace TiltRush
             var credits = UIKit.MakeButton(root, "CREDITS", Neon.Indigo, new Vector2(280, 100), () => UI.Show<CreditsScreen>(), 38);
             UIKit.Anchor((RectTransform)credits.transform, new Vector2(1f, 0f), new Vector2(-40, 40), new Vector2(280, 100));
 
+            noAds = UIKit.MakeButton(root, "NO ADS", Neon.Yellow, new Vector2(280, 90), () => App.I.Shop.BuyRemoveAds(), 34);
+            UIKit.Anchor((RectTransform)noAds.transform, new Vector2(1f, 0f), new Vector2(-40, 160), new Vector2(280, 90));
+
             stats = UIKit.Label(root, "", 30, Theme.TextDim, TextAnchor.LowerLeft);
             UIKit.Anchor(stats.rectTransform, new Vector2(0f, 0f), new Vector2(40, 30), new Vector2(900, 50));
         }
@@ -101,6 +105,9 @@ namespace TiltRush
 
         public override void OnShow()
         {
+            // the NO ADS button only appears when the shop works and ads were not bought yet
+            noAds.gameObject.SetActive(App.I.Shop != null && App.I.Shop.Available && !Purchases.AdsRemoved);
+            if (noAds.gameObject.activeSelf && App.I.Shop.Price.Length > 0) noAds.GetComponentInChildren<Text>().text = "NO ADS  " + App.I.Shop.Price;
             preview.Refresh();
             var d = SaveManager.Data;
             stats.text = "BEST " + d.bestClassicScore.ToString("N0") + "   •   ELO " + d.elo + "   •   SKINS " + Skins.UnlockedCount + "/" + Skins.All.Length;

@@ -60,7 +60,8 @@ namespace TiltRush
         public int customOrientation;
 
         public bool tutorialDone;
-        public bool adConsentAsked, adConsent;   // personalised ads allowed? (asked once, Options > Profile)          // the tutorial runs automatically on the very first start
+        public bool adConsentAsked, adConsent;   // personalised ads allowed? (asked once, Options > Profile)
+        public bool adsRemoved;                  // "Remove ads" bought          // the tutorial runs automatically on the very first start
 
         // Campaign: number of levels completed (in order)
         public int campaignDone = 0;
@@ -76,7 +77,7 @@ namespace TiltRush
             if (PlayerPrefs.HasKey(Key))
                 Data = JsonUtility.FromJson<SaveData>(PlayerPrefs.GetString(Key));
             if (Data == null) Data = new SaveData();
-            if (string.IsNullOrEmpty(Data.playerName)) { Data.playerName = "Player" + UnityEngine.Random.Range(1000, 9999); Save(); }
+            if (NameFilter.Check(Data.playerName) != null) { Data.playerName = "Player" + UnityEngine.Random.Range(1000, 9999); Save(); }
             if (!Data.skinsInitialized) { Data.skinsInitialized = true; Skins.MarkAllKnown(); Save(); }
         }
 
@@ -93,6 +94,7 @@ namespace TiltRush
             fresh.hudSize = old.hudSize; fresh.pauseLeft = old.pauseLeft; fresh.showFps = old.showFps; fresh.menuAnimations = old.menuAnimations;
             fresh.tiltSensitivity = old.tiltSensitivity; fresh.tiltSmoothing = old.tiltSmoothing; fresh.invertX = old.invertX; fresh.invertY = old.invertY; fresh.tiltAxes = old.tiltAxes;
             fresh.tutorialDone = old.tutorialDone; fresh.adConsentAsked = old.adConsentAsked; fresh.adConsent = old.adConsent;
+            fresh.adsRemoved = old.adsRemoved;   // a purchase is never reset
             fresh.tiltPreset = old.tiltPreset; fresh.hasCustomTilt = old.hasCustomTilt; fresh.customNeutral = old.customNeutral; fresh.customOrientation = old.customOrientation;
             Data = fresh;
             Data.skinsInitialized = true;

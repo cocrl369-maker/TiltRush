@@ -49,6 +49,7 @@ namespace TiltRush
             sinceLast += dt;
             if (showing) return;
 
+            if (Purchases.AdsRemoved) return;                 // bought "Remove ads"
             bool busy = GameWorld.Current != null || (App.I.Session != null && App.I.Session.Busy) || !SaveManager.Data.tutorialDone;
             if (busy) { calm = 0f; return; }
             calm += dt;

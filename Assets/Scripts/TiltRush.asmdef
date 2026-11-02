@@ -8,7 +8,9 @@
         "Unity.Services.Leaderboards",
         "Unity.Services.Lobbies",
         "Unity.Services.Multiplayer",
-        "UnityEngine.Advertisements"
+        "UnityEngine.Advertisements",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -21,7 +23,8 @@
         { "name": "com.unity.services.leaderboards", "expression": "1.0.0", "define": "TILTRUSH_LEADERBOARDS" },
         { "name": "com.unity.services.lobby", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
         { "name": "com.unity.services.multiplayer", "expression": "1.0.0", "define": "TILTRUSH_LOBBY" },
-        { "name": "com.unity.ads", "expression": "4.0.0", "define": "TILTRUSH_ADS" }
+        { "name": "com.unity.ads", "expression": "4.0.0", "define": "TILTRUSH_ADS" },
+        { "name": "com.unity.purchasing", "expression": "4.8.0", "define": "TILTRUSH_IAP" }
     ],
     "noEngineReferences": false
 }

@@ -18,6 +18,9 @@ namespace TiltRush
         /// <summary>Short status text for the options screen, e.g. "ONLINE" or "OFFLINE (simulated players)".</summary>
         string Status { get; }
 
+        /// <summary>Online player ID (shown in Options > Profile, needed for data deletion requests). "-" when offline.</summary>
+        string PlayerId { get; }
+
         /// <summary>Stop searching / leave the current match (cancel button, quitting, match over).</summary>
         void LeaveMatch();
 

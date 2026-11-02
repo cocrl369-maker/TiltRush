@@ -214,3 +214,11 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   for consent to personalised ads (GDPR), changeable in Options > Profile. Fill in `Config.AdsGameIdAndroid`, set
   `Config.AdsTestMode = false` for the store version. Privacy policy link: `Config.PrivacyPolicyUrl`.
 - **Store graphics**: `Store/icon_1024.png` (Unity app icon), `Store/icon_512.png` (Play Store icon), `Store/feature_1024x500.png`.
+
+## Release extras
+- **Name filter** (`Core/NameFilter.cs`): 3-12 chars, letters/digits/space/_-.; blocks insults (EN/DE, also with leet tricks).
+  Other players' bad names are shown as "Player####".
+- **Remove ads** (`Core/Purchases.cs`, Unity IAP / package "In-App Purchasing"): one-time product `remove_ads`,
+  NO ADS button in the main menu (only when the shop works); restored automatically by Google Play.
+- **Store texts and legal drafts** in `Store/`: `store_listing.md` (DE/EN), `datenschutz_de.md`, `privacy_policy_en.md`, `impressum_de.md`.
+- Options > Profile shows the online player ID (needed for data deletion requests).

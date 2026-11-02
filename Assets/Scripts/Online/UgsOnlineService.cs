@@ -51,6 +51,7 @@ namespace TiltRush
         string syncedName;
 
         public string Status { get { return status; } }
+        public string PlayerId { get { return ready ? MyId : "-"; } }
 
         public UgsOnlineService() { _ = EnsureReady(); }   // connect right away
 
@@ -121,7 +122,7 @@ namespace TiltRush
                     if (list.Count >= count) break;
                     bool you = e.PlayerId == MyId;
                     youIn |= you;
-                    list.Add(new ScoreEntry { Rank = e.Rank + 1, Name = CleanName(e.PlayerName), Score = (int)e.Score, IsYou = you });
+                    list.Add(new ScoreEntry { Rank = e.Rank + 1, Name = NameFilter.Display(CleanName(e.PlayerName), (e.PlayerId ?? "").GetHashCode()), Score = (int)e.Score, IsYou = you });
                 }
                 if (!youIn)
                 {
@@ -225,7 +226,7 @@ namespace TiltRush
                 {
                     MatchId = lobby.Id,
                     Seed = ParseInt(lobby.Data, "seed", 1),
-                    Opponent = new OpponentInfo { Name = Get(opp, "name", "Rival"), Elo = ParseInt(opp, "elo", myElo) }
+                    Opponent = new OpponentInfo { Name = NameFilter.Display(Get(opp, "name", "Rival"), lobby.Id.GetHashCode()), Elo = ParseInt(opp, "elo", myElo) }
                 });
             }
             catch (Exception e)
