@@ -115,7 +115,7 @@ namespace TiltRush
         public const string RemoveAdsProductId = "remove_ads";   // in-app product (Google Play Console)
 
         // ---- Store / legal: web address of your privacy policy (shown in Options > Profile)
-        public const string PrivacyPolicyUrl = "";
+        public const string PrivacyPolicyUrl = "https://sites.google.com/view/tiltrush/startseite/datenschutz";
 
         // Elo & matches
         public const int StartElo = 400;
