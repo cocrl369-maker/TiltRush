@@ -88,7 +88,7 @@ namespace TiltRush
             c.Row(h => Bar(h), "RED WALLS", new Color32(255, 90, 90, 255), "Bars sweep across the arena. Slip around their ends!");
             c.Row(h => Blade(h), "SWORDS", new Color32(255, 150, 150, 255), "A dark lane with light red edges warns you - then a sword races along it.");
             c.Row(h => RingIcon(h), "LAUNCH RINGS", Neon.Yellow, "Yellow rings fling you backwards - escape danger or get thrown into it!");
-            c.Row(h => Block(h), "OBSTACLES", new Color32(160, 180, 220, 255), "Dark blocks (campaign) stop you and the dots, but never hurt. Hide behind them!");
+            c.Row(h => Block(h), "OBSTACLES", new Color32(160, 180, 220, 255), "Blocks in the campaign stop you and the dots, but never hurt - hide behind them! Every world has its own look: lava bricks, ice, slime, candy, metal ...");
 
             c.Heading("MODES", Neon.Pink);
             foreach (var m in Modes.All) c.Row(h => ModeIcon(h, m.Color), m.Name, m.Color, m.Description);
@@ -143,11 +143,23 @@ namespace TiltRush
             UIKit.Icon(h, SpriteFactory.Fill(ShapeType.Circle), 34, Neon.Yellow);
         }
 
+        /// <summary>Three small obstacle blocks in the styles of different worlds (lava, ice, candy).</summary>
         static void Block(RectTransform h)
         {
-            UIKit.Icon(h, SpriteFactory.TileFill(), 110, new Color32(160, 180, 220, 255));
-            UIKit.Icon(h, SpriteFactory.TileFill(), 96, new Color32(18, 16, 30, 255));
-            UIKit.Icon(h, SpriteFactory.TileOutline(), 96, new Color(0.63f, 0.7f, 0.86f, 0.5f));
+            LevelTheme[] worlds = { LevelThemes.Lava, LevelThemes.Ice, LevelThemes.Candy };
+            for (int i = 0; i < worlds.Length; i++)
+            {
+                var st = worlds[i].Block;
+                var holder = UIKit.Rect("Block", h);
+                holder.anchorMin = holder.anchorMax = holder.pivot = new Vector2(0.5f, 0.5f);
+                holder.sizeDelta = new Vector2(62, 62);
+                holder.anchoredPosition = new Vector2((i - 1) * 46f, (i == 1 ? 22f : -18f));
+                UIKit.Icon(holder, SpriteFactory.TileFill(), 64, new Color(0, 0, 0, 0.8f));
+                UIKit.Icon(holder, SpriteFactory.TileFill(), 58, st.Edge);
+                UIKit.Icon(holder, SpriteFactory.TileFill(), 48, st.Fill);
+                Color d = st.Detail; d.a = Mathf.Max(d.a, 0.6f);
+                UIKit.Icon(holder, SpriteFactory.TileOutline(), 46, d);
+            }
         }
 
         static void ModeIcon(RectTransform h, Color c)

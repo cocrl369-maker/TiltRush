@@ -17,8 +17,8 @@ namespace TiltRush
     public class TiltInput : IMoveInput
     {
         public static readonly string[] PresetNames = { "AUTO", "FLAT", "RELAXED", "UPRIGHT", "LYING DOWN" };
-        public static readonly string[] PresetHints = { "pose at round start", "phone held flat", "sofa / in hand, ~35 deg", "desk / upright, ~60 deg", "lying in bed, screen down" };
-        static readonly float[] PresetPitch = { 0f, 0f, 35f, 60f, 160f };   // how far the top edge is raised towards you
+        public static readonly string[] PresetHints = { "pose at round start", "phone held flat", "sofa / in hand, ~35 deg", "upright, ~80 deg", "lying in bed, screen down" };
+        static readonly float[] PresetPitch = { 0f, 0f, 35f, 80f, 160f };   // how far the top edge is raised towards you
 
         Vector3 neutral, filtered;
         int lastFrame = -1;
@@ -68,6 +68,34 @@ namespace TiltRush
             return new Vector3(k * Mathf.Sin(r), 0f, -Mathf.Cos(r));
         }
 
+        /// <summary>
+        /// STANDARD: Unity already reports the acceleration in screen axes (x = right, y = up, z = out of the back)
+        /// for the current landscape orientation. SWAPPED (Controls > Tilt axes): devices that report raw portrait axes.
+        /// </summary>
+        static Vector3 ToScreen(Vector3 v)
+        {
+            if (SaveManager.Data.tiltAxes == 0) return v;
+            return Landscape() == ScreenOrientation.LandscapeRight ? new Vector3(v.y, -v.x, v.z) : new Vector3(-v.y, v.x, v.z);
+        }
+
+        /// <summary>
+        /// Tilt relative to the rest pose, in every way of holding the phone.
+        /// The rest pose is described by its pitch around the screen's horizontal axis (0 deg = flat, 90 deg = upright,
+        /// ~160 deg = lying in bed with the screen facing down). The current gravity is rotated back by that pitch, so the
+        /// rest pose always looks "flat" - tilting forwards / backwards then works even when the phone is held upright
+        /// (simply subtracting the vectors fails there: gravity is already fully "down" and can only move one way).
+        /// Lying with the screen facing down: left / right is mirrored so the controls feel natural.
+        /// </summary>
+        static Vector2 Relative(Vector3 g, Vector3 n)
+        {
+            float pitch = Mathf.Atan2(-n.y, -n.z);
+            float c = Mathf.Cos(pitch), s = Mathf.Sin(pitch);
+            float y = g.y * c - g.z * s;          // rest pose -> 0
+            float x = g.x - n.x;
+            if (n.z > 0.2f) x = -x;               // screen facing down (lying in bed)
+            return new Vector2(x, y);
+        }
+
         public Vector2 Read()
         {
             // the filter advances once per rendered frame (Read can be called several times per frame)
@@ -79,13 +107,7 @@ namespace TiltRush
                 filtered = Vector3.Lerp(filtered, Input.acceleration, k);
             }
 
-            Vector3 a = filtered - neutral;
-            // STANDARD: Unity already reports the acceleration in screen axes (x = right, y = up) for the current
-            // landscape orientation. SWAPPED (Options > Controls): for devices that report raw portrait axes.
-            Vector2 v = SaveManager.Data.tiltAxes == 0
-                ? new Vector2(a.x, a.y)
-                : (Landscape() == ScreenOrientation.LandscapeRight ? new Vector2(a.y, -a.x) : new Vector2(-a.y, a.x));
-            v *= SaveManager.Data.tiltSensitivity;
+            Vector2 v = Relative(ToScreen(filtered), ToScreen(neutral)) * SaveManager.Data.tiltSensitivity;
             if (SaveManager.Data.invertX) v.x = -v.x;
             if (SaveManager.Data.invertY) v.y = -v.y;
 
