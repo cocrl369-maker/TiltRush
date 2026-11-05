@@ -9,7 +9,8 @@ namespace TiltRush
     ///   Music/Game       all game modes (fallback for the folders below)
     ///   Music/Campaign, Music/Classic, Music/Hard, Music/Dodge, Music/Asteroids, Music/Coop, Music/Online, Music/Tutorial
     ///                    optional: own music for one mode
-    /// A missing folder falls back to Music/Game, then to every file in Music. Tracks play in random order and
+    /// A missing folder borrows a related mode (Tutorial -> Campaign, Hard/Coop/Online -> Classic), then Music/Game,
+    /// Music/Campaign, Music/Menu. Tracks play in random order and
     /// cross-fade when you go from the menu into a game. Name the artists in Assets/Resources/credits.txt
     /// (shown by the CREDITS button in the main menu).
     /// SFX: drop clips into Assets/Resources/Sfx named click, pickup, launch, die ... Missing ones are generated.
@@ -51,14 +52,28 @@ namespace TiltRush
             return list;
         }
 
+        /// <summary>Modes without their own music folder use the music of this mode.</summary>
+        static readonly Dictionary<string, string> Borrow = new Dictionary<string, string>
+        {
+            { "Tutorial", "Campaign" },
+            { "Hard", "Classic" },
+            { "Coop", "Classic" },
+            { "Online", "Classic" },
+        };
+
         /// <summary>"Menu", "Game" or a mode name ("Asteroids", "Campaign" ...). Switches the playlist with a cross-fade.</summary>
         public void SetContext(string ctx)
         {
             if (ctx == context) return;
             context = ctx;
             AudioClip[] list = Load("Music/" + ctx);
+            // a mode without its own folder borrows the music of a related mode (never a random track of another mode)
+            string borrow;
+            if (list.Length == 0 && Borrow.TryGetValue(ctx, out borrow)) list = Load("Music/" + borrow);
             if (list.Length == 0 && ctx != "Menu") list = Load("Music/Game");
-            if (list.Length == 0) list = Load("Music");
+            if (list.Length == 0 && ctx != "Menu") list = Load("Music/Campaign");
+            if (list.Length == 0) list = Load("Music/Menu");
+            if (list.Length == 0) list = Load("Music");          // last resort: loose files directly in Music/
             if (list == tracks && music.isPlaying) { pending = null; fadeTarget = 1f; return; }   // same music: keep playing
             pending = list;
             if (music.isPlaying) fadeTarget = 0f;                 // fade out, then switch (see Update)
