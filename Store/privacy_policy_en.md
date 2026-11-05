@@ -1,4 +1,4 @@
-# Privacy Policy for the app "Tilt Rush"
+# Privacy Policy for the app "Gyro Rush"
 
 > **DRAFT** – fill in the [PLACEHOLDERS]. This is not legal advice.
 
@@ -8,7 +8,7 @@ Last updated: [DATE]
 [FIRST NAME LAST NAME], [STREET], [POSTCODE CITY], [COUNTRY] – Email: [EMAIL]
 
 ## 2. General
-"Tilt Rush" can be played without an account. Progress, settings and statistics are stored **only on your device**.
+"Gyro Rush" can be played without an account. Progress, settings and statistics are stored **only on your device**.
 
 ## 3. Online features (Unity Gaming Services)
 Leaderboards and online play use services of **Unity Technologies SF**, 30 3rd Street, San Francisco, CA 94103, USA ("Unity"): Authentication, Leaderboards, Lobby.

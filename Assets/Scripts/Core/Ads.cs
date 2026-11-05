@@ -31,12 +31,12 @@ namespace TiltRush
         void Start()
         {
 #if TILTRUSH_ADS
-            if (string.IsNullOrEmpty(GameId)) { Debug.Log("TILT RUSH ads: no Game ID in Config.AdsGameIdAndroid - ads are off."); return; }
+            if (string.IsNullOrEmpty(GameId)) { Debug.Log("GYRO RUSH ads: no Game ID in Config.AdsGameIdAndroid - ads are off."); return; }
             if (!Advertisement.isSupported) return;
             ApplyConsent();
             Advertisement.Initialize(GameId, Config.AdsTestMode, this);
 #else
-            Debug.Log("TILT RUSH ads: package 'Advertisement Legacy' not installed - ads are off.");
+            Debug.Log("GYRO RUSH ads: package 'Advertisement Legacy' not installed - ads are off.");
 #endif
         }
 
@@ -68,7 +68,7 @@ namespace TiltRush
         {
             asking = true;
             App.I.UI.ShowDialog("ADS & PRIVACY",
-                "TILT RUSH is free and shows a short ad every few minutes (never during a round).\n\n" +
+                "GYRO RUSH is free and shows a short ad every few minutes (never during a round).\n\n" +
                 "May our ad partner Unity Ads use data from your device to show ads that fit you better?\n" +
                 "You can change this any time in OPTIONS > PROFILE.",
                 new UIStack.Item("YES", Neon.Lime, () => SetConsent(true)),
@@ -118,7 +118,7 @@ namespace TiltRush
 
 #if TILTRUSH_ADS
         public void OnInitializationComplete() { ready = true; Advertisement.Load(AdUnit, this); }
-        public void OnInitializationFailed(UnityAdsInitializationError error, string message) { Debug.LogWarning("TILT RUSH ads: init failed: " + message); }
+        public void OnInitializationFailed(UnityAdsInitializationError error, string message) { Debug.LogWarning("GYRO RUSH ads: init failed: " + message); }
         public void OnUnityAdsAdLoaded(string placementId) { loaded = true; }
         public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message) { loaded = false; retry = 30f; }
         public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message) { Done(false); }

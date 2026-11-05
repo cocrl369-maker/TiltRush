@@ -1,4 +1,4 @@
-# TILT RUSH – Unity (Android)
+# GYRO RUSH – Unity (Android)
 
 ## Schnellstart (Deutsch)
 1. **Unity Hub > New project** > Vorlage **"2D (Built-In Render Pipeline)"** wählen (NICHT "Universal 2D" / URP).
@@ -6,7 +6,7 @@
    (vorher einen alten `Scripts`-Ordner von TiltRush löschen, damit keine doppelten Dateien entstehen).
 3. **Edit > Project Settings > Player > Other Settings > Active Input Handling = "Both"**.
    Unity startet danach einmal neu. Ohne diese Einstellung erscheint in der Console der Fehler
-   `TILT RUSH: set ... Active Input Handling to "Both"` – das ist Absicht und genau der Hinweis auf diesen Schritt.
+   `GYRO RUSH: set ... Active Input Handling to "Both"` – das ist Absicht und genau der Hinweis auf diesen Schritt.
 4. **Play** drücken. Im Game-Fenster oben das Seitenverhältnis auf **16:9** stellen und einmal ins Bild klicken (Tastatur: WASD / Pfeile).
 5. Handy-Build: **File > Build Settings** (in Unity 6: **File > Build Profiles**) **> Android > Switch Platform**, dann **Build And Run** (Handy per USB, Entwickleroptionen + USB-Debugging an).
 

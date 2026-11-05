@@ -25,7 +25,7 @@ namespace TiltRush
     /// </summary>
     public static class Config
     {
-        public const string GameTitle = "TILT RUSH";
+        public const string GameTitle = "GYRO RUSH";
 
         // Camera / arena. The arena always fills the whole screen (inside the safe area).
         // A BIGGER CameraSize = more world visible = everything looks smaller.

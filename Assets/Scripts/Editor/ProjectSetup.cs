@@ -19,7 +19,7 @@ namespace TiltRush.EditorTools
             if (PlayerSettings.allowedAutorotateToPortraitUpsideDown) { PlayerSettings.allowedAutorotateToPortraitUpsideDown = false; changed = true; }
             if (!PlayerSettings.allowedAutorotateToLandscapeLeft) { PlayerSettings.allowedAutorotateToLandscapeLeft = true; changed = true; }
             if (!PlayerSettings.allowedAutorotateToLandscapeRight) { PlayerSettings.allowedAutorotateToLandscapeRight = true; changed = true; }
-            if (changed) Debug.Log("TILT RUSH: player settings set to landscape only.");
+            if (changed) Debug.Log("GYRO RUSH: player settings set to landscape only.");
         }
     }
 }

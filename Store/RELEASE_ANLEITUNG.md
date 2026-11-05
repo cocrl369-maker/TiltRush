@@ -1,4 +1,4 @@
-# TILT RUSH – Release im Google Play Store
+# GYRO RUSH – Release im Google Play Store
 
 Schritt-für-Schritt-Anleitung von Anfang an. Hake ab, was erledigt ist: `[ ]` → `[x]`.
 Die Reihenfolge ist wichtig – einige Schritte gehen erst, wenn ein früherer erledigt ist.
@@ -45,7 +45,7 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
 
 ## Phase 3 – Webseite mit Datenschutz und Impressum
 
-- [ ] **3.1** **sites.google.com** → neue Website „Tilt Rush“.
+- [ ] **3.1** **sites.google.com** → neue Website „Gyro Rush“.
 - [ ] **3.2** Seite **„Datenschutz“** anlegen: Text aus `Store/datenschutz_de.md` einfügen, alle `[PLATZHALTER]` ausfüllen.
       Optional zweite Seite „Privacy Policy“ mit `Store/privacy_policy_en.md`.
 - [ ] **3.3** Seite **„Impressum“** mit `Store/impressum_de.md` (Name, Anschrift, E-Mail).
@@ -66,7 +66,7 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
 
 *Edit > Project Settings > Player*, Reiter **Android** (Roboter-Symbol):
 
-- [ ] **5.1** **Company Name**: dein Name oder Studioname · **Product Name**: `Tilt Rush` · **Version**: `1.0.0`
+- [ ] **5.1** **Company Name**: dein Name oder Studioname · **Product Name**: `Gyro Rush` · **Version**: `1.0.0`
 - [ ] **5.2** **Icon**: `Store/icon_1024.png` in den Unity-`Assets`-Ordner ziehen → bei *Icon > Default Icon* einsetzen.
 - [ ] **5.3** *Other Settings*:
   - **Package Name** = `com.deinname.tiltrush` (nur Kleinbuchstaben) – ⚠️ **nie mehr änderbar** nach dem ersten Upload
@@ -83,7 +83,7 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
 
 ## Phase 6 – App in der Play Console anlegen
 
-- [ ] **6.1** **App erstellen**: Name „Tilt Rush“, Sprache Deutsch, **Spiel**, **Kostenlos**, Erklärungen bestätigen.
+- [ ] **6.1** **App erstellen**: Name „Gyro Rush“, Sprache Deutsch, **Spiel**, **Kostenlos**, Erklärungen bestätigen.
 - [ ] **6.2** Unter **Dashboard > App einrichten** alle Punkte erledigen:
   - **Datenschutzerklärung**: URL aus 3.5
   - **App-Zugriff**: „Alle Funktionen ohne besonderen Zugriff verfügbar“
@@ -121,9 +121,9 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
 ## Phase 9 – Veröffentlichen
 
 - [ ] **9.1** Nach 14 Tagen erscheint im Dashboard **„Zugriff auf Produktion beantragen“** → kurze Fragen zum Test beantworten (wie viele Tester, was verbessert wurde). Google antwortet meist innerhalb weniger Tage.
-- [ ] **9.2** *Produktion > Neuen Release erstellen* → letztes `.aab` übernehmen/hochladen → Versionshinweise (z. B. „Erste Version von TILT RUSH!“).
+- [ ] **9.2** *Produktion > Neuen Release erstellen* → letztes `.aab` übernehmen/hochladen → Versionshinweise (z. B. „Erste Version von GYRO RUSH!“).
 - [ ] **9.3** **Länder/Regionen** auswählen → **Zur Überprüfung senden**.
-- [ ] **9.4** Prüfung durch Google (meist einige Tage) → danach ist **Tilt Rush im Play Store**. 🎉
+- [ ] **9.4** Prüfung durch Google (meist einige Tage) → danach ist **Gyro Rush im Play Store**. 🎉
 
 ## Phase 10 – Nach dem Release
 

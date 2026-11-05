@@ -74,7 +74,7 @@ namespace TiltRush
             catch (Exception e)
             {
                 status = "OFFLINE - " + e.Message;
-                Debug.LogWarning("TiltRush online: " + e);
+                Debug.LogWarning("GyroRush online: " + e);
             }
         }
 
@@ -147,7 +147,7 @@ namespace TiltRush
             string clean = string.IsNullOrEmpty(name) ? "Player" : name.Trim().Replace(' ', '_');
             if (clean == syncedName) return;
             try { await AuthenticationService.Instance.UpdatePlayerNameAsync(clean); syncedName = clean; }
-            catch (Exception e) { Debug.LogWarning("TiltRush: could not set player name: " + e.Message); }
+            catch (Exception e) { Debug.LogWarning("GyroRush: could not set player name: " + e.Message); }
         }
 
         // ================================================================== online PvP
@@ -201,7 +201,7 @@ namespace TiltRush
                             { "seed", new DataObject(DataObject.VisibilityOptions.Member, UnityEngine.Random.Range(1, 100000).ToString(CultureInfo.InvariantCulture)) }
                         }
                     };
-                    lobby = await LobbyService.Instance.CreateLobbyAsync("TiltRush", 2, c);
+                    lobby = await LobbyService.Instance.CreateLobbyAsync("GyroRush", 2, c);
                     isHost = true; lobbyId = lobby.Id;
                     App.I.StartCoroutine(Heartbeat(lobby.Id));
                     while (lobby.Players.Count < 2)

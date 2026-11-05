@@ -9,7 +9,7 @@ German = "Deutsch – de-DE", English = "English (United States) – en-US" (add
 
 **App-Name** (max. 30 Zeichen)
 ```
-Tilt Rush
+Gyro Rush
 ```
 
 **Kurzbeschreibung** (max. 80 Zeichen)
@@ -21,7 +21,7 @@ Kippen, ausweichen, überleben! 25 Level, 7 Modi und 15 verrückte Gadgets.
 ```
 Kipp dein Handy – und flieg um dein Leben!
 
-In TILT RUSH steuerst du dein Raumschiff nur durch Neigen. Hunderte stachelige Gegner jagen dich durch bunte Neon-Welten. Weiche aus, sammle Gadgets ein und puste ganze Schwärme mit einem Schlag weg.
+In GYRO RUSH steuerst du dein Raumschiff nur durch Neigen. Hunderte stachelige Gegner jagen dich durch bunte Neon-Welten. Weiche aus, sammle Gadgets ein und puste ganze Schwärme mit einem Schlag weg.
 
 ★ 25 KAMPAGNEN-LEVEL IN 12 WELTEN
 Lava-See, Eishöhle, Giftsumpf, Weltall, Candy Land, Gewitter, Cyber Grid … jede Welt mit eigenen Farben, Hindernissen und Effekten. Je länger du überlebst, desto knalliger wird es.
@@ -56,7 +56,7 @@ Kostenlos spielbar. Enthält Werbung (nie während einer Runde) und einen option
 
 **App name** (max. 30 characters)
 ```
-Tilt Rush
+Gyro Rush
 ```
 
 **Short description** (max. 80 characters)
@@ -68,7 +68,7 @@ Tilt, dodge, survive! 25 levels, 7 modes and 15 crazy gadgets.
 ```
 Tilt your phone – and fly for your life!
 
-In TILT RUSH you steer your ship just by tilting. Hundreds of spiky enemies chase you through colourful neon worlds. Dodge, grab gadgets and blast whole swarms away in one go.
+In GYRO RUSH you steer your ship just by tilting. Hundreds of spiky enemies chase you through colourful neon worlds. Dodge, grab gadgets and blast whole swarms away in one go.
 
 ★ 25 CAMPAIGN LEVELS IN 12 WORLDS
 Lava lake, ice cave, toxic swamp, outer space, candy land, thunder storm, cyber grid … every world with its own colours, obstacles and effects. The longer you survive, the more intense it gets.

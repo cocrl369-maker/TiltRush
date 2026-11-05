@@ -51,8 +51,8 @@ namespace TiltRush
             if (p != null && p.hasReceipt) Unlock(false);          // bought earlier (e.g. after reinstalling)
         }
 
-        public void OnInitializeFailed(InitializationFailureReason error) { Debug.LogWarning("TILT RUSH shop: " + error); }
-        public void OnInitializeFailed(InitializationFailureReason error, string message) { Debug.LogWarning("TILT RUSH shop: " + error + " " + message); }
+        public void OnInitializeFailed(InitializationFailureReason error) { Debug.LogWarning("GYRO RUSH shop: " + error); }
+        public void OnInitializeFailed(InitializationFailureReason error, string message) { Debug.LogWarning("GYRO RUSH shop: " + error + " " + message); }
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
         {
@@ -101,7 +101,7 @@ namespace TiltRush
             }
             catch (Exception e)
             {
-                Debug.LogWarning("TILT RUSH shop: " + e.Message);
+                Debug.LogWarning("GYRO RUSH shop: " + e.Message);
             }
         }
 
@@ -129,7 +129,7 @@ namespace TiltRush
             SaveManager.Data.adsRemoved = true;
             SaveManager.Save();
             if (thank)
-                App.I.UI.ShowDialog("THANK YOU!", "Ads are gone for good.\nThanks for supporting TILT RUSH!",
+                App.I.UI.ShowDialog("THANK YOU!", "Ads are gone for good.\nThanks for supporting GYRO RUSH!",
                     new UIStack.Item("OK", Neon.Lime, () => App.I.UI.Show<MainMenuScreen>()));
         }
     }

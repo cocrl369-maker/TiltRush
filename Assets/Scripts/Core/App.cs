@@ -4,7 +4,7 @@ using UnityEngine;
 // which makes every Input call throw an error. Fix: Edit > Project Settings > Player > Other Settings >
 // Active Input Handling = "Both" (Unity restarts once).
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-#error TILT RUSH: set Edit > Project Settings > Player > Other Settings > Active Input Handling to "Both" (see README).
+#error GYRO RUSH: set Edit > Project Settings > Player > Other Settings > Active Input Handling to "Both" (see README).
 #endif
 
 namespace TiltRush

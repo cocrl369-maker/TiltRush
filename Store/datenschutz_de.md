@@ -1,4 +1,4 @@
-# Datenschutzerklärung für die App „Tilt Rush“
+# Datenschutzerklärung für die App „Gyro Rush“
 
 > **ENTWURF** – Platzhalter in [ECKIGEN KLAMMERN] ausfüllen. Dies ist keine Rechtsberatung;
 > lass den Text vor der Veröffentlichung idealerweise prüfen (z. B. mit einem Datenschutz-Generator oder einem Anwalt).
@@ -12,7 +12,7 @@ Stand: [DATUM]
 E-Mail: [E-MAIL-ADRESSE]
 
 ## 2. Allgemeines
-Diese Erklärung informiert dich darüber, welche personenbezogenen Daten beim Spielen von „Tilt Rush“ (im Folgenden „App“) verarbeitet werden. Die App ist ohne Benutzerkonto spielbar. Spielstände, Einstellungen und Statistiken werden **nur lokal auf deinem Gerät** gespeichert.
+Diese Erklärung informiert dich darüber, welche personenbezogenen Daten beim Spielen von „Gyro Rush“ (im Folgenden „App“) verarbeitet werden. Die App ist ohne Benutzerkonto spielbar. Spielstände, Einstellungen und Statistiken werden **nur lokal auf deinem Gerät** gespeichert.
 
 ## 3. Online-Funktionen (Unity Gaming Services)
 Für Bestenlisten und Online-Spiele nutzt die App Dienste der **Unity Technologies SF**, 30 3rd Street, San Francisco, CA 94103, USA („Unity“): Authentication, Leaderboards und Lobby.
