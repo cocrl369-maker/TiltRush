@@ -393,7 +393,7 @@ namespace TiltRush
     /// <summary>UI version of the player (used in main menu + wardrobe). Reflects the saved style.</summary>
     public class PlayerPreview : MonoBehaviour
     {
-        Image glow, backing, fill, line, detail;
+        Image glow, fill, line, detail;
         RectTransform spin;
 
         public static PlayerPreview Create(Transform parent)
@@ -402,8 +402,6 @@ namespace TiltRush
             var p = rt.gameObject.AddComponent<PlayerPreview>();
             p.glow = p.Img(rt, SpriteFactory.Glow(), 2.6f);
             p.spin = UIKit.Stretch(UIKit.Rect("Spin", rt));
-            p.backing = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1.3f);
-            p.backing.color = new Color(0, 0, 0, 0.7f);
             p.fill = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1f);
             p.detail = p.Img(p.spin, SpriteFactory.Fill(ShapeType.Arrow), 1f);
             p.line = p.Img(p.spin, SpriteFactory.Outline(ShapeType.Arrow), 1f);
@@ -428,7 +426,6 @@ namespace TiltRush
         /// <summary>Shows any style (the wardrobe uses this to preview a skin before it is chosen).</summary>
         public void Show(PlayerStyle st)
         {
-            backing.sprite = SpriteFactory.Fill(st.Shape);
             detail.sprite = st.Detail; detail.enabled = st.Detail != null; detail.color = st.Outline;
             fill.sprite = SpriteFactory.Fill(st.Shape);
             line.sprite = SpriteFactory.Outline(st.Shape);

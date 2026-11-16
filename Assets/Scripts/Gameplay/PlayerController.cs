@@ -42,7 +42,6 @@ namespace TiltRush
             transform.position = pos;
             BuildTrail(pos);
             view = ShapeView.Create(transform, style.Shape, Config.PlayerVisualRadius, style.Primary, style.Outline, 0.5f, 10);
-            view.AddBacking(new Color(0f, 0f, 0f, 0.7f), 1.3f);   // thick dark outline: readable on every background
             view.SetDetail(style.Detail, style.Outline);            // skin detail in the second colour
             shield = ShapeView.Create(transform, ShapeType.Circle, 0.62f, new Color(0f, 1f, 0.4f, 0.12f), Neon.Green, 0.5f, 12);
             shield.gameObject.SetActive(false);
