@@ -205,6 +205,17 @@ namespace TiltRush
                 "Online:  " + d.onlineWins + " W / " + d.onlineLosses + " L  (ELO " + d.elo + ")";
         }
 
+        float refreshIn;
+
+        /// <summary>Keeps every row in sync with the saved value, even if a tap was handled late (cheap: Text ignores unchanged strings).</summary>
+        void Update()
+        {
+            refreshIn -= Time.unscaledDeltaTime;
+            if (refreshIn > 0f) return;
+            refreshIn = 0.2f;
+            foreach (var r in refreshers) r();
+        }
+
         public override void OnShow()
         {
             resetBtn.gameObject.SetActive(!InGame);           // no resetting in the middle of a round

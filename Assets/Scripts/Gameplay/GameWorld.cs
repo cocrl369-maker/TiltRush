@@ -673,7 +673,7 @@ namespace TiltRush
             if (pickupTimer <= 0f && tutorial == null)
             {
                 pickupTimer = Config.GadgetSpawnInterval * (0.7f + (float)pickupRng.NextDouble() * 0.6f);
-                pickups.Add(Pickup.Spawn(transform, GadgetLibrary.PickRandom(pickupRng, asteroids), RandomPoint(pickupRng, 1f)));
+                pickups.Add(Pickup.Spawn(transform, GadgetLibrary.PickRandom(pickupRng, asteroids, Difficulty), RandomPoint(pickupRng, 1f)));
             }
 
             for (int i = pickups.Count - 1; i >= 0; i--)

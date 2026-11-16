@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TiltRush
 {
-    /// <summary>Second-colour detail drawn inside a skin (in the outline colour), like the two-colour icons in GD.</summary>
+    /// <summary>Second-colour detail drawn inside a skin. Not used any more (skins are body colour + outline colour only).</summary>
     public enum SkinDetail { None, Inner, Core, Custom }   // Custom = cockpit / fold / dome drawn for that ship
 
     /// <summary>What you have to do to unlock a skin.</summary>
@@ -88,27 +88,36 @@ namespace TiltRush
             S("WING",    ShapeType.Wing,    SkinDetail.None,  UnlockKind.Campaign, 10),
             S("FALCON",  ShapeType.Falcon,  SkinDetail.None,  UnlockKind.Campaign, 12),
             // new skins with two colours, unlocked by playing well
-            S("ROCKET",  ShapeType.Rocket,  SkinDetail.Core,  UnlockKind.ClassicScore, 1000),
-            S("STAR",    ShapeType.Star,    SkinDetail.Inner, UnlockKind.Pickups, 25),
-            S("CRYSTAL", ShapeType.Crystal, SkinDetail.Inner, UnlockKind.Runs, 20),
-            S("FANG",    ShapeType.Fang,    SkinDetail.Core,  UnlockKind.Kills, 300),
-            S("MANTA",   ShapeType.Manta,   SkinDetail.Inner, UnlockKind.DodgeTime, 45),
+            S("ROCKET",  ShapeType.Rocket,  SkinDetail.None,  UnlockKind.ClassicScore, 1000),
+            S("STAR",    ShapeType.Star,    SkinDetail.None, UnlockKind.Pickups, 25),
+            S("CRYSTAL", ShapeType.Crystal, SkinDetail.None, UnlockKind.Runs, 20),
+            S("FANG",    ShapeType.Fang,    SkinDetail.None,  UnlockKind.Kills, 300),
+            S("MANTA",   ShapeType.Manta,   SkinDetail.None, UnlockKind.DodgeTime, 45),
             S("BOLT",    ShapeType.Bolt,    SkinDetail.None,  UnlockKind.ClassicScore, 3000),
-            S("SPEAR",   ShapeType.Spear,   SkinDetail.Inner, UnlockKind.HardScore, 1500),
-            S("HORNET",  ShapeType.Hornet,  SkinDetail.Core,  UnlockKind.DodgeTime, 90),
-            S("CROWN",   ShapeType.Crown,   SkinDetail.Core,  UnlockKind.OnlineWins, 3),
-            S("SABER",   ShapeType.Saber,   SkinDetail.Inner, UnlockKind.ClassicScore, 6000),
-            S("PHOENIX", ShapeType.Phoenix, SkinDetail.Core,  UnlockKind.Kills, 1500),
-            S("NOVA",    ShapeType.Nova,    SkinDetail.Inner, UnlockKind.HardScore, 4000),
+            S("SPEAR",   ShapeType.Spear,   SkinDetail.None, UnlockKind.HardScore, 1500),
+            S("HORNET",  ShapeType.Hornet,  SkinDetail.None,  UnlockKind.DodgeTime, 90),
+            S("CROWN",   ShapeType.Crown,   SkinDetail.None,  UnlockKind.OnlineWins, 3),
+            S("SABER",   ShapeType.Saber,   SkinDetail.None, UnlockKind.ClassicScore, 6000),
+            S("PHOENIX", ShapeType.Phoenix, SkinDetail.None,  UnlockKind.Kills, 1500),
+            S("NOVA",    ShapeType.Nova,    SkinDetail.None, UnlockKind.HardScore, 4000),
             // spaceships and things you know
-            S("STARFIGHTER", ShapeType.Starfighter, SkinDetail.Custom, UnlockKind.Free, 0),
-            S("PAPER PLANE", ShapeType.PaperPlane,  SkinDetail.Custom, UnlockKind.Tutorial, 1),
-            S("JET",         ShapeType.Jet,         SkinDetail.Custom, UnlockKind.Runs, 5),
-            S("UFO",         ShapeType.Ufo,         SkinDetail.Custom, UnlockKind.AsteroidScore, 2000),
-            S("SHARK",       ShapeType.Shark,       SkinDetail.Inner,  UnlockKind.Kills, 800),
-            S("SHUTTLE",     ShapeType.Shuttle,     SkinDetail.Custom, UnlockKind.Campaign, 15),
-            S("VIPER",       ShapeType.Viper,       SkinDetail.Custom, UnlockKind.AsteroidScore, 5000),
-            S("STEALTH",     ShapeType.Stealth,     SkinDetail.Inner,  UnlockKind.Campaign, 20),
+            S("STARFIGHTER", ShapeType.Starfighter, SkinDetail.None, UnlockKind.Free, 0),
+            S("PAPER PLANE", ShapeType.PaperPlane,  SkinDetail.None, UnlockKind.Tutorial, 1),
+            S("JET",         ShapeType.Jet,         SkinDetail.None, UnlockKind.Runs, 5),
+            S("UFO",         ShapeType.Ufo,         SkinDetail.None, UnlockKind.AsteroidScore, 2000),
+            S("SHARK",       ShapeType.Shark,       SkinDetail.None,  UnlockKind.Kills, 800),
+            S("SHUTTLE",     ShapeType.Shuttle,     SkinDetail.None, UnlockKind.Campaign, 15),
+            S("VIPER",       ShapeType.Viper,       SkinDetail.None, UnlockKind.AsteroidScore, 5000),
+            S("STEALTH",     ShapeType.Stealth,     SkinDetail.None,  UnlockKind.Campaign, 20),
+            // elaborate designs for the real pros
+            S("HALO",        ShapeType.Halo,        SkinDetail.None,  UnlockKind.Pickups, 150),
+            S("TRIDENT",     ShapeType.Trident,     SkinDetail.None,  UnlockKind.Kills, 3000),
+            S("BEETLE",      ShapeType.Beetle,      SkinDetail.None,  UnlockKind.Runs, 60),
+            S("BAT",         ShapeType.Bat,         SkinDetail.None,  UnlockKind.DodgeTime, 150),
+            S("TWIN",        ShapeType.Twin,        SkinDetail.None,  UnlockKind.OnlineWins, 10),
+            S("CRUISER",     ShapeType.Cruiser,     SkinDetail.None,  UnlockKind.AsteroidScore, 10000),
+            S("CRESCENT",    ShapeType.Crescent,    SkinDetail.None,  UnlockKind.HardScore, 8000),
+            S("DRAGON",      ShapeType.Dragon,      SkinDetail.None,  UnlockKind.Campaign, 25),
         };
 
         public static int Progress(UnlockKind k)

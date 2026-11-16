@@ -9,7 +9,7 @@ namespace TiltRush
     /// </summary>
     public class WardrobeScreen : UIScreen
     {
-        const int Cols = 7;
+        static int Cols { get { return Mathf.Max(7, Mathf.CeilToInt(Skins.All.Length / 4f)); } }   // always 4 rows
         static readonly string[] TabNames = { "SKINS", "BODY COLOR", "OUTLINE" };
 
         PlayerPreview preview;

@@ -41,7 +41,7 @@ geschlossener Test (**14 Tage**), App-Prüfung durch Google (einige Tage).
   ```csharp
   public const string AdsGameIdAndroid = "800420854";   // schon eingetragen
   ```
-- [ ] **2.6** Spiel testen: *Options > Profile* zeigt „Online: ONLINE“. Nach 2 Minuten im Menü erscheint eine **Test**-Werbung.
+- [ ] **2.6** Spiel testen: *Options > Profile* zeigt „Online: ONLINE“. Nach 4 Minuten im Menü erscheint eine **Test**-Werbung.
 
 ## Phase 3 – Webseite mit Datenschutz und Impressum
 

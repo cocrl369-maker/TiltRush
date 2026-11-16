@@ -14,6 +14,7 @@ namespace TiltRush
         public Color Color;
         public GadgetIcon Icon;   // pictogram on the pickup (SpriteFactory.Gadget)
         public float Weight = 1f;   // spawn probability weight
+        public float Power = 0.5f;  // 0 = weak helper (Shrink, Decoy ...), 1 = strong weapon (Nuke). Strong ones get more likely the harder it gets.
         public bool InNormal = true;      // appears in the normal modes
         public bool InAsteroids = true;   // appears in the asteroid field
         public Action<GameWorld, PlayerController> Apply;
@@ -23,62 +24,72 @@ namespace TiltRush
     {
         public static readonly List<GadgetDef> All = new List<GadgetDef>
         {
-            new GadgetDef { Name = "Slow-Mo", Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = GadgetIcon.Clock, InAsteroids = false,
+            new GadgetDef { Name = "Slow-Mo", Power = 0.3f, Description = "Dots move in slow motion", Color = Neon.Aqua, Icon = GadgetIcon.Clock, InAsteroids = false,
                 Apply = (w, p) => w.SlowTimer = 5f },
 
-            new GadgetDef { Name = "Freeze", Description = "Freezes nearby dots into ice - fly into them to smash them!", Color = new Color32(180, 220, 255, 255), Icon = GadgetIcon.Snowflake, InAsteroids = false,
+            new GadgetDef { Name = "Freeze", Power = 0.6f, Description = "Freezes nearby dots into ice - fly into them to smash them!", Color = new Color32(180, 220, 255, 255), Icon = GadgetIcon.Snowflake, InAsteroids = false,
                 Apply = (w, p) => w.FreezeArea(p.Pos, Config.FreezeRadius) },
 
-            new GadgetDef { Name = "Shield", Description = "Invincible, destroys dots on touch", Color = Neon.Green, Icon = GadgetIcon.Shield,
+            new GadgetDef { Name = "Shield", Power = 0.7f, Description = "Invincible, destroys dots on touch", Color = Neon.Green, Icon = GadgetIcon.Shield,
                 Apply = (w, p) => p.GiveShield(6f) },
 
-            new GadgetDef { Name = "Shockwave", Description = "Blasts away nearby dots", Color = Neon.Orange, Icon = GadgetIcon.Shockwave,
+            new GadgetDef { Name = "Shockwave", Power = 0.6f, Description = "Blasts away nearby dots", Color = Neon.Orange, Icon = GadgetIcon.Shockwave,
                 Apply = (w, p) => w.Shockwave(p.Pos, Config.ShockwaveRadius) },
 
-            new GadgetDef { Name = "Nuke", Description = "Destroys every dot", Color = Neon.Pink, Icon = GadgetIcon.Nuke, Weight = 0.5f,
+            new GadgetDef { Name = "Nuke", Power = 1f, Description = "Destroys every dot", Color = Neon.Pink, Icon = GadgetIcon.Nuke, Weight = 0.5f,
                 Apply = (w, p) => w.KillAllEnemies() },
 
             // ---- inspired by the original's weapons, but with their own look and feel
-            new GadgetDef { Name = "Seekers", Description = "Homing darts hunt down the dots", Color = Neon.Lime, Icon = GadgetIcon.Crosshair,
+            new GadgetDef { Name = "Seekers", Power = 0.6f, Description = "Homing darts hunt down the dots", Color = Neon.Lime, Icon = GadgetIcon.Crosshair,
                 Apply = (w, p) => w.LaunchSeekers(p.Pos, 6) },
 
-            new GadgetDef { Name = "Lance", Description = "Fires three piercing beams ahead", Color = new Color32(255, 225, 100, 255), Icon = GadgetIcon.Lance,
+            new GadgetDef { Name = "Lance", Power = 0.5f, Description = "Fires three piercing beams ahead", Color = new Color32(255, 225, 100, 255), Icon = GadgetIcon.Lance,
                 Apply = (w, p) => w.FireLance(p.Pos, p.Facing) },
 
-            new GadgetDef { Name = "Storm", Description = "Lightning leaps between nearby dots", Color = new Color32(150, 130, 255, 255), Icon = GadgetIcon.Bolt,
+            new GadgetDef { Name = "Storm", Power = 0.7f, Description = "Lightning leaps between nearby dots", Color = new Color32(150, 130, 255, 255), Icon = GadgetIcon.Bolt,
                 Apply = (w, p) => p.GiveStorm(5f) },
 
-            new GadgetDef { Name = "Turret", Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = GadgetIcon.Turret, InAsteroids = false,
+            new GadgetDef { Name = "Turret", Power = 0.6f, Description = "Drops an auto-firing turret", Color = Neon.Purple, Icon = GadgetIcon.Turret, InAsteroids = false,
                 Apply = (w, p) => w.PlaceTurret(p.Pos) },
 
-            new GadgetDef { Name = "Decoy", Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost, InAsteroids = false,
+            new GadgetDef { Name = "Decoy", Power = 0.1f, Description = "A hologram lures the dots away", Color = new Color32(120, 255, 200, 255), Icon = GadgetIcon.Ghost, InAsteroids = false,
                 Apply = (w, p) => w.PlaceDecoy(p.Pos, p.Index) },
 
-            new GadgetDef { Name = "Shrink", Description = "You become tiny - slip through the gaps", Color = new Color32(255, 240, 120, 255), Icon = GadgetIcon.Shrink,
+            new GadgetDef { Name = "Shrink", Power = 0f, Description = "You become tiny - slip through the gaps", Color = new Color32(255, 240, 120, 255), Icon = GadgetIcon.Shrink,
                 Apply = (w, p) => p.GiveShrink(7f) },
 
-            new GadgetDef { Name = "Boost", Description = "Fly much faster for a few seconds", Color = new Color32(255, 160, 40, 255), Icon = GadgetIcon.Boost,
+            new GadgetDef { Name = "Boost", Power = 0.15f, Description = "Fly much faster for a few seconds", Color = new Color32(255, 160, 40, 255), Icon = GadgetIcon.Boost,
                 Apply = (w, p) => p.GiveBoost(6f) },
 
-            new GadgetDef { Name = "Black Hole", Description = "Sucks in nearby dots and swallows them", Color = new Color32(170, 90, 255, 255), Icon = GadgetIcon.Vortex, Weight = 0.7f,
+            new GadgetDef { Name = "Black Hole", Power = 0.9f, Description = "Sucks in nearby dots and swallows them", Color = new Color32(170, 90, 255, 255), Icon = GadgetIcon.Vortex, Weight = 0.7f,
                 Apply = (w, p) => w.PlaceBlackHole(p.Pos) },
 
-            new GadgetDef { Name = "Orbit", Description = "Three orbs circle around you and smash dots", Color = new Color32(90, 200, 255, 255), Icon = GadgetIcon.Orbit,
+            new GadgetDef { Name = "Orbit", Power = 0.6f, Description = "Three orbs circle around you and smash dots", Color = new Color32(90, 200, 255, 255), Icon = GadgetIcon.Orbit,
                 Apply = (w, p) => p.GiveOrbit(8f) },
 
             // asteroid field only
-            new GadgetDef { Name = "Spread Shot", Description = "Asteroid Field: your cannon fires five shots at once", Color = new Color32(255, 90, 90, 255),
+            new GadgetDef { Name = "Spread Shot", Power = 0.8f, Description = "Asteroid Field: your cannon fires five shots at once", Color = new Color32(255, 90, 90, 255),
                 Icon = GadgetIcon.Spread, Weight = 1.6f, InNormal = false,
                 Apply = (w, p) => p.GiveSpread(8f) },
         };
 
-        public static GadgetDef PickRandom(System.Random rng, bool asteroids = false)
+        /// <summary>
+        /// Random gadget. 'difficulty' (0..1) shifts the odds: at the start every gadget has its normal weight,
+        /// at full difficulty weak gadgets appear 4x less often and the strongest about twice as often.
+        /// </summary>
+        public static GadgetDef PickRandom(System.Random rng, bool asteroids = false, float difficulty = 0f)
         {
             float total = 0f;
-            foreach (var g in All) if (Allowed(g, asteroids)) total += g.Weight;
+            foreach (var g in All) if (Allowed(g, asteroids)) total += Chance(g, difficulty);
             float r = (float)rng.NextDouble() * total;
-            foreach (var g in All) { if (!Allowed(g, asteroids)) continue; r -= g.Weight; if (r <= 0f) return g; }
+            foreach (var g in All) { if (!Allowed(g, asteroids)) continue; r -= Chance(g, difficulty); if (r <= 0f) return g; }
             return All[0];
+        }
+
+        /// <summary>Spawn weight of a gadget at the given difficulty.</summary>
+        public static float Chance(GadgetDef g, float difficulty)
+        {
+            return g.Weight * Mathf.Lerp(1f, Mathf.Lerp(0.25f, 2.2f, g.Power), Mathf.Clamp01(difficulty));
         }
 
         static bool Allowed(GadgetDef g, bool asteroids) { return asteroids ? g.InAsteroids : g.InNormal; }

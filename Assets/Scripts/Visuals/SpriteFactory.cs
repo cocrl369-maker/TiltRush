@@ -13,7 +13,8 @@ namespace TiltRush
         Saw, Spike6, Spike10,  // enemies: saw blade, small spiky star, big spiky ball
         Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova,  // unlockable skins
         Rock, Rock2, Shard,    // asteroid field
-        Starfighter, Jet, PaperPlane, Ufo, Shuttle, Stealth, Shark, Viper   // spaceship skins
+        Starfighter, Jet, PaperPlane, Ufo, Shuttle, Stealth, Shark, Viper,  // spaceship skins
+        Halo, Trident, Dragon, Beetle, Twin, Bat, Cruiser, Crescent         // elaborate skins (built from several parts, see Fancy())
     }
 
     /// <summary>
@@ -187,6 +188,9 @@ namespace TiltRush
                 case ShapeType.Stealth:     return Poly(x, y, StealthV);
                 case ShapeType.Shark:       return Poly(x, y, SharkV);
                 case ShapeType.Viper:       return Poly(x, y, ViperV);
+                case ShapeType.Halo: case ShapeType.Trident: case ShapeType.Dragon: case ShapeType.Beetle:
+                case ShapeType.Twin: case ShapeType.Bat: case ShapeType.Cruiser: case ShapeType.Crescent:
+                    return Fancy(s, x, y);
                 case ShapeType.Rock:   return Poly(x, y, RockV);
                 case ShapeType.Rock2:  return Poly(x, y, Rock2V);
                 case ShapeType.Shard:  return Poly(x, y, ShardV);
@@ -310,6 +314,64 @@ namespace TiltRush
                 case ShapeType.Shuttle:     return ShuttleD;
                 case ShapeType.Viper:       return ViperD;
                 default:                    return null;
+            }
+        }
+
+        // ---- elaborate skins: unions / cut-outs of several parts. "R" polygons are right halves, mirrored with |x|.
+        static readonly Vector2[] HaloDart = P(0f, 0.98f, 0.32f, -0.55f, 0f, -0.32f, -0.32f, -0.55f);
+        static readonly Vector2[] TridentMid = P(0f, 0.98f, 0.14f, 0.55f, 0.12f, -0.95f, -0.12f, -0.95f, -0.14f, 0.55f);
+        static readonly Vector2[] TridentR = P(0.62f, 0.85f, 0.74f, 0.2f, 0.62f, -0.22f, 0.05f, -0.22f, 0.05f, 0.02f, 0.46f, 0.08f);
+        static readonly Vector2[] DragonBody = P(0f, 0.95f, 0.16f, 0.62f, 0.2f, 0.15f, 0.14f, -0.45f, 0.06f, -0.75f, 0f, -0.98f,
+                                                 -0.06f, -0.75f, -0.14f, -0.45f, -0.2f, 0.15f, -0.16f, 0.62f);
+        static readonly Vector2[] DragonWingR = P(0.12f, 0.35f, 0.55f, 0.55f, 0.97f, 0.72f, 0.8f, 0.32f, 0.95f, 0.08f, 0.66f, 0.02f,
+                                                  0.78f, -0.28f, 0.45f, -0.18f, 0.12f, -0.25f);
+        static readonly Vector2[] DragonHornR = P(0.06f, 0.74f, 0.3f, 0.97f, 0.16f, 0.62f);
+        static readonly Vector2[] BeetleJawR = P(0.06f, 0.6f, 0.3f, 0.72f, 0.2f, 0.97f, 0.15f, 0.74f);
+        static readonly Vector2[] TwinHullR = P(0.48f, 0.95f, 0.64f, 0.45f, 0.64f, -0.88f, 0.32f, -0.88f, 0.32f, 0.45f);
+        static readonly Vector2[] TwinBridgeR = P(0f, 0.3f, 0.36f, 0.12f, 0.36f, -0.3f, 0f, -0.12f);
+        static readonly Vector2[] BatWingR = P(0f, 0.62f, 0.22f, 0.32f, 0.6f, 0.5f, 0.97f, 0.66f, 0.9f, -0.4f, 0f, -0.25f);
+        static readonly Vector2[] BatEarR = P(0.04f, 0.4f, 0.14f, 0.85f, 0.22f, 0.35f);
+        static readonly Vector2[] CruiserHullR = P(0f, 0.98f, 0.16f, 0.62f, 0.2f, 0.22f, 0.44f, 0.06f, 0.44f, -0.28f, 0.28f, -0.38f,
+                                                   0.28f, -0.78f, 0.14f, -0.95f, 0f, -0.86f);
+        static readonly Vector2[] CruiserFinR = P(0.42f, -0.05f, 0.86f, -0.36f, 0.86f, -0.62f, 0.42f, -0.42f);
+        static readonly Vector2[] CrescentDart = P(0f, 0.55f, 0.22f, -0.1f, 0f, 0.02f, -0.22f, -0.1f);
+
+        static float Circ(float x, float y, float cx, float cy, float r) { return Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r; }
+
+        static float Fancy(ShapeType s, float x, float y)
+        {
+            float ax = Mathf.Abs(x);   // mirror: right half drawn twice
+            switch (s)
+            {
+                case ShapeType.Halo:        // dart inside a ring
+                    return Mathf.Min(Poly(x, y, HaloDart), Mathf.Abs(Mathf.Sqrt(x * x + (y + 0.05f) * (y + 0.05f)) - 0.7f) - 0.1f);
+                case ShapeType.Trident:     // three prongs on a cross bar
+                    return Mathf.Min(Poly(x, y, TridentMid), Poly(ax, y, TridentR));
+                case ShapeType.Dragon:      // slim body, jagged wings, two horns
+                    return Mathf.Min(Poly(x, y, DragonBody), Mathf.Min(Poly(ax, y, DragonWingR), Poly(ax, y, DragonHornR)));
+                case ShapeType.Beetle:      // oval shell, head, jaws and six legs (Seg = round-ended line of the given width)
+                {
+                    float d = (Mathf.Sqrt(x * x / (0.44f * 0.44f) + (y + 0.12f) * (y + 0.12f) / (0.66f * 0.66f)) - 1f) * 0.44f;
+                    d = Mathf.Min(d, Circ(x, y, 0f, 0.5f, 0.22f));
+                    d = Mathf.Min(d, Poly(ax, y, BeetleJawR));
+                    d = Mathf.Min(d, Seg(ax, y, 0.3f, 0.22f, 0.78f, 0.5f, 0.14f));
+                    d = Mathf.Min(d, Seg(ax, y, 0.4f, -0.08f, 0.88f, -0.02f, 0.14f));
+                    return Mathf.Min(d, Seg(ax, y, 0.34f, -0.42f, 0.76f, -0.82f, 0.14f));
+                }
+                case ShapeType.Twin:        // two hulls, a bridge and a round cockpit
+                    return Mathf.Min(Mathf.Min(Poly(ax, y, TwinHullR), Poly(ax, y, TwinBridgeR)), Circ(x, y, 0f, 0.18f, 0.2f));
+                case ShapeType.Bat:         // wings with a scalloped lower edge, two ears
+                {
+                    float cut = Mathf.Min(Circ(ax, y, 0.32f, -0.48f, 0.24f), Circ(ax, y, 0.68f, -0.52f, 0.22f));
+                    return Mathf.Min(Mathf.Max(Poly(ax, y, BatWingR), -cut), Poly(ax, y, BatEarR));
+                }
+                case ShapeType.Cruiser:     // stepped hull, swept fins, engine pods
+                    return Mathf.Min(Mathf.Min(Poly(ax, y, CruiserHullR), Poly(ax, y, CruiserFinR)), Circ(ax, y, 0.6f, -0.7f, 0.15f));
+                default:                    // Crescent: moon with the horns forward and a small dart in it
+                {
+                    float moon = Mathf.Max(Circ(x, y, 0f, -0.12f, 0.82f), -Circ(x, y, 0f, 0.32f, 0.66f));
+                    return Mathf.Min(moon, Poly(x, y, CrescentDart));
+                }
             }
         }
 

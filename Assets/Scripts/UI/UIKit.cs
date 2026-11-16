@@ -235,6 +235,11 @@ namespace TiltRush
             L.Inner = Layer(rt, "InnerLine", SpriteFactory.RoundedRing(), 17f, 2.2f);
             L.Border = Layer(rt, "Border", SpriteFactory.RoundedRingThick(), 5f, 1.7f);
 
+            // hit area that keeps the full size while the visible button squashes (otherwise taps near the edge get lost)
+            var hit = Stretch(Rect("Hit", rt));
+            hit.SetAsFirstSibling();
+            hit.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0);
+
             var b = rt.gameObject.AddComponent<Button>();
             b.targetGraphic = img;
             b.transition = Selectable.Transition.None;               // ButtonFx does the animation
@@ -242,6 +247,7 @@ namespace TiltRush
 
             var fx = rt.gameObject.AddComponent<ButtonFx>();
             fx.Pulse = pulse;
+            fx.Hit = hit;
             fx.Setup(L, color, raw);
 
             b.onClick.AddListener(() =>
@@ -265,6 +271,7 @@ namespace TiltRush
                             IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         public bool Pulse;          // gentle "breathing" (used for the big PLAY button)
+        public RectTransform Hit;   // invisible child, scaled against the squash so the tap area never shrinks
         float scale = 1f, velocity;
         bool down, hover;
 
@@ -335,6 +342,7 @@ namespace TiltRush
             velocity += ((goal - scale) * 500f - velocity * 20f) * dt;
             scale += velocity * dt;
             transform.localScale = Vector3.one * scale;
+            if (Hit != null) Hit.localScale = Vector3.one / Mathf.Max(scale, 0.5f);
         }
 
         void Burst()

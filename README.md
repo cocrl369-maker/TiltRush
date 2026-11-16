@@ -204,12 +204,18 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
 - **Mode select**: 4 big category cards (Campaign, Classic, Special, Multiplayer); Classic/Special/Multiplayer open 2 big cards.
 - **Skins**: 28 in total. New ships: STARFIGHTER (default for new players), PAPER PLANE (finish the tutorial), JET (5 rounds),
   UFO (2,000 in Asteroid Field), SHARK (800 dots), SHUTTLE (campaign 15), VIPER (5,000 in Asteroid Field), STEALTH (campaign 20).
-  Details (cockpit, fold, dome) are polygons in `SpriteFactory.CustomDetail`.
+  Since v1.1 every skin is just body colour + outline colour (no inner pattern; `SkinDetail` stays for old saves).
+- **Elaborate skins** (36 in total): HALO (150 pickups), TRIDENT (3,000 dots), BEETLE (60 rounds), BAT (Dodge 150 s),
+  TWIN (10 online wins), CRUISER (10,000 in Asteroid Field), CRESCENT (Hard 8,000), DRAGON (campaign 25).
+  Built from several parts in `SpriteFactory.Fancy` (unions, mirrored halves, cut-outs). The wardrobe uses 4 rows (9 columns).
+- **Gadget odds** (`GadgetDef.Power`, `GadgetLibrary.Chance`): the higher the difficulty, the more often strong gadgets
+  (Nuke, Black Hole, Spread Shot ...) appear; weak ones (Shrink, Decoy, Boost) up to 4x less often at full difficulty.
+- **Buttons** keep their full tap area while they squash (invisible `Hit` child), the options rows re-read their values 5x per second.
 
 ## Controls screen, ads, store graphics
 - **Controls** (`UI/ControlsScreen.cs`): own screen (tilt setup, sensitivity, smoothing, axes, invert), button in the main menu
   (round button in the middle), the mode select and the pause menu. BACK returns to where you came from.
-- **Ads** (`Core/Ads.cs`, Unity Ads / package "Advertisement Legacy"): interstitial every `Config.AdIntervalSeconds` (120 s),
+- **Ads** (`Core/Ads.cs`, Unity Ads / package "Advertisement Legacy"): interstitial every `Config.AdIntervalSeconds` (240 s),
   never during a round, the tutorial or online matchmaking / matches; waits for a calm moment. First visit of the main menu asks
   for consent to personalised ads (GDPR), changeable in Options > Profile. Fill in `Config.AdsGameIdAndroid`, set
   `Config.AdsTestMode = false` for the store version. Privacy policy link: `Config.PrivacyPolicyUrl`.
