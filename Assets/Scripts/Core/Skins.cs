@@ -118,6 +118,15 @@ namespace TiltRush
             S("CRUISER",     ShapeType.Cruiser,     SkinDetail.None,  UnlockKind.AsteroidScore, 10000),
             S("CRESCENT",    ShapeType.Crescent,    SkinDetail.None,  UnlockKind.HardScore, 8000),
             S("DRAGON",      ShapeType.Dragon,      SkinDetail.None,  UnlockKind.Campaign, 25),
+            // even more elaborate designs
+            S("SCORPION",    ShapeType.Scorpion,    SkinDetail.None,  UnlockKind.Kills, 6000),
+            S("KRAKEN",      ShapeType.Kraken,      SkinDetail.None,  UnlockKind.DodgeTime, 200),
+            S("ATOM",        ShapeType.Atom,        SkinDetail.None,  UnlockKind.Pickups, 400),
+            S("HAMMERHEAD",  ShapeType.Hammerhead,  SkinDetail.None,  UnlockKind.AsteroidScore, 20000),
+            S("BUTTERFLY",   ShapeType.Butterfly,   SkinDetail.None,  UnlockKind.Runs, 120),
+            S("EXCALIBUR",   ShapeType.Excalibur,   SkinDetail.None,  UnlockKind.ClassicScore, 15000),
+            S("ANGEL",       ShapeType.Angel,       SkinDetail.None,  UnlockKind.HardScore, 15000),
+            S("FORTRESS",    ShapeType.Fortress,    SkinDetail.None,  UnlockKind.OnlineWins, 25),
         };
 
         public static int Progress(UnlockKind k)

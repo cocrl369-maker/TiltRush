@@ -9,7 +9,8 @@ namespace TiltRush
     /// </summary>
     public class WardrobeScreen : UIScreen
     {
-        static int Cols { get { return Mathf.Max(7, Mathf.CeilToInt(Skins.All.Length / 4f)); } }   // always 4 rows
+        static int Rows { get { return Skins.All.Length <= 36 ? 4 : 5; } }                          // more skins -> one more, flatter row
+        static int Cols { get { return Mathf.Max(7, Mathf.CeilToInt(Skins.All.Length / (float)Rows)); } }
         static readonly string[] TabNames = { "SKINS", "BODY COLOR", "OUTLINE" };
 
         PlayerPreview preview;
@@ -61,7 +62,9 @@ namespace TiltRush
         {
             int n = Skins.All.Length;
             skinBtns = new Button[n]; skinFill = new Image[n]; skinLine = new Image[n]; skinDetail = new Image[n]; skinLabel = new Text[n];
-            var st = new UIStack(page, 300, 290, 1060) { Spacing = 14f };
+            bool flat = Rows > 4;
+            float rowH = flat ? 112f : 140f, icon = flat ? 70f : 84f;
+            var st = new UIStack(page, 300, 290, 1060) { Spacing = flat ? 12f : 14f };
             for (int row = 0; row * Cols < n; row++)
             {
                 int count = Mathf.Min(Cols, n - row * Cols);
@@ -71,7 +74,7 @@ namespace TiltRush
                     int idx = row * Cols + c;
                     items[c] = new UIStack.Item("", Neon.Indigo, () => PickSkin(idx));
                 }
-                var btns = st.Row(140, 18, items);
+                var btns = st.Row(rowH, flat ? 16 : 18, items);
                 for (int c = 0; c < count; c++)
                 {
                     int idx = row * Cols + c;
@@ -79,15 +82,15 @@ namespace TiltRush
                     skinBtns[idx] = b;
                     skinLabel[idx] = b.GetComponentInChildren<Text>();
                     skinLabel[idx].alignment = TextAnchor.LowerCenter;
-                    skinLabel[idx].rectTransform.offsetMin = new Vector2(4, 10);
+                    skinLabel[idx].rectTransform.offsetMin = new Vector2(4, flat ? 6 : 10);
                     var holder = UIKit.Rect("IconHolder", b.transform);
                     holder.anchorMin = holder.anchorMax = new Vector2(0.5f, 1f); holder.pivot = new Vector2(0.5f, 1f);
-                    holder.anchoredPosition = new Vector2(0, -12); holder.sizeDelta = new Vector2(90, 90);
+                    holder.anchoredPosition = new Vector2(0, flat ? -6 : -12); holder.sizeDelta = new Vector2(icon + 6, icon + 6);
                     var shape = Skins.All[idx].Shape;
-                    skinFill[idx] = UIKit.Icon(holder, SpriteFactory.Fill(shape), 84, Color.white);
-                    skinDetail[idx] = UIKit.Icon(holder, SpriteFactory.Detail(shape, Skins.All[idx].Detail), 84, Color.white);
+                    skinFill[idx] = UIKit.Icon(holder, SpriteFactory.Fill(shape), icon, Color.white);
+                    skinDetail[idx] = UIKit.Icon(holder, SpriteFactory.Detail(shape, Skins.All[idx].Detail), icon, Color.white);
                     skinDetail[idx].enabled = skinDetail[idx].sprite != null;
-                    skinLine[idx] = UIKit.Icon(holder, SpriteFactory.Outline(shape), 84, Color.white);
+                    skinLine[idx] = UIKit.Icon(holder, SpriteFactory.Outline(shape), icon, Color.white);
                 }
             }
         }

@@ -70,6 +70,9 @@ namespace TiltRush
                 if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 ready = true;
                 status = "ONLINE";
+#if TILTRUSH_LEADERBOARDS
+                _ = SyncBests();
+#endif
             }
             catch (Exception e)
             {
@@ -141,6 +144,33 @@ namespace TiltRush
             await Task.CompletedTask;
 #endif
         }
+
+#if TILTRUSH_LEADERBOARDS
+        /// <summary>
+        /// Phone and leaderboard can drift apart (a score that was made offline or failed to upload, an old entry from a
+        /// reinstall ...). After connecting, each board is compared with the save file: a better local score is uploaded,
+        /// a better online score is taken over locally. So the BEST shown in the app is always your leaderboard entry.
+        /// </summary>
+        async Task SyncBests()
+        {
+            try { await SyncName(SaveManager.Data.playerName); } catch (Exception) { }
+            bool changed = false;
+            foreach (var b in Boards.All)
+            {
+                if (b.Elo) continue;                          // ELO is the current value, not a best
+                int local = Boards.MyBest(b.Id), remote = -1;
+                try { remote = (int)(await LeaderboardsService.Instance.GetPlayerScoreAsync(b.Id)).Score; }
+                catch (Exception) { }                         // no entry yet (or offline)
+                try
+                {
+                    if (local > remote && local > 0) await LeaderboardsService.Instance.AddPlayerScoreAsync(b.Id, local);
+                    else if (remote > local) { Boards.SetMyBest(b.Id, remote); changed = true; }
+                }
+                catch (Exception e) { Debug.LogWarning("GyroRush: could not sync " + b.Id + ": " + e.Message); }
+            }
+            if (changed) SaveManager.Save();
+        }
+#endif
 
         async Task SyncName(string name)
         {

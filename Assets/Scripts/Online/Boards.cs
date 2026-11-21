@@ -39,6 +39,19 @@ namespace TiltRush
             return All[0];
         }
 
+        /// <summary>Takes over a better score from the leaderboard into the save file (see UgsOnlineService.SyncBests).</summary>
+        public static void SetMyBest(string id, int value)
+        {
+            var d = SaveManager.Data;
+            switch (id)
+            {
+                case "hard":      d.bestHardScore = value; break;
+                case "dodge":     d.bestDodgeScore = value; break;
+                case "asteroids": d.bestAsteroidsScore = value; break;
+                case "classic":   d.bestClassicScore = value; break;
+            }
+        }
+
         /// <summary>Your own best value for a board (from the save file).</summary>
         public static int MyBest(string id)
         {

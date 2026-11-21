@@ -124,6 +124,7 @@ namespace TiltRush
             rt.sizeDelta = new Vector2(size, size);
             var img = rt.gameObject.AddComponent<Image>();
             img.sprite = sprite; img.color = color; img.raycastTarget = false;
+            img.enabled = sprite != null;          // an Image without a sprite would show as a white square
             return img;
         }
 

@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace TiltRush
 {
     /// <summary>Permanent, non-lethal obstacle. Positions are relative to the arena (-0.5..0.5), sizes in world units.</summary>
@@ -27,6 +29,28 @@ namespace TiltRush
     /// <summary>The campaign. Add / change levels here - everything else adapts automatically.</summary>
     public static class Campaign
     {
+        // ---- level length. The times in the table below are the "long" versions; they are shortened here:
+        //      levels WITH obstacles never last longer than ObstacleSeconds, levels without grow only slowly.
+        //      Enemies, walls and swords shrink in the same ratio, so the density stays the same - only shorter.
+        public const float ObstacleSeconds = 45f, StartSeconds = 30f, SecondsPerLevel = 1.5f;
+
+        static Campaign()
+        {
+            for (int i = 0; i < Levels.Length; i++)
+            {
+                var l = Levels[i];
+                float target = l.Obstacles.Length > 0 ? ObstacleSeconds : StartSeconds + SecondsPerLevel * i;
+                target = Mathf.Round(Mathf.Min(l.Duration, target));
+                if (target >= l.Duration) continue;
+                float k = target / l.Duration;
+                l.Normal = Scale(l.Normal, k); l.Fast = Scale(l.Fast, k); l.Big = Scale(l.Big, k);
+                l.Walls = Scale(l.Walls, k); l.Swords = Scale(l.Swords, k);
+                l.Duration = target;
+            }
+        }
+
+        static int Scale(int n, float k) { return n <= 0 ? 0 : Mathf.Max(1, Mathf.RoundToInt(n * k)); }
+
         static ObstacleDef C(float x, float y, float r) { return new ObstacleDef { Circle = true, X = x, Y = y, A = r }; }
         static ObstacleDef R(float x, float y, float w, float h) { return new ObstacleDef { X = x, Y = y, A = w, B = h }; }
 

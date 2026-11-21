@@ -14,7 +14,8 @@ namespace TiltRush
         Rocket, Star, Crystal, Fang, Manta, Bolt, Spear, Hornet, Crown, Saber, Phoenix, Nova,  // unlockable skins
         Rock, Rock2, Shard,    // asteroid field
         Starfighter, Jet, PaperPlane, Ufo, Shuttle, Stealth, Shark, Viper,  // spaceship skins
-        Halo, Trident, Dragon, Beetle, Twin, Bat, Cruiser, Crescent         // elaborate skins (built from several parts, see Fancy())
+        Halo, Trident, Dragon, Beetle, Twin, Bat, Cruiser, Crescent,        // elaborate skins (built from several parts, see Fancy())
+        Scorpion, Kraken, Atom, Hammerhead, Butterfly, Excalibur, Angel, Fortress
     }
 
     /// <summary>
@@ -191,6 +192,9 @@ namespace TiltRush
                 case ShapeType.Halo: case ShapeType.Trident: case ShapeType.Dragon: case ShapeType.Beetle:
                 case ShapeType.Twin: case ShapeType.Bat: case ShapeType.Cruiser: case ShapeType.Crescent:
                     return Fancy(s, x, y);
+                case ShapeType.Scorpion: case ShapeType.Kraken: case ShapeType.Atom: case ShapeType.Hammerhead:
+                case ShapeType.Butterfly: case ShapeType.Excalibur: case ShapeType.Angel: case ShapeType.Fortress:
+                    return Fancy2(s, x, y);
                 case ShapeType.Rock:   return Poly(x, y, RockV);
                 case ShapeType.Rock2:  return Poly(x, y, Rock2V);
                 case ShapeType.Shard:  return Poly(x, y, ShardV);
@@ -328,13 +332,106 @@ namespace TiltRush
         static readonly Vector2[] DragonHornR = P(0.06f, 0.74f, 0.3f, 0.97f, 0.16f, 0.62f);
         static readonly Vector2[] BeetleJawR = P(0.06f, 0.6f, 0.3f, 0.72f, 0.2f, 0.97f, 0.15f, 0.74f);
         static readonly Vector2[] TwinHullR = P(0.48f, 0.95f, 0.64f, 0.45f, 0.64f, -0.88f, 0.32f, -0.88f, 0.32f, 0.45f);
-        static readonly Vector2[] TwinBridgeR = P(0f, 0.3f, 0.36f, 0.12f, 0.36f, -0.3f, 0f, -0.12f);
-        static readonly Vector2[] BatWingR = P(0f, 0.62f, 0.22f, 0.32f, 0.6f, 0.5f, 0.97f, 0.66f, 0.9f, -0.4f, 0f, -0.25f);
+        static readonly Vector2[] TwinBridge = M(P(0f, 0.3f, 0.36f, 0.12f, 0.36f, -0.3f, 0f, -0.12f));
+        static readonly Vector2[] BatWing = M(P(0f, 0.62f, 0.22f, 0.32f, 0.6f, 0.5f, 0.97f, 0.66f, 0.9f, -0.4f, 0f, -0.25f));
         static readonly Vector2[] BatEarR = P(0.04f, 0.4f, 0.14f, 0.85f, 0.22f, 0.35f);
-        static readonly Vector2[] CruiserHullR = P(0f, 0.98f, 0.16f, 0.62f, 0.2f, 0.22f, 0.44f, 0.06f, 0.44f, -0.28f, 0.28f, -0.38f,
-                                                   0.28f, -0.78f, 0.14f, -0.95f, 0f, -0.86f);
+        static readonly Vector2[] CruiserHull = M(P(0f, 0.98f, 0.16f, 0.62f, 0.2f, 0.22f, 0.44f, 0.06f, 0.44f, -0.28f, 0.28f, -0.38f,
+                                                   0.28f, -0.78f, 0.14f, -0.95f, 0f, -0.86f));
         static readonly Vector2[] CruiserFinR = P(0.42f, -0.05f, 0.86f, -0.36f, 0.86f, -0.62f, 0.42f, -0.42f);
         static readonly Vector2[] CrescentDart = P(0f, 0.55f, 0.22f, -0.1f, 0f, 0.02f, -0.22f, -0.1f);
+
+        static readonly Vector2[] ScorpionSting = P(0f, -0.98f, 0.1f, -0.84f, -0.1f, -0.84f);
+        static readonly Vector2[] HammerBar = M(P(0f, 0.9f, 0.55f, 0.88f, 0.64f, 0.74f, 0.52f, 0.62f, 0.16f, 0.6f, 0f, 0.62f));
+        static readonly Vector2[] HammerBody = M(P(0f, 0.66f, 0.18f, 0.45f, 0.2f, 0f, 0.12f, -0.5f, 0.05f, -0.7f, 0f, -0.68f));
+        static readonly Vector2[] HammerFinR = P(0.17f, 0.22f, 0.62f, -0.14f, 0.56f, -0.26f, 0.17f, -0.06f);
+        static readonly Vector2[] HammerTail = M(P(0f, -0.6f, 0.06f, -0.64f, 0.4f, -0.96f, 0.24f, -0.97f, 0f, -0.8f));
+        static readonly Vector2[] SwordBlade = P(0f, 0.98f, 0.13f, 0.74f, 0.13f, -0.24f, -0.13f, -0.24f, -0.13f, 0.74f);
+        static readonly Vector2[] SwordGuard = M(P(0f, -0.18f, 0.55f, -0.16f, 0.64f, -0.29f, 0.55f, -0.42f, 0f, -0.4f));
+        static readonly Vector2[] AngelRobe = P(0f, 0.36f, 0.3f, -0.72f, 0f, -0.62f, -0.3f, -0.72f);
+        static readonly Vector2[] AngelWingR = P(0.1f, 0.25f, 0.5f, 0.56f, 0.95f, 0.62f, 0.84f, 0.38f, 0.96f, 0.2f, 0.74f, 0.06f,
+                                                 0.86f, -0.12f, 0.55f, -0.15f, 0.6f, -0.34f, 0.18f, -0.2f);
+        static readonly Vector2[] FortressTip = P(0f, 0.98f, 0.22f, 0.76f, -0.22f, 0.76f);
+
+        /// <summary>Filled ellipse (centre, half axes a / b, rotated by deg).</summary>
+        static float Ell(float x, float y, float cx, float cy, float a, float b, float deg = 0f)
+        {
+            float r = deg * Mathf.Deg2Rad, c = Mathf.Cos(r), sn = Mathf.Sin(r);
+            float u = (x - cx) * c + (y - cy) * sn, v = -(x - cx) * sn + (y - cy) * c;
+            return (Mathf.Sqrt(u * u / (a * a) + v * v / (b * b)) - 1f) * Mathf.Min(a, b);
+        }
+
+        /// <summary>Ellipse ring (orbit) of line width w.</summary>
+        static float ERing(float x, float y, float a, float b, float deg, float w) { return Mathf.Abs(Ell(x, y, 0f, 0f, a, b, deg)) - w * 0.5f; }
+
+        /// <summary>Second batch of elaborate skins (same idea as Fancy).</summary>
+        static float Fancy2(ShapeType s, float x, float y)
+        {
+            float ax = Mathf.Abs(x);
+            switch (s)
+            {
+                case ShapeType.Scorpion:    // claws forward, three legs a side, segmented tail with a sting
+                {
+                    float d = Mathf.Min(Ell(x, y, 0f, 0.05f, 0.3f, 0.42f), Circ(x, y, 0f, 0.45f, 0.18f));
+                    d = Mathf.Min(d, Seg(ax, y, 0.14f, 0.45f, 0.45f, 0.68f, 0.14f));
+                    d = Mathf.Min(d, Mathf.Max(Circ(ax, y, 0.5f, 0.8f, 0.15f), -Circ(ax, y, 0.42f, 0.94f, 0.09f)));   // pincer with a notch
+                    d = Mathf.Min(d, Seg(ax, y, 0.25f, 0.15f, 0.56f, 0.26f, 0.1f));
+                    d = Mathf.Min(d, Seg(ax, y, 0.28f, -0.05f, 0.62f, -0.08f, 0.1f));
+                    d = Mathf.Min(d, Seg(ax, y, 0.24f, -0.25f, 0.54f, -0.42f, 0.1f));
+                    d = Mathf.Min(d, Mathf.Min(Circ(x, y, 0f, -0.48f, 0.13f), Mathf.Min(Circ(x, y, 0f, -0.66f, 0.11f), Circ(x, y, 0f, -0.8f, 0.09f))));
+                    return Mathf.Min(d, Poly(x, y, ScorpionSting));
+                }
+                case ShapeType.Kraken:      // round head with two eye holes, six curling tentacles
+                {
+                    float d = Mathf.Max(Ell(x, y, 0f, 0.36f, 0.42f, 0.52f), -Circ(ax, y, 0.16f, 0.36f, 0.08f));
+                    d = Mathf.Min(d, Mathf.Min(Seg(ax, y, 0.08f, 0.02f, 0.14f, -0.42f, 0.15f), Seg(ax, y, 0.14f, -0.42f, 0.05f, -0.86f, 0.11f)));
+                    d = Mathf.Min(d, Mathf.Min(Seg(ax, y, 0.24f, 0.04f, 0.45f, -0.36f, 0.15f), Seg(ax, y, 0.45f, -0.36f, 0.4f, -0.82f, 0.11f)));
+                    return Mathf.Min(d, Mathf.Min(Seg(ax, y, 0.34f, 0.12f, 0.7f, -0.14f, 0.15f), Seg(ax, y, 0.7f, -0.14f, 0.84f, -0.56f, 0.11f)));
+                }
+                case ShapeType.Atom:        // nucleus with three orbits (the upright one shows the direction)
+                {
+                    float d = Mathf.Min(Circ(x, y, 0f, 0f, 0.2f), ERing(x, y, 0.88f, 0.3f, 90f, 0.12f));
+                    d = Mathf.Min(d, Mathf.Min(ERing(x, y, 0.88f, 0.3f, 30f, 0.12f), ERing(x, y, 0.88f, 0.3f, 150f, 0.12f)));
+                    return Mathf.Min(d, Circ(x, y, 0f, 0.86f, 0.1f));
+                }
+                case ShapeType.Hammerhead:  // shark with the wide hammer head
+                    return Mathf.Min(Mathf.Min(Poly(x, y, HammerBar), Poly(x, y, HammerBody)), Mathf.Min(Poly(ax, y, HammerFinR), Poly(x, y, HammerTail)));
+                case ShapeType.Butterfly:   // four wings with eye spots, body and antennae
+                {
+                    float wings = Mathf.Min(Ell(ax, y, 0.42f, 0.28f, 0.42f, 0.32f, 25f), Ell(ax, y, 0.3f, -0.38f, 0.28f, 0.24f, -20f));
+                    wings = Mathf.Max(wings, -Circ(ax, y, 0.46f, 0.32f, 0.1f));
+                    float d = Mathf.Min(wings, Seg(x, y, 0f, 0.5f, 0f, -0.62f, 0.18f));
+                    return Mathf.Min(d, Mathf.Min(Seg(ax, y, 0.04f, 0.5f, 0.22f, 0.86f, 0.08f), Circ(ax, y, 0.23f, 0.89f, 0.07f)));
+                }
+                case ShapeType.Excalibur:   // sword: blade, cross guard, grip, pommel
+                {
+                    float d = Mathf.Min(Poly(x, y, SwordBlade), Poly(x, y, SwordGuard));
+                    return Mathf.Min(d, Mathf.Min(Seg(x, y, 0f, -0.4f, 0f, -0.78f, 0.15f), Circ(x, y, 0f, -0.86f, 0.12f)));
+                }
+                case ShapeType.Angel:       // halo, head, robe and feathered wings
+                {
+                    float d = Mathf.Min(Mathf.Abs(Ell(x, y, 0f, 0.8f, 0.3f, 0.12f)) - 0.05f, Circ(x, y, 0f, 0.48f, 0.15f));
+                    return Mathf.Min(d, Mathf.Min(Poly(x, y, AngelRobe), Poly(ax, y, AngelWingR)));
+                }
+                default:                    // Fortress: station with a hole in the middle, four arms and pods
+                {
+                    float d = Mathf.Min(Circ(x, y, 0f, 0f, 0.34f), Mathf.Min(Seg(x, y, -0.8f, 0f, 0.8f, 0f, 0.22f), Seg(x, y, 0f, -0.82f, 0f, 0.8f, 0.22f)));
+                    d = Mathf.Min(d, Mathf.Min(Circ(ax, y, 0.82f, 0f, 0.15f), Poly(x, y, FortressTip)));
+                    d = Mathf.Min(d, Circ(x, y, 0f, -0.84f, 0.13f));
+                    return Mathf.Max(d, -Circ(x, y, 0f, 0f, 0.14f));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Right half (first and last point on the centre line) -> whole symmetric polygon. Better than mirroring with |x|,
+        /// which leaves a thin outline seam along the middle.
+        /// </summary>
+        static Vector2[] M(Vector2[] r)
+        {
+            var v = new System.Collections.Generic.List<Vector2>(r);
+            for (int i = r.Length - 2; i >= 1; i--) v.Add(new Vector2(-r[i].x, r[i].y));
+            return v.ToArray();
+        }
 
         static float Circ(float x, float y, float cx, float cy, float r) { return Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r; }
 
@@ -359,14 +456,14 @@ namespace TiltRush
                     return Mathf.Min(d, Seg(ax, y, 0.34f, -0.42f, 0.76f, -0.82f, 0.14f));
                 }
                 case ShapeType.Twin:        // two hulls, a bridge and a round cockpit
-                    return Mathf.Min(Mathf.Min(Poly(ax, y, TwinHullR), Poly(ax, y, TwinBridgeR)), Circ(x, y, 0f, 0.18f, 0.2f));
+                    return Mathf.Min(Mathf.Min(Poly(ax, y, TwinHullR), Poly(x, y, TwinBridge)), Circ(x, y, 0f, 0.18f, 0.2f));
                 case ShapeType.Bat:         // wings with a scalloped lower edge, two ears
                 {
                     float cut = Mathf.Min(Circ(ax, y, 0.32f, -0.48f, 0.24f), Circ(ax, y, 0.68f, -0.52f, 0.22f));
-                    return Mathf.Min(Mathf.Max(Poly(ax, y, BatWingR), -cut), Poly(ax, y, BatEarR));
+                    return Mathf.Min(Mathf.Max(Poly(x, y, BatWing), -cut), Poly(ax, y, BatEarR));
                 }
                 case ShapeType.Cruiser:     // stepped hull, swept fins, engine pods
-                    return Mathf.Min(Mathf.Min(Poly(ax, y, CruiserHullR), Poly(ax, y, CruiserFinR)), Circ(ax, y, 0.6f, -0.7f, 0.15f));
+                    return Mathf.Min(Mathf.Min(Poly(x, y, CruiserHull), Poly(ax, y, CruiserFinR)), Circ(ax, y, 0.6f, -0.7f, 0.15f));
                 default:                    // Crescent: moon with the horns forward and a small dart in it
                 {
                     float moon = Mathf.Max(Circ(x, y, 0f, -0.12f, 0.82f), -Circ(x, y, 0f, 0.32f, 0.66f));

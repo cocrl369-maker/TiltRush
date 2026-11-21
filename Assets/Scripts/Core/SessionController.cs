@@ -238,7 +238,7 @@ namespace TiltRush
             if (board != null)
             {
                 int t = token;
-                app.Online.SubmitScore(board, d.playerName, score,
+                app.Online.SubmitScore(board, d.playerName, Boards.MyBest(board),   // your best: the board never drops below it
                     rank => { if (t == token && rank > 0 && app.UI.Current is DialogScreen) show("\nWorld rank: #" + rank); },
                     err => { });
             }

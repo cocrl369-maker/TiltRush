@@ -207,7 +207,14 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   Since v1.1 every skin is just body colour + outline colour (no inner pattern; `SkinDetail` stays for old saves).
 - **Elaborate skins** (36 in total): HALO (150 pickups), TRIDENT (3,000 dots), BEETLE (60 rounds), BAT (Dodge 150 s),
   TWIN (10 online wins), CRUISER (10,000 in Asteroid Field), CRESCENT (Hard 8,000), DRAGON (campaign 25).
-  Built from several parts in `SpriteFactory.Fancy` (unions, mirrored halves, cut-outs). The wardrobe uses 4 rows (9 columns).
+  Built from several parts in `SpriteFactory.Fancy` / `Fancy2` (unions, symmetric polygons via `M()`, cut-outs).
+- **Second batch** (44 in total): SCORPION (6,000 dots), KRAKEN (Dodge 200 s), ATOM (400 pickups), HAMMERHEAD (20,000 in
+  Asteroid Field), BUTTERFLY (120 rounds), EXCALIBUR (Classic 15,000), ANGEL (Hard 15,000), FORTRESS (25 online wins).
+  The wardrobe switches to 5 flatter rows when there are more than 36 skins.
+- **Campaign length** (`Campaign` static constructor): levels with obstacles last at most 45 s, others 30 s + 1.5 s per level.
+  Enemies, walls and swords are scaled down in the same ratio (same density, shorter level).
+- **Leaderboard sync** (`UgsOnlineService.SyncBests`): after connecting, a better local best is uploaded and a better online
+  score is taken over, so BEST in the app and your leaderboard entry always match. After a run your best is submitted.
 - **Gadget odds** (`GadgetDef.Power`, `GadgetLibrary.Chance`): the higher the difficulty, the more often strong gadgets
   (Nuke, Black Hole, Spread Shot ...) appear; weak ones (Shrink, Decoy, Boost) up to 4x less often at full difficulty.
 - **Buttons** keep their full tap area while they squash (invisible `Hit` child), the options rows re-read their values 5x per second.
