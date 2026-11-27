@@ -425,8 +425,11 @@ namespace TiltRush
         }
 
         /// <summary>Shows any style (the wardrobe uses this to preview a skin before it is chosen).</summary>
+        PlayerStyle shown;
+
         public void Show(PlayerStyle st)
         {
+            shown = st;
             detail.sprite = st.Detail; detail.enabled = st.Detail != null; detail.color = st.Outline;
             fill.sprite = SpriteFactory.Fill(st.Shape);
             line.sprite = SpriteFactory.Outline(st.Shape);
@@ -437,6 +440,12 @@ namespace TiltRush
         void Update()
         {
             spin.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(Time.unscaledTime * 1.5f) * 35f);   // tip wobbles left/right
+            if (shown.Animated)                                                                       // GRADIENT colour
+            {
+                var st = shown.Tick();
+                fill.color = st.Primary; line.color = st.Outline;
+                glow.color = new Color(st.Outline.r, st.Outline.g, st.Outline.b, 0.25f);
+            }
             transform.localScale = Vector3.one * (1f + 0.04f * Mathf.Sin(Time.unscaledTime * 3f));
         }
     }

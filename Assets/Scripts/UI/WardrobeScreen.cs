@@ -52,8 +52,8 @@ namespace TiltRush
             for (int i = 0; i < 3; i++) pages[i] = UIKit.Stretch(UIKit.Rect("Page" + i, transform));
 
             BuildSkins(pages[0]);
-            bodyBtns = Swatches(pages[1], idx => { if (Unlocks.ColorUnlocked(idx)) { SaveManager.Data.primary = idx; Refresh(); } });
-            lineBtns = Swatches(pages[2], idx => { if (Unlocks.ColorUnlocked(idx)) { SaveManager.Data.outline = idx; Refresh(); } });
+            bodyBtns = Swatches(pages[1], idx => { if (Unlocks.PrimaryUnlocked(idx)) { SaveManager.Data.primary = idx; Refresh(); } });
+            lineBtns = Swatches(pages[2], idx => { if (Unlocks.OutlineUnlocked(idx)) { SaveManager.Data.outline = idx; Refresh(); } });
 
             MenuUtil.AddBack(transform, () => { SaveManager.Save(); UI.Show<MainMenuScreen>(); });
         }
@@ -102,10 +102,10 @@ namespace TiltRush
             Refresh();
         }
 
-        /// <summary>4 rows x 5 colour swatches.</summary>
+        /// <summary>3 rows x 7 colour swatches (the last one is the GRADIENT colour).</summary>
         static Button[] Swatches(RectTransform page, System.Action<int> onPick)
         {
-            int n = Config.Palette.Length, perRow = 5;
+            int n = Unlocks.ColorCount, perRow = 7;
             var all = new Button[n];
             var st = new UIStack(page, 310, 290, 1000) { Spacing = 18f, RawColors = true };
             for (int row = 0; row * perRow < n; row++)
@@ -115,9 +115,9 @@ namespace TiltRush
                 for (int c = 0; c < count; c++)
                 {
                     int idx = row * perRow + c;
-                    items[c] = new UIStack.Item("", Config.Palette[idx], () => onPick(idx));
+                    items[c] = new UIStack.Item("", Unlocks.IsGradient(idx) ? Color.white : Config.Palette[idx], () => onPick(idx));
                 }
-                var btns = st.Row(130, 30, items);
+                var btns = st.Row(130, 26, items);
                 for (int c = 0; c < count; c++) all[row * perRow + c] = btns[c];
             }
             return all;
@@ -132,6 +132,25 @@ namespace TiltRush
                 UIKit.SetButtonColor(tabs[k], k == i ? Neon.Blue : Theme.Locked, k != i);
             }
             Refresh();
+        }
+
+        /// <summary>Keeps the GRADIENT colour moving (swatches and skin icons).</summary>
+        void Update()
+        {
+            if (bodyBtns == null) return;
+            var d = SaveManager.Data;
+            int g = Unlocks.Gradient;
+            Color c = Unlocks.GradientColor();
+            if (Unlocks.PrimaryUnlocked(g)) UIKit.SetButtonColor(bodyBtns[g], c, true);
+            if (Unlocks.OutlineUnlocked(g)) UIKit.SetButtonColor(lineBtns[g], c, true);
+            var style = PlayerStyle.FromSave(0);
+            if (!style.Animated) return;
+            for (int i = 0; i < skinBtns.Length; i++)
+            {
+                if (!Skins.All[i].Unlocked) continue;
+                skinFill[i].color = style.Primary;
+                skinLine[i].color = style.Outline;
+            }
         }
 
         void Refresh()
@@ -153,12 +172,12 @@ namespace TiltRush
             }
             for (int i = 0; i < bodyBtns.Length; i++)
             {
-                bool open = Unlocks.ColorUnlocked(i);
-                string locked = "LV " + Unlocks.ColorLevel[i];
-                bodyBtns[i].GetComponentInChildren<Text>().text = open ? (i == d.primary ? "OK" : "") : locked;
-                lineBtns[i].GetComponentInChildren<Text>().text = open ? (i == d.outline ? "OK" : "") : locked;
-                UIKit.SetButtonColor(bodyBtns[i], open ? Config.Palette[i] : Theme.Locked, true);
-                UIKit.SetButtonColor(lineBtns[i], open ? Config.Palette[i] : Theme.Locked, true);
+                bool openB = Unlocks.PrimaryUnlocked(i), openL = Unlocks.OutlineUnlocked(i);
+                Color c = Unlocks.IsGradient(i) ? Unlocks.GradientColor() : Config.Palette[i];
+                bodyBtns[i].GetComponentInChildren<Text>().text = openB ? (i == d.primary ? "OK" : (Unlocks.IsGradient(i) ? "GRADIENT" : "")) : Unlocks.LockText(i, true);
+                lineBtns[i].GetComponentInChildren<Text>().text = openL ? (i == d.outline ? "OK" : (Unlocks.IsGradient(i) ? "GRADIENT" : "")) : Unlocks.LockText(i, false);
+                UIKit.SetButtonColor(bodyBtns[i], openB ? c : Theme.Locked, true);
+                UIKit.SetButtonColor(lineBtns[i], openL ? c : Theme.Locked, true);
             }
 
             // left side: the focused skin (may be locked - then it is shown as a preview with the requirement)
@@ -172,7 +191,7 @@ namespace TiltRush
             infoText.text = fs.Unlocked
                 ? (f == d.playerShape ? "<color=#7DFF00>SELECTED</color>" : "Tap again to select")
                 : "<color=#FFD080>LOCKED</color>\n" + fs.Requirement;
-            if (tab != 0) infoText.text = "Skins unlocked: " + Skins.UnlockedCount + " / " + Skins.All.Length + "\nColours unlock in the campaign.";
+            if (tab != 0) infoText.text = "Colours unlock in the campaign.\n<color=#FFD080>" + Unlocks.GradientRequirement(tab == 1) + "</color>";
         }
 
         public override void OnShow() { focus = -1; SetTab(tab); }

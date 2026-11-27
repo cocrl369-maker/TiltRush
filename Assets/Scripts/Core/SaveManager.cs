@@ -23,7 +23,7 @@ namespace TiltRush
 
         // Wardrobe
         public int playerShape = 20; // index into Skins.All (20 = STARFIGHTER)
-        public int primary = 0;    // Config.Palette index
+        public int primary = 0;    // Config.Palette index (Config.Palette.Length = GRADIENT)
         public int outline = 7;     // White
 
         // Options - GRAPHICS
@@ -65,6 +65,15 @@ namespace TiltRush
 
         // Campaign: number of levels completed (in order)
         public int campaignDone = 0;
+
+        // Days for the GRADIENT colour (see Unlocks)
+        public string lastLoginDay = "";
+        public int loginDays;                    // different days the game was opened
+        public string playDay = "";
+        public float playDaySeconds;             // played today (rounds)
+        public bool playDayCounted;
+        public int longPlayDays;                 // days with more than 10 minutes of play
+        public bool gradPrimaryAnnounced, gradOutlineAnnounced;
     }
 
     public static class SaveManager
@@ -124,27 +133,45 @@ namespace TiltRush
         public ShapeType Shape;
         public Color Primary, Outline;
         public Sprite Detail;          // second-colour detail of the skin (drawn in the outline colour), may be null
+        public bool GradPrimary, GradOutline;   // GRADIENT colour: changes all the time, see Tick()
+
+        public bool Animated { get { return GradPrimary || GradOutline; } }
+
+        /// <summary>The style with the current gradient colours (call every frame for animated styles).</summary>
+        public PlayerStyle Tick()
+        {
+            var s = this;
+            if (GradPrimary) s.Primary = Unlocks.GradientColor(0f);
+            if (GradOutline) s.Outline = Unlocks.GradientColor(GradPrimary ? 0.4f : 0f);
+            return s;
+        }
 
         public static PlayerStyle FromSave(int playerIndex = 0)
         {
             var d = SaveManager.Data;
-            int n = Config.Palette.Length;
+            int n = Config.Palette.Length, all = Unlocks.ColorCount;
             int sh = Mathf.Abs(d.playerShape) % Skins.All.Length;
             if (!Skins.All[sh].Unlocked) sh = 0;
             var skin = Skins.All[sh];
-            int pi = Unlocks.ColorUnlocked(d.primary % n) ? d.primary % n : 0;
-            int oi = Unlocks.ColorUnlocked(d.outline % n) ? d.outline % n : 7;
-            var s = new PlayerStyle { Shape = skin.Shape, Primary = Config.Palette[pi], Outline = Config.Palette[oi],
+            int pi = Unlocks.PrimaryUnlocked(Mathf.Abs(d.primary) % all) ? Mathf.Abs(d.primary) % all : 0;
+            int oi = Unlocks.OutlineUnlocked(Mathf.Abs(d.outline) % all) ? Mathf.Abs(d.outline) % all : 7;
+            var s = new PlayerStyle { Shape = skin.Shape,
+                                      Primary = Unlocks.IsGradient(pi) ? Color.white : Config.Palette[pi],
+                                      Outline = Unlocks.IsGradient(oi) ? Color.white : Config.Palette[oi],
+                                      GradPrimary = Unlocks.IsGradient(pi), GradOutline = Unlocks.IsGradient(oi),
                                       Detail = SpriteFactory.Detail(skin.Shape, skin.Detail) };
+            s = s.Tick();
             if (playerIndex == 1)                       // player 2 gets a different (unlocked) colour
             {
                 int p2 = pi;
                 for (int k = 5; k < 5 + n; k++)
                 {
-                    int c = (pi + k) % n;
+                    int c = (pi % n + k) % n;
                     if (c != pi && c != oi && Unlocks.ColorUnlocked(c)) { p2 = c; break; }
                 }
-                s.Primary = Config.Palette[p2];
+                if (p2 == pi && Unlocks.IsGradient(pi)) p2 = 1;        // gradient player 1 -> player 2 gets Aqua
+                s.Primary = Config.Palette[p2 % n];
+                s.GradPrimary = false;
             }
             return s;
         }

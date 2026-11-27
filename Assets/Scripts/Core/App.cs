@@ -47,6 +47,7 @@ namespace TiltRush
             Input.multiTouchEnabled = true;
 
             SaveManager.Load();
+            Unlocks.TrackLogin();                     // days for the GRADIENT outline colour
             ApplyFrameRate();
             SetupCamera();
 
@@ -93,7 +94,7 @@ namespace TiltRush
         }
 
         // Pausing when the app goes to the background (phone call, home button, notification shade)
-        void OnApplicationPause(bool paused) { if (paused) Pause(); }
+        void OnApplicationPause(bool paused) { if (paused) Pause(); else Unlocks.TrackLogin(); }   // back after midnight = new day
         void OnApplicationFocus(bool focused) { if (!focused && !Application.isEditor) Pause(); }
 
         void LateUpdate()

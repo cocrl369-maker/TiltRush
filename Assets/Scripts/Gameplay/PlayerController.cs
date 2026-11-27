@@ -159,6 +159,7 @@ namespace TiltRush
 
         void LateUpdate()
         {
+            if (style.Animated && view != null) { style = style.Tick(); view.SetColors(style.Primary, style.Outline); }   // GRADIENT colour
             if (trail == null) return;
             if (!Alive || !SaveManager.Data.trail) { foreach (var r in trail) r.enabled = false; return; }
 

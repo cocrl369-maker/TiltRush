@@ -213,6 +213,10 @@ The arena automatically fills the whole screen (safe area aware); `Config.Camera
   The wardrobe switches to 5 flatter rows when there are more than 36 skins.
 - **Campaign length** (`Campaign` static constructor): levels with obstacles last at most 45 s, others 30 s + 1.5 s per level.
   Enemies, walls and swords are scaled down in the same ratio (same density, shorter level).
+- **GRADIENT colour** (`Unlocks.Gradient`, index = `Config.Palette.Length`): cycles through the rainbow
+  (`Unlocks.GradientSpeed`). Body colour: play more than 10 minutes on 10 different days (`longPlayDays`);
+  outline colour: open the game on 10 different days (`loginDays`). Days are counted in `Unlocks.TrackLogin` /
+  `Unlocks.AddPlayTime`; the colours are animated in `PlayerController`, `PlayerPreview` and the wardrobe (7 swatches per row).
 - **Leaderboard sync** (`UgsOnlineService.SyncBests`): after connecting, a better local best is uploaded and a better online
   score is taken over, so BEST in the app and your leaderboard entry always match. After a run your best is submitted.
 - **Gadget odds** (`GadgetDef.Power`, `GadgetLibrary.Chance`): the higher the difficulty, the more often strong gadgets

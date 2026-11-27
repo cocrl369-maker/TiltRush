@@ -196,6 +196,7 @@ namespace TiltRush
             statsText.text =
                 "Rounds played:  " + d.runsPlayed.ToString("N0") + "\n" +
                 "Time played:  " + Mathf.FloorToInt(d.totalPlaySeconds / 60f) + " min\n" +
+                "Days opened:  " + d.loginDays + "   (10+ min: " + d.longPlayDays + ")\n" +
                 "Dots destroyed:  " + d.totalKills.ToString("N0") + "\n" +
                 "Pickups collected:  " + d.totalPickups.ToString("N0") + "\n" +
                 "Best Classic:  " + d.bestClassicScore.ToString("N0") + " pts\n" +

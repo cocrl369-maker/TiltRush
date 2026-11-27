@@ -109,6 +109,9 @@ namespace TiltRush
             stats.totalKills += r.Kills;
             stats.totalPickups += r.Pickups;
             foreach (float s in r.Survival) stats.totalPlaySeconds = stats.totalPlaySeconds + s;
+            float longest = 0f;
+            foreach (float s in r.Survival) longest = Mathf.Max(longest, s);
+            Unlocks.AddPlayTime(longest);                       // days with 10+ minutes -> GRADIENT body colour
             SaveManager.Save();
 
             switch (mode.Id)
@@ -297,6 +300,7 @@ namespace TiltRush
         static string NewSkinsText()
         {
             var list = Skins.CollectNew();
+            list.AddRange(Unlocks.CollectNewColours());
             if (list.Count == 0) return "";
             SaveManager.Save();
             return "\n\n<color=#7DFF00>UNLOCKED: " + string.Join(", ", list.ToArray()).ToUpper() + "</color>";
